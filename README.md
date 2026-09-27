@@ -40,9 +40,64 @@ replacement home exercise programs).
 
 ## Status
 
-Early scaffold — architecture and tech stack TBD. Next steps: pick the pose-estimation
-approach (e.g. on-device MediaPipe/TF.js for privacy + latency), define the exercise set
-for the MVP demo, and design the clinician-facing report.
+Built as a Swift monorepo — see [docs/milestones.md](docs/milestones.md) for what's done and what's next,
+[docs/architecture.md](docs/architecture.md) for the design and trust boundary, and
+[docs/concept.md](docs/concept.md) for the product concept.
+
+```
+Packages/LaileCore   shared domain logic (iOS + server): exercises, conductor, safety rules, rewards, streams
+Packages/LaileKit    iOS feature modules (SwiftUI)
+iOS/                 app target (XcodeGen) → TestFlight
+Server/              Vapor API + clinician portal + Hunyuan + ElevenLabs/TRTC voice
+```
+
+### Run it
+
+Server + clinician portal (SQLite and demo data, no keys needed):
+
+```bash
+cd Server && swift run LaileServer serve --hostname 127.0.0.1 --port 8080
+```
+
+Open http://127.0.0.1:8080/portal and sign in as `clinician@laile.demo` (password in
+`Server/Sources/LaileServer/Features/Seed/DemoSeedFeature.swift`). The fictional demo patient is
+`patient@laile.demo`; the unclaimed invite code is `LAI-DEMO42`.
+
+iOS app (runs fully on-device in demo mode; the Simulator uses a simulated skeleton):
+
+```bash
+cd iOS && xcodegen generate && open Laile.xcodeproj
+```
+
+Tests:
+
+```bash
+cd Packages/LaileCore && swift test && cd ../../Server && swift test
+```
+
+### Voice
+
+Set `ELEVENLABS_API_KEY` (see `Server/.env.example`), then render every fixed coaching line into the app:
+
+```bash
+cd Server && swift run LaileServer generate-cues --output ../iOS/Laile/Resources/Cues
+```
+
+TRTC Conversational AI uses ElevenLabs natively (`TTSType: elevenlabs`), so live calls get the same voice.
+
+### TestFlight
+
+1. Set `DEVELOPMENT_TEAM` in `iOS/project.yml`, run `xcodegen generate`.
+2. Xcode → Product → Archive → Distribute → App Store Connect.
+3. Add internal testers (up to 100, no review wait).
+
+### Deploy (Tencent Cloud Lighthouse)
+
+```bash
+docker build -f Server/Dockerfile -t laile-server .
+```
+
+Run with `DATABASE_URL` pointing at TencentDB for PostgreSQL and the keys from `Server/.env.example`.
 
 ## Submission requirements (from the Hackathon Handbook)
 

@@ -1,0 +1,82 @@
+#extend("base"):
+#export("content"):
+<div class="page-head">
+  <div>
+    <p class="muted small"><a href="/portal/patients/#(patientId)">← #(patientName)</a></p>
+    <h1>#(title) <span class="muted small">v#(version)</span></h1>
+    <p class="muted">Drafted by #(draftedBy). #if(isDraft):<span class="pill pill-warn">Draft — not visible to the patient until you sign it</span>#else:<span class="pill pill-ok">#(status)</span> #(signedLine)#endif</p>
+  </div>
+  #if(!isDraft):
+  <form method="post" action="/portal/programs/#(id)/revise"><button class="btn" type="submit">Create revision</button></form>
+  #endif
+</div>
+
+#if(count(violations) > 0):
+<div class="error"><strong>Precaution conflicts — signing is blocked:</strong><ul>#for(v in violations):<li>#(v)</li>#endfor</ul></div>
+#endif
+
+#if(count(blocked) > 0):
+<div class="card">
+  <h3>Removed by the safety check</h3>
+  <p class="muted small">These suggestions violated the patient's precautions or weren't in the vetted library, so they were removed automatically.</p>
+  <ul>#for(b in blocked):<li class="small">#(b)</li>#endfor</ul>
+</div>
+#endif
+
+<div class="card">
+  <p class="small"><strong>Precautions:</strong> #for(p in precautions):<span class="pill">#(p)</span> #endfor</p>
+  <p class="small muted">#(summary)</p>
+</div>
+
+<form method="post" action="/portal/programs/#(id)">
+  #for(item in items):
+  <div class="item-card">
+    <div class="row" style="justify-content:space-between">
+      <strong>#(item.name)</strong>
+      <span class="small muted">#(item.category) · #(item.source)</span>
+    </div>
+    <div class="fields">
+      <label>Sets<input class="num" type="number" name="sets_#(item.id)" value="#(item.sets)" #if(!isDraft):disabled#endif></label>
+      #if(item.isHold):
+        <label>Hold (s)<input class="num" type="number" name="hold_#(item.id)" value="#(item.hold)" #if(!isDraft):disabled#endif></label>
+      #else:
+        <label>Reps<input class="num" type="number" name="reps_#(item.id)" value="#(item.reps)" #if(!isDraft):disabled#endif></label>
+      #endif
+      <label>Rest (s)<input class="num" type="number" name="rest_#(item.id)" value="#(item.rest)" #if(!isDraft):disabled#endif></label>
+      <label>Times/day<input class="num" type="number" name="times_#(item.id)" value="#(item.times)" #if(!isDraft):disabled#endif></label>
+      #if(item.tracksKnee):
+        <label>Knee-bend goal (°)<input class="num" type="number" name="target_#(item.id)" value="#(item.target)" #if(!isDraft):disabled#endif></label>
+      #endif
+      #if(isDraft):<label>Remove<input type="checkbox" name="remove_#(item.id)"></label>#endif
+    </div>
+    <p class="small"><span class="muted">Why:</span> #(item.rationale)</p>
+    <p class="hint">Safe range: #(item.limits)</p>
+  </div>
+  #endfor
+
+  #if(isDraft):
+  <div class="card">
+    <div class="grid grid-2">
+      <div>
+        <label class="small"><strong>Add an exercise</strong> <span class="hint">only exercises that pass this patient's precautions are listed</span></label>
+        <select name="add_exercise"><option value="">—</option>#for(o in addOptions):<option value="#(o.value)">#(o.label)</option>#endfor</select>
+      </div>
+      <div>
+        <label class="small"><strong>Stop a set when pain is above (0–10)</strong></label>
+        <input class="num" type="number" name="pain_stop" value="#(painStop)" min="0" max="9">
+      </div>
+    </div>
+    <p class="row" style="margin-top:1rem"><button class="btn" type="submit">Save changes</button></p>
+  </div>
+  #endif
+</form>
+
+#if(isDraft):
+<form method="post" action="/portal/programs/#(id)/sign" class="card">
+  <h3>Sign and send to patient</h3>
+  <p class="muted small">By signing you confirm you have reviewed every exercise and dose. The patient's app will switch to this program; the previous version is archived.</p>
+  <button class="btn btn-primary" type="submit">Sign program</button>
+</form>
+#endif
+#endexport
+#endextend

@@ -1,0 +1,108 @@
+#extend("base"):
+#export("content"):
+<div class="page-head">
+  <div>
+    <p class="muted small"><a href="/portal">← Patients</a></p>
+    <h1>#(name)</h1>
+    <p class="muted">#(procedure) · #(dayLabel) · Age #(age)</p>
+  </div>
+  <div class="row no-print">
+    <a class="btn" href="/portal/patients/#(id)/report">Pre-visit report</a>
+    <form method="post" action="/portal/patients/#(id)/programs/draft"><button class="btn btn-primary" type="submit">✦ Draft program with AI</button></form>
+  </div>
+</div>
+
+#if(!linked):
+<div class="notice">Not linked yet. Give the patient invite code <span class="code">#(inviteCode)</span> — they enter it in the Laile app under Me → Link my clinician.</div>
+#endif
+
+#if(count(flags) > 0):
+<div class="card">
+  <h2>Needs attention</h2>
+  <ul class="flags">
+    #for(f in flags):<li>#(f)</li>#endfor
+  </ul>
+</div>
+#endif
+
+<div class="grid grid-3">
+  <div class="card"><p class="muted small">Adherence</p><p class="stat" style="font-size:1.05rem">#(adherence)</p></div>
+  <div class="card"><p class="muted small">Stop a set when pain is above</p><p class="stat">#(painStop)/10</p></div>
+  <div class="card"><p class="muted small">Goals</p><p>#(goals)</p></div>
+</div>
+
+#if(count(charts) > 0):
+<div class="grid grid-2">
+  #for(c in charts):
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <h3>#(c.title)</h3>
+      <span><strong>#(c.latest)</strong> <span class="muted small">#(c.change)</span></span>
+    </div>
+    #unsafeHTML(c.svg)
+    <p class="muted small">#(c.next) · Filled dots are personal bests; dashed line is the baseline.</p>
+  </div>
+  #endfor
+</div>
+#endif
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Pain &amp; symptom reports</h2>
+    <p class="muted small">Captured by voice mid-exercise, with the exercise, rep and joint angle at that moment.</p>
+    #if(count(symptoms) == 0):<p class="muted">None reported.</p>#endif
+    #for(s in symptoms):
+    <div class="symptom #if(s.isRedFlag):red#elseif(s.needsReview):review#endif">
+      <div class="row" style="justify-content:space-between">
+        <strong>#(s.summary)</strong>
+        #if(s.needsReview):
+          <form method="post" action="/portal/symptoms/#(s.id)/review" class="no-print"><button class="btn" type="submit">Mark reviewed</button></form>
+        #elseif(s.reviewed):<span class="pill pill-ok">Reviewed</span>#endif
+      </div>
+      <blockquote>“#(s.verbatim)”</blockquote>
+      <span class="muted small">#(s.when) · App action: #(s.action)</span>
+    </div>
+    #endfor
+  </div>
+
+  <div>
+    <div class="card">
+      <h2>Programs</h2>
+      #if(count(programs) == 0):<p class="muted">No program yet — draft one with AI, then review and sign it.</p>#endif
+      <table>
+        #for(p in programs):
+        <tr>
+          <td><a href="/portal/programs/#(p.id)">#(p.title)</a><br><span class="muted small">v#(p.version) · drafted by #(p.draftedBy)</span></td>
+          <td>#if(p.status == "signed"):<span class="pill pill-ok">signed</span>#elseif(p.status == "draft"):<span class="pill pill-warn">draft</span>#else:<span class="pill">#(p.status)</span>#endif</td>
+          <td class="small muted">#(p.date)</td>
+        </tr>
+        #endfor
+      </table>
+    </div>
+    <div class="card">
+      <h2>Precautions</h2>
+      <ul>#for(p in precautions):<li>#(p)</li>#endfor</ul>
+      #if(comorbidities != ""):<p class="small"><strong>Conditions:</strong> #(comorbidities)</p>#endif
+      #if(notes != ""):<p class="small"><strong>Notes:</strong> #(notes)</p>#endif
+    </div>
+    <div class="card">
+      <h2>Medications</h2>
+      <p class="muted small">Shown to the patient as entered. The app explains and reminds; it never advises on doses.</p>
+      #for(m in medications):<p><strong>#(m.name)</strong> — #(m.dose) at #(m.times)<br><span class="muted small">#(m.purpose)</span></p>#endfor
+    </div>
+  </div>
+</div>
+
+<div class="card table-wrap">
+  <h2>Recent sessions</h2>
+  <table>
+    <thead><tr><th>When</th><th>Session</th><th>Verified reps</th><th>Length</th><th>Pain</th><th>Reports</th></tr></thead>
+    <tbody>
+    #for(s in sessions):
+      <tr><td class="small">#(s.when)</td><td>#(s.title)</td><td>#(s.reps)</td><td>#(s.duration)</td><td class="small">#(s.pain)</td><td>#if(s.symptoms > 0):<span class="pill pill-warn">#(s.symptoms)</span>#endif</td></tr>
+    #endfor
+    </tbody>
+  </table>
+</div>
+#endexport
+#endextend

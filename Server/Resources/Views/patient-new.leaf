@@ -1,0 +1,56 @@
+#extend("base"):
+#export("content"):
+<div class="page-head">
+  <div>
+    <h1>New patient</h1>
+    <p class="muted">Creates a record and an invite code. The patient links their app with the code and consents to share their sessions with you.</p>
+  </div>
+</div>
+#if(error):<div class="error">#(error)</div>#endif
+<form class="stack card" method="post" action="/portal/patients">
+  <div class="grid grid-2">
+    <div>
+      <label for="displayName">Name</label>
+      <input id="displayName" name="displayName" type="text" required>
+      <label for="age">Age</label>
+      <input id="age" name="age" type="number" min="0" max="120">
+      <label for="procedure">Procedure / condition</label>
+      <select id="procedure" name="procedure">
+        #for(o in procedures):<option value="#(o.value)">#(o.label)</option>#endfor
+      </select>
+      <label for="procedureDate">Procedure date</label>
+      <input id="procedureDate" name="procedureDate" type="date">
+      <label for="affectedSide">Affected side</label>
+      <select id="affectedSide" name="affectedSide">
+        <option value="">Not applicable</option><option value="left">Left</option><option value="right">Right</option>
+      </select>
+    </div>
+    <div>
+      <label for="weightBearing">Weight-bearing status</label>
+      <select id="weightBearing" name="weightBearing">
+        #for(o in weightBearing):<option value="#(o.value)">#(o.label)</option>#endfor
+      </select>
+      <label for="maxImpact">Maximum impact</label>
+      <select id="maxImpact" name="maxImpact">
+        #for(o in impacts):<option value="#(o.value)" #if(o.value == "1"):selected#endif>#(o.label)</option>#endfor
+      </select>
+      <label for="maxKneeFlexion">Knee flexion limit (°) <span class="hint">optional</span></label>
+      <input id="maxKneeFlexion" name="maxKneeFlexion" type="number" min="0" max="150">
+      <label for="maxHipFlexion">Hip flexion limit (°) <span class="hint">e.g. 90 for posterior hip precautions</span></label>
+      <input id="maxHipFlexion" name="maxHipFlexion" type="number" min="0" max="150">
+      <label for="painStopSetAbove">Stop a set when pain is above (0–10)</label>
+      <input id="painStopSetAbove" name="painStopSetAbove" type="number" min="0" max="9" value="4">
+    </div>
+  </div>
+  <label for="goals">Goals <span class="hint">comma-separated, in the patient's words</span></label>
+  <input id="goals" name="goals" type="text" placeholder="Climb the stairs at home, walk to the market">
+  <label for="comorbidities">Relevant conditions <span class="hint">comma-separated</span></label>
+  <input id="comorbidities" name="comorbidities" type="text">
+  <label for="clinicalNotes">Clinical notes</label>
+  <textarea id="clinicalNotes" name="clinicalNotes"></textarea>
+  <label for="medications">Medications <span class="hint">one per line: name | dose as prescribed | plain-language purpose | how to take | times (08:00, 20:00)</span></label>
+  <textarea id="medications" name="medications" placeholder="Paracetamol | 2 tablets | Pain relief | As prescribed | 08:00, 14:00, 20:00"></textarea>
+  <p style="margin-top:1rem"><button class="btn btn-primary" type="submit">Create patient</button></p>
+</form>
+#endexport
+#endextend

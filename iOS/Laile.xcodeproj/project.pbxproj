@@ -1,0 +1,366 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		3C742097F7058C46A19D0ED1 /* LaileKit in Frameworks */ = {isa = PBXBuildFile; productRef = 953A8CE27CFE703BE1C09179 /* LaileKit */; };
+		7857E3C71C78A1DF52CD5451 /* Cues in Resources */ = {isa = PBXBuildFile; fileRef = AEE6245CF17C85B675405FA7 /* Cues */; };
+		A84BF08F457DE10E3F318F6A /* LaileApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A4932F69C33D6D9A625578C /* LaileApp.swift */; };
+		AE91B9966FF3C48E958F690C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4F60FA41D57B5AE06B1D79B2 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		1A4932F69C33D6D9A625578C /* LaileApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaileApp.swift; sourceTree = "<group>"; };
+		2E4E13AA52F2BB3EEB70152F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		4F60FA41D57B5AE06B1D79B2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AEE6245CF17C85B675405FA7 /* Cues */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Cues; path = Laile/Resources/Cues; sourceTree = SOURCE_ROOT; };
+		F24C561DB573DFEECFF530F8 /* Laile.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Laile.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F47808FEDB50353B59076A61 /* LaileKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = LaileKit; path = ../Packages/LaileKit; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C05078CB2F8F34583D00F900 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3C742097F7058C46A19D0ED1 /* LaileKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		35B89B7B6E86E5144F5FE8EC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F24C561DB573DFEECFF530F8 /* Laile.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6D9CC1FA344074E5C175DEE6 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				F47808FEDB50353B59076A61 /* LaileKit */,
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
+		99B288BE6D06A64F83F958B9 = {
+			isa = PBXGroup;
+			children = (
+				B74F9D935C03BE66B7F4E8C9 /* Laile */,
+				6D9CC1FA344074E5C175DEE6 /* Packages */,
+				35B89B7B6E86E5144F5FE8EC /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		B74F9D935C03BE66B7F4E8C9 /* Laile */ = {
+			isa = PBXGroup;
+			children = (
+				4F60FA41D57B5AE06B1D79B2 /* Assets.xcassets */,
+				2E4E13AA52F2BB3EEB70152F /* Info.plist */,
+				1A4932F69C33D6D9A625578C /* LaileApp.swift */,
+				BD9B24BC1A50FA26846717A7 /* Resources */,
+			);
+			path = Laile;
+			sourceTree = "<group>";
+		};
+		BD9B24BC1A50FA26846717A7 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				AEE6245CF17C85B675405FA7 /* Cues */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		78F3535C5376B1D6E3E89C53 /* Laile */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0F5C319A91209BA56D7FC007 /* Build configuration list for PBXNativeTarget "Laile" */;
+			buildPhases = (
+				DC0552AB7A9B59149E8E36F4 /* Sources */,
+				82F0488BF9781C989EA23058 /* Resources */,
+				C05078CB2F8F34583D00F900 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Laile;
+			packageProductDependencies = (
+				953A8CE27CFE703BE1C09179 /* LaileKit */,
+			);
+			productName = Laile;
+			productReference = F24C561DB573DFEECFF530F8 /* Laile.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A86D982E0553200BA26B99CD /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					78F3535C5376B1D6E3E89C53 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 4C148CCD85AC94A577FDAB67 /* Build configuration list for PBXProject "Laile" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 99B288BE6D06A64F83F958B9;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				07B5710EB8B1F68F8824D4D6 /* XCLocalSwiftPackageReference "../Packages/LaileKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 35B89B7B6E86E5144F5FE8EC /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				78F3535C5376B1D6E3E89C53 /* Laile */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		82F0488BF9781C989EA23058 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AE91B9966FF3C48E958F690C /* Assets.xcassets in Resources */,
+				7857E3C71C78A1DF52CD5451 /* Cues in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		DC0552AB7A9B59149E8E36F4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A84BF08F457DE10E3F318F6A /* LaileApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		0E134CD5AFFEEA2E901BF6E7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		7766D100138EA9B6EFDEAB1D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = Laile/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.laile.ios;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		8C2733B9F75BDD7AB556ED67 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		E2FAA26D74754D1363E9D6A9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = Laile/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = app.laile.ios;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0F5C319A91209BA56D7FC007 /* Build configuration list for PBXNativeTarget "Laile" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E2FAA26D74754D1363E9D6A9 /* Debug */,
+				7766D100138EA9B6EFDEAB1D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		4C148CCD85AC94A577FDAB67 /* Build configuration list for PBXProject "Laile" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0E134CD5AFFEEA2E901BF6E7 /* Debug */,
+				8C2733B9F75BDD7AB556ED67 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		07B5710EB8B1F68F8824D4D6 /* XCLocalSwiftPackageReference "../Packages/LaileKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../Packages/LaileKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		953A8CE27CFE703BE1C09179 /* LaileKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LaileKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = A86D982E0553200BA26B99CD /* Project object */;
+}

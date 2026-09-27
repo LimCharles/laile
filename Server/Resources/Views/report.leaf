@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pre-visit report</title>
+  <link rel="stylesheet" href="/css/portal.css">
+</head>
+<body>
+<main>
+  <div class="page-head">
+    <div>
+      <p class="brand"><span class="brand-mark">莱</span> Laile · Pre-visit report</p>
+      <h1>#(name)</h1>
+      <p class="muted">#(procedure) · #(dayLabel) · Generated #(generated) for #(clinicianName)</p>
+    </div>
+    <button class="btn no-print" onclick="window.print()">Print</button>
+  </div>
+
+  <div class="card">
+    <h2>Summary (last 14 days)</h2>
+    <p><strong>Program:</strong> #(program)</p>
+    <p><strong>Adherence:</strong> #(adherence) · #(sessionsCount) sessions, #(totalReps) camera-verified reps</p>
+    <ul>#for(h in headline):<li>#(h)</li>#endfor</ul>
+    <p class="muted small">All numbers come straight from recorded sessions. Joint angles are camera estimates for trend-tracking, not a substitute for in-clinic goniometry.</p>
+  </div>
+
+  #if(count(flags) > 0):
+  <div class="card">
+    <h2>Flags</h2>
+    <ul class="flags">#for(f in flags):<li>#(f)</li>#endfor</ul>
+  </div>
+  #endif
+
+  <div class="grid grid-2">
+    #for(c in charts):
+    <div class="card">
+      <h3>#(c.title) — #(c.latest) <span class="muted small">#(c.change)</span></h3>
+      #unsafeHTML(c.svg)
+    </div>
+    #endfor
+  </div>
+
+  <div class="card">
+    <h2>Pain and symptom reports</h2>
+    #if(count(symptoms) == 0):<p class="muted">None needing review.</p>#endif
+    #for(s in symptoms):
+    <div class="symptom #if(s.isRedFlag):red#else:review#endif">
+      <strong>#(s.summary)</strong>
+      <blockquote>“#(s.verbatim)”</blockquote>
+      <span class="muted small">#(s.when) · #(s.action)#if(s.reviewed): · reviewed#endif</span>
+    </div>
+    #endfor
+  </div>
+</main>
+</body>
+</html>

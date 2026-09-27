@@ -1,0 +1,42 @@
+#extend("base"):
+#export("content"):
+<div class="page-head">
+  <div>
+    <h1>Streams</h1>
+    <p class="muted">Timed follow-along sessions. Everyone does the same exercise at the same moment; each phone counts its own reps with the camera. Patients only see streams their precautions allow.</p>
+  </div>
+</div>
+
+<div class="grid grid-2">
+  <div class="card table-wrap">
+    <h2>Schedule</h2>
+    <table>
+      <thead><tr><th>When</th><th>Stream</th><th>Length</th><th>Status</th></tr></thead>
+      <tbody>
+      #for(s in streams):
+        <tr>
+          <td class="small">#(s.when)</td>
+          <td><strong>#(s.title)</strong><br><span class="muted small">#(s.host) · intensity #(s.intensity)/5 · #(s.tags)</span></td>
+          <td>#(s.minutes) min</td>
+          <td>#if(s.status == "Live"):<span class="pill pill-danger">● Live</span>#elseif(s.status == "Lobby open"):<span class="pill pill-warn">Lobby open</span>#else:<span class="pill">#(s.status)</span>#endif</td>
+        </tr>
+      #endfor
+      </tbody>
+    </table>
+  </div>
+
+  <form class="card stack" method="post" action="/portal/streams">
+    <h2>Schedule a live stream</h2>
+    <label for="title">Title</label>
+    <input id="title" name="title" type="text" placeholder="Tuesday lunch-break blast">
+    <label for="template">Routine</label>
+    <select id="template" name="template">#for(f in formats):<option value="#(f.value)">#(f.label)</option>#endfor</select>
+    <label for="start">Start (Singapore time)</label>
+    <input id="start" name="start" type="datetime-local" required>
+    <label for="host">Host name <span class="hint">defaults to you</span></label>
+    <input id="host" name="host" type="text">
+    <p style="margin-top:1rem"><button class="btn btn-primary" type="submit">Schedule</button></p>
+  </form>
+</div>
+#endexport
+#endextend

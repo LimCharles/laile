@@ -1,0 +1,36 @@
+#extend("base"):
+#export("content"):
+<div class="page-head">
+  <div>
+    <h1>Your patients</h1>
+    <p class="muted">Sessions are camera-verified on the patient's phone. Program drafts: #(llmName).</p>
+  </div>
+  <a class="btn btn-primary" href="/portal/patients/new">+ New patient</a>
+</div>
+
+<div class="card table-wrap">
+  #if(count(patients) == 0):
+    <p class="muted">No patients yet. Create one to get an invite code for their app.</p>
+  #else:
+  <table>
+    <thead>
+      <tr><th>Patient</th><th>Procedure</th><th>Last session</th><th>Adherence</th><th>Knee bend</th><th>Program</th><th>Flags</th></tr>
+    </thead>
+    <tbody>
+    #for(p in patients):
+      <tr>
+        <td><a href="/portal/patients/#(p.id)"><strong>#(p.name)</strong></a><br><span class="muted small">#(p.dayLabel)</span></td>
+        <td>#(p.procedure)</td>
+        <td>#if(p.linked):#(p.lastSession)#else:<span class="pill">Invite <span class="code">#(p.inviteCode)</span></span>#endif</td>
+        <td class="small">#(p.adherence)</td>
+        <td><strong>#(p.kneeFlexion)</strong></td>
+        <td class="small">#(p.programStatus)</td>
+        <td>#if(p.flagCount > 0):<span class="pill pill-warn">#(p.flagCount)</span>#else:<span class="pill pill-ok">0</span>#endif</td>
+      </tr>
+    #endfor
+    </tbody>
+  </table>
+  #endif
+</div>
+#endexport
+#endextend

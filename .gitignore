@@ -25,3 +25,14 @@ venv/
 
 # Misc
 .claude/
+
+# Swift / Xcode
+.build/
+.swiftpm/
+*.xcodeproj/
+!iOS/*.xcodeproj/
+DerivedData/
+xcuserdata/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
