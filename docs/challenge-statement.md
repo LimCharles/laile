@@ -24,7 +24,7 @@ on a particular chronic condition, population, or aspect of long-term health man
 
 > Note: the handbook's own example scenarios (SSRI mood tracking, T2 diabetes, hypertension)
 > are guidance only — "Participants are strongly encouraged to explore alternative approaches
-> that meaningfully address the problem statement." Lai Le targets post-surgical orthopedic
+> that meaningfully address the problem statement." Laile targets post-surgical orthopedic
 > rehab (knee/hip replacement home exercise adherence) as its alternative approach.
 
 ### What the Solution Should Solve

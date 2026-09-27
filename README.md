@@ -1,4 +1,4 @@
-# Lai Le (莱乐)
+# Laile (莱乐)
 
 Camera-verified home physical therapy — so recovery doesn't depend on willpower.
 
@@ -15,7 +15,7 @@ Apple Health, mood trackers, etc. are passive logs with no external stakes.
 
 ## The approach
 
-Lai Le uses camera-based pose estimation to verify that a prescribed exercise was actually
+Laile uses camera-based pose estimation to verify that a prescribed exercise was actually
 performed, and performed correctly — not just checked off. This does two things existing
 health apps can't:
 
