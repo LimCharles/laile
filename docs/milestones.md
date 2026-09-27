@@ -16,7 +16,7 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
 
 ## M1 — Session engine on iOS ✅
 
-- ✅ Apple Vision body-pose on-device (video never leaves the phone); simulated pose provider for Simulator/demo
+- ✅ Apple Vision body-pose on-device (video never leaves the phone); simulated pose provider for the Simulator
 - ✅ Full-screen session UI: skeleton overlay with measured joint + live angle, big rep counter, depth meter,
   hold ring, setup guidance, pause/skip/end
 - ✅ Voice cues with never-late counting; pre-generated-audio pipeline (see M3)
@@ -65,7 +65,8 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
 
 - ⬜ Deploy server to **Tencent Cloud Lighthouse** (Dockerfile included) + TencentDB for PostgreSQL; HTTPS domain
 - ⬜ TestFlight: set `DEVELOPMENT_TEAM`, archive, upload, internal testers (no review needed)
-- ⬜ Point the app at the live server (Me → Connect to a Laile server)
+- ⬜ Set the Release `LAILE_API_BASE_URL` in `iOS/project.yml` to the deployed domain
+- ⬜ Portal "discharge → Move mode" action (rehab graduation)
 - ⬜ Miora: app icon, cover image (380×216), exercise demo clips
 
 ## M7 — Submission package ⬜ (target 14 Oct)

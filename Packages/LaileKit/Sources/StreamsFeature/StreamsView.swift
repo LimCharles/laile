@@ -158,7 +158,8 @@ struct StreamRoomView: View {
                 .accessibilityLabel("Leave stream")
             VStack(alignment: .leading, spacing: 0) {
                 Text(model.stream.title).font(.headline)
-                Text("with \(model.stream.hostName) · \(model.participants) moving").font(.caption).foregroundStyle(.white.opacity(0.7))
+                Text(model.participants > 0 ? "with \(model.stream.hostName) · \(model.participants) moving" : "with \(model.stream.hostName)")
+                    .font(.caption).foregroundStyle(.white.opacity(0.7))
             }
             Spacer()
             if case .live = model.phase { Pill("● LIVE", color: .white, background: Theme.live) }
@@ -229,6 +230,10 @@ struct StreamRoomView: View {
     private var leaderboard: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Camera-verified reps").font(.caption.weight(.bold)).foregroundStyle(.white.opacity(0.6))
+            if model.leaderboard.isEmpty {
+                Text(model.joined ? "Connecting…" : "Join to see everyone's reps live.")
+                    .font(.subheadline).foregroundStyle(.white.opacity(0.7))
+            }
             ForEach(visibleLeaderboard, id: \.1.id) { index, entry in
                 HStack {
                     Text("\(index + 1)").font(.caption.weight(.heavy)).frame(width: 20)

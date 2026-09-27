@@ -6,19 +6,17 @@ import SwiftUI
 /// User preferences kept in UserDefaults.
 public struct AppSettings: Codable, Equatable {
     public var onboardingComplete = false
-    public var serverURL = ""
     public var speakCues = true
     public var listenForFeedback = true
-    public var useCloudCoach = true
     /// Set when the readiness screen suggested checking with a doctor first.
     public var gentleOnly = false
     public var preferFrontCamera = true
 
     public init() {}
 
-    static let key = "laile.settings.v1"
+    static let key = "laile.settings.v2"
 
-    static func load() -> AppSettings {
+    public static func load() -> AppSettings {
         guard let data = UserDefaults.standard.data(forKey: key), let s = try? JSONDecoder().decode(AppSettings.self, from: data) else { return AppSettings() }
         return s
     }
@@ -32,8 +30,10 @@ public struct AppSettings: Codable, Equatable {
 @MainActor
 @Observable
 public final class AppModel {
-    public private(set) var backend: any LaileBackend
+    public let backend: any LaileBackend
     public var settings: AppSettings { didSet { settings.save() } }
+    /// Mirrors the backend's token state so views update on sign-in / sign-out / expiry.
+    public private(set) var isSignedIn: Bool
 
     public var user: API.UserProfile?
     public var rewards: RewardsSummary?
@@ -54,27 +54,23 @@ public final class AppModel {
     /// Latest session result, shown after the session sheet closes.
     public var lastResult: API.SessionSubmitResponse?
 
-    public init() {
-        let settings = AppSettings.load()
-        self.settings = settings
-        if let url = URL(string: settings.serverURL), !settings.serverURL.isEmpty {
-            let remote = RemoteBackend(baseURL: url)
-            backend = remote.isSignedIn ? remote : DemoBackend()
-        } else {
-            backend = DemoBackend()
-        }
+    /// The app's model, talking to the hosted API this build is configured for.
+    public convenience init() {
+        self.init(backend: RemoteBackend(), settings: .load())
     }
 
-    /// For previews and tests.
-    public init(backend: any LaileBackend, settings: AppSettings = AppSettings()) {
+    /// For previews and tests (stub the backend).
+    public init(backend: any LaileBackend, settings: AppSettings) {
         self.backend = backend
         self.settings = settings
+        self.isSignedIn = backend.isSignedIn
     }
 
     public var mode: AppMode { user?.mode ?? .move }
     public var now: Date { Date().addingTimeInterval(serverOffset) }
 
     public func refresh() async {
+        guard backend.isSignedIn else { isSignedIn = false; return }
         isLoading = true
         defer { isLoading = false }
         do {
@@ -93,6 +89,7 @@ public final class AppModel {
         } catch {
             lastError = error.localizedDescription
         }
+        isSignedIn = backend.isSignedIn
     }
 
     @discardableResult
@@ -134,42 +131,28 @@ public final class AppModel {
         today = try? await backend.today()
     }
 
-    // MARK: Backend switching
+    // MARK: Account
 
-    public func useDemoBackend() async {
-        settings.serverURL = ""
-        backend = DemoBackend()
+    public func signIn(email: String, password: String) async throws {
+        user = try await backend.signIn(email: email, password: password)
+        isSignedIn = true
         await refresh()
     }
 
-    public func connect(serverURL: String, email: String, password: String, register: Bool, name: String) async throws {
-        guard let url = URL(string: serverURL.trimmingCharacters(in: .whitespaces)), url.scheme != nil else {
-            throw BackendError.http(0, "Enter a full server URL, e.g. https://laile.example.com")
-        }
-        let remote = RemoteBackend(baseURL: url)
-        if register {
-            _ = try await remote.register(email: email, password: password, name: name)
-        } else {
-            _ = try await remote.signIn(email: email, password: password)
-        }
-        settings.serverURL = url.absoluteString
-        backend = remote
+    public func register(email: String, password: String, name: String) async throws {
+        user = try await backend.register(email: email, password: password, name: name)
+        isSignedIn = true
         await refresh()
     }
 
-    public func signOut() async {
-        (backend as? RemoteBackend)?.signOut()
-        await useDemoBackend()
-    }
-
-    public func resetDemo() async {
-        (backend as? DemoBackend)?.resetDemo()
-        await refresh()
-    }
-
-    public func graduateFromRehab() async {
-        (backend as? DemoBackend)?.graduate()
-        await refresh()
+    public func signOut() {
+        backend.signOut()
+        isSignedIn = false
+        user = nil
+        rewards = nil
+        today = nil
+        progress = nil
+        settings.onboardingComplete = false
     }
 }
 

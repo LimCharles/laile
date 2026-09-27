@@ -34,8 +34,7 @@ public enum ConductorEvent: Sendable, Equatable {
 
 public struct ConductorConfig: Sendable {
     public var symptomPolicy: SymptomPolicy
-    /// When the cloud voice agent is speaking replies, the conductor stays quiet on
-    /// non-urgent symptom responses (it always speaks escalation lines).
+    /// Default for `report(_:at:speakResponse:)`. Escalation lines are always spoken.
     public var speaksSymptomResponses: Bool
     public var setupStableSeconds: Double = 1.0
     public var trackingLostSeconds: Double = 2.0
@@ -255,7 +254,8 @@ public struct SessionConductor: Sendable {
 
     /// Apply something the user said (already classified by the LLM or the on-device
     /// classifier). Context is attached here; the rule engine decides the action.
-    public mutating func report(_ incoming: SymptomReport, at t: TimeInterval) -> [ConductorEvent] {
+    /// Pass `speakResponse: false` when the cloud coach is already speaking its own reply.
+    public mutating func report(_ incoming: SymptomReport, at t: TimeInterval, speakResponse: Bool? = nil) -> [ConductorEvent] {
         now = max(now, t)
         var report = incoming
         report.timestamp = date(for: now)
@@ -293,7 +293,7 @@ public struct SessionConductor: Sendable {
         var events: [ConductorEvent] = [.symptomLogged(report)]
         let isEscalation: Bool
         if case .endSession = decision.action { isEscalation = true } else { isEscalation = false }
-        if config.speaksSymptomResponses || isEscalation,
+        if speakResponse ?? config.speaksSymptomResponses || isEscalation,
            let line = SymptomResponses.line(for: decision.action, category: report.category, policy: config.symptomPolicy) {
             events.append(.say(line))
         }

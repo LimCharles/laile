@@ -15,7 +15,6 @@ struct MeView: View {
     @State private var inviteCode = ""
     @State private var linkError: String?
     @State private var linking = false
-    @State private var showServer = false
 
     var body: some View {
         NavigationStack {
@@ -33,7 +32,7 @@ struct MeView: View {
 
                 if app.mode == .move {
                     Section {
-                        TextField("Invite code, e.g. LAI-DEMO42", text: $inviteCode)
+                        TextField("Invite code, e.g. LAI-7KQ2MX", text: $inviteCode)
                             .textInputAutocapitalization(.characters)
                             .autocorrectionDisabled()
                         Button(linking ? "Linking…" : "Link my clinician") {
@@ -53,30 +52,18 @@ struct MeView: View {
                 } else {
                     Section("Your care team") {
                         LabeledContent("Clinician", value: app.user?.clinicianName ?? "—")
-                        if app.backend.isDemo {
-                            Button("I've been discharged — back to Move mode") { Task { await app.graduateFromRehab() } }
-                        }
                     }
                 }
 
                 Section("Coach") {
                     Toggle("Speak cues and counts", isOn: $app.settings.speakCues)
                     Toggle("Listen for how it feels", isOn: $app.settings.listenForFeedback)
-                    Toggle("Cloud coach (Hunyuan)", isOn: $app.settings.useCloudCoach)
-                        .disabled(app.backend.isDemo)
                     Toggle("Use front camera", isOn: $app.settings.preferFrontCamera)
                 }
 
-                Section {
-                    LabeledContent("Backend", value: app.backend.isDemo ? "On this phone (demo)" : app.backend.displayName)
-                    if app.backend.isDemo {
-                        Button("Connect to a Laile server…") { showServer = true }
-                        Button("Reset demo data", role: .destructive) { Task { await app.resetDemo() } }
-                    } else {
-                        Button("Sign out", role: .destructive) { Task { await app.signOut() } }
-                    }
-                } header: {
-                    Text("Account")
+                Section("Account") {
+                    LabeledContent("Email", value: app.user?.email ?? "—")
+                    Button("Sign out", role: .destructive) { app.signOut() }
                 }
 
                 Section("Privacy & safety") {
@@ -88,68 +75,22 @@ struct MeView: View {
                 .font(.footnote)
             }
             .navigationTitle("Me")
-            .sheet(isPresented: $showServer) { ServerSheet(app: app) }
         }
     }
 }
 
-struct ServerSheet: View {
+/// First run: create an account (or sign in), pick a path, a short activity-readiness check
+/// or clinician link, then camera/mic permissions.
+public struct OnboardingView: View {
+    enum Step { case welcome, account, path, readiness, link, permissions }
+
     @Bindable var app: AppModel
-    @Environment(\.dismiss) private var dismiss
-    @State private var url = "http://localhost:8080"
+    @State private var step: Step
+    @State private var creatingAccount = true
+    @State private var name = ""
     @State private var email = ""
     @State private var password = ""
-    @State private var name = ""
-    @State private var register = false
-    @State private var error: String?
     @State private var working = false
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("Server") {
-                    TextField("https://…", text: $url).textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.URL)
-                }
-                Section {
-                    Picker("", selection: $register) {
-                        Text("Sign in").tag(false)
-                        Text("Create account").tag(true)
-                    }
-                    .pickerStyle(.segmented)
-                    if register { TextField("Your name", text: $name) }
-                    TextField("Email", text: $email).textInputAutocapitalization(.never).keyboardType(.emailAddress).autocorrectionDisabled()
-                    SecureField("Password (8+ characters)", text: $password)
-                }
-                if let error { Text(error).foregroundStyle(Theme.danger) }
-            }
-            .navigationTitle("Connect")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(working ? "…" : "Connect") {
-                        Task {
-                            working = true
-                            defer { working = false }
-                            do {
-                                try await app.connect(serverURL: url, email: email, password: password, register: register, name: name)
-                                dismiss()
-                            } catch {
-                                self.error = error.localizedDescription
-                            }
-                        }
-                    }
-                    .disabled(email.isEmpty || password.count < 8 || working)
-                }
-            }
-        }
-    }
-}
-
-/// First-run: pick a path, and (for Move mode) a short activity-readiness check.
-public struct OnboardingView: View {
-    @Bindable var app: AppModel
-    @State private var step = 0
-    @State private var name = ""
     @State private var answers: [Bool?]
     @State private var inviteCode = ""
     @State private var error: String?
@@ -166,16 +107,19 @@ public struct OnboardingView: View {
 
     public init(app: AppModel) {
         self.app = app
+        _step = State(initialValue: app.isSignedIn ? .path : .welcome)
         _answers = State(initialValue: Array(repeating: nil, count: Self.questions.count))
     }
 
     public var body: some View {
         VStack(spacing: 20) {
             switch step {
-            case 0: welcome
-            case 1: readiness
-            case 2: linkClinician
-            default: permissions
+            case .welcome: welcome
+            case .account: account
+            case .path: path
+            case .readiness: readiness
+            case .link: linkClinician
+            case .permissions: permissions
             }
         }
         .padding(24)
@@ -189,11 +133,73 @@ public struct OnboardingView: View {
             Text("Move a little, every day.").font(.laileTitle)
             Text("Quick camera-counted sessions and stretches, a coach you can talk to, and — if you're recovering — your clinician's plan, verified.")
                 .foregroundStyle(Theme.muted)
-            TextField("What should I call you?", text: $name)
-                .padding(14).background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
             Spacer()
-            Button("I want quick daily movement") { saveName(); step = 1 }.buttonStyle(PrimaryButtonStyle())
-            Button("I'm recovering with a clinician's plan") { saveName(); step = 2 }.buttonStyle(SecondaryButtonStyle())
+            Button("Get started") { creatingAccount = true; step = .account }.buttonStyle(PrimaryButtonStyle())
+            Button("I already have an account") { creatingAccount = false; step = .account }.buttonStyle(SecondaryButtonStyle())
+        }
+    }
+
+    private var account: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Spacer()
+            Text(creatingAccount ? "Create your account" : "Welcome back").font(.laileTitle)
+            if creatingAccount {
+                field(TextField("What should I call you?", text: $name).textContentType(.givenName))
+            }
+            field(TextField("Email", text: $email)
+                .textContentType(.emailAddress).keyboardType(.emailAddress)
+                .textInputAutocapitalization(.never).autocorrectionDisabled())
+            field(SecureField(creatingAccount ? "Password (8+ characters)" : "Password", text: $password)
+                .textContentType(creatingAccount ? .newPassword : .password))
+            if let error { Text(error).font(.footnote).foregroundStyle(Theme.danger) }
+            Spacer()
+            Button(working ? "One moment…" : (creatingAccount ? "Create account" : "Sign in")) { Task { await submitAccount() } }
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(!accountFormValid || working)
+            Button(creatingAccount ? "I already have an account" : "Create a new account") {
+                creatingAccount.toggle()
+                error = nil
+            }
+            .buttonStyle(SecondaryButtonStyle())
+        }
+    }
+
+    private func field(_ content: some View) -> some View {
+        content.padding(14).background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
+    }
+
+    private var accountFormValid: Bool {
+        email.contains("@") && password.count >= (creatingAccount ? 8 : 1)
+            && (!creatingAccount || !name.trimmingCharacters(in: .whitespaces).isEmpty)
+    }
+
+    private func submitAccount() async {
+        working = true
+        defer { working = false }
+        do {
+            let trimmedEmail = email.trimmingCharacters(in: .whitespaces)
+            if creatingAccount {
+                try await app.register(email: trimmedEmail, password: password, name: name.trimmingCharacters(in: .whitespaces))
+                step = .path
+            } else {
+                try await app.signIn(email: trimmedEmail, password: password)
+                // Returning rehab patients already have their clinician linked.
+                step = app.mode == .rehab ? .permissions : .path
+            }
+            error = nil
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
+    private var path: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Spacer()
+            Text("What brings you here?").font(.laileTitle)
+            Text("You can link a clinician later from the Me tab.").foregroundStyle(Theme.muted)
+            Spacer()
+            Button("I want quick daily movement") { step = .readiness }.buttonStyle(PrimaryButtonStyle())
+            Button("I'm recovering with a clinician's plan") { step = .link }.buttonStyle(SecondaryButtonStyle())
         }
     }
 
@@ -224,7 +230,7 @@ public struct OnboardingView: View {
             let unanswered = answers.filter { $0 == nil }.count
             Button(unanswered == 0 ? "Continue" : "Answer \(unanswered) more") {
                 app.settings.gentleOnly = answers.contains { $0 == true }
-                step = 3
+                step = .permissions
             }
             .buttonStyle(PrimaryButtonStyle(color: unanswered == 0 ? Theme.accent : Theme.muted))
             .disabled(unanswered > 0)
@@ -241,16 +247,15 @@ public struct OnboardingView: View {
                 .textInputAutocapitalization(.characters).autocorrectionDisabled()
                 .font(.title3.monospaced())
                 .padding(14).background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
-            if app.backend.isDemo { Text("Demo code: \(DemoBackend.inviteCode)").font(.footnote).foregroundStyle(Theme.muted) }
             if let error { Text(error).font(.footnote).foregroundStyle(Theme.danger) }
             Spacer()
             Button("Link and continue") {
                 Task {
-                    do { try await app.link(inviteCode: inviteCode); step = 3 } catch { self.error = error.localizedDescription }
+                    do { try await app.link(inviteCode: inviteCode); step = .permissions } catch { self.error = error.localizedDescription }
                 }
             }
             .buttonStyle(PrimaryButtonStyle())
-            Button("I don't have a code yet") { step = 1 }.buttonStyle(SecondaryButtonStyle())
+            Button("I don't have a code yet") { step = .readiness }.buttonStyle(SecondaryButtonStyle())
         }
     }
 
@@ -272,11 +277,6 @@ public struct OnboardingView: View {
             Button("Not now") { finish() }.buttonStyle(SecondaryButtonStyle())
         }
         .foregroundStyle(Theme.text)
-    }
-
-    private func saveName() {
-        let trimmed = name.trimmingCharacters(in: .whitespaces)
-        if !trimmed.isEmpty { (app.backend as? DemoBackend)?.setDisplayName(trimmed) }
     }
 
     private func finish() {

@@ -41,6 +41,9 @@ targets:
         NSMicrophoneUsageDescription: "Talk to your coach mid-exercise — say if something feels tight, sore or wrong."
         NSSpeechRecognitionUsageDescription: "Laile turns what you say during exercise (like \"sharp pain in my knee\") into notes and safety checks."
         ITSAppUsesNonExemptEncryption: false
+        LaileAPIBaseURL: $(LAILE_API_BASE_URL)
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
     settings:
@@ -51,3 +54,10 @@ targets:
         TARGETED_DEVICE_FAMILY: "1,2"
         CODE_SIGN_STYLE: Automatic
         ENABLE_PREVIEWS: YES
+      configs:
+        # The hosted Laile API this build talks to. Debug → local server (Simulator reaches the Mac).
+        Debug:
+          LAILE_API_BASE_URL: http://127.0.0.1:8080
+        # Replace with the deployed Lighthouse domain before archiving for TestFlight.
+        Release:
+          LAILE_API_BASE_URL: https://api.laile.app

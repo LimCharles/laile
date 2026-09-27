@@ -1,14 +1,14 @@
 import Foundation
 import LaileCore
 
-/// Everything the app needs from "the backend". Two implementations:
-/// - `DemoBackend`: fully on-device (same LaileCore engines as the server) — works on
-///   TestFlight with no server, no account, no network.
-/// - `RemoteBackend`: the Vapor API (clinician link, cloud coach, live stream leaderboards).
+/// Everything the app needs from the Laile API. `RemoteBackend` is the implementation; the
+/// protocol exists so previews and tests can stub it.
 @MainActor
 public protocol LaileBackend: AnyObject {
-    var isDemo: Bool { get }
-    var displayName: String { get }
+    var isSignedIn: Bool { get }
+    func signIn(email: String, password: String) async throws -> API.UserProfile
+    func register(email: String, password: String, name: String) async throws -> API.UserProfile
+    func signOut()
 
     func currentUser() async throws -> API.UserProfile
     func rewards() async throws -> RewardsSummary
@@ -21,12 +21,12 @@ public protocol LaileBackend: AnyObject {
     func serverTimeOffset() async -> TimeInterval
     func link(inviteCode: String) async throws -> API.UserProfile
     func markMedicationTaken(_ medicationId: UUID, scheduled: TimeOfDay) async throws
-    /// One conversational turn with the coach (cloud LLM when remote; on-device rules in demo).
+    /// One conversational turn with the coach (Hunyuan + server-side safety rules).
     func coachTurn(_ utterance: String, context: API.VoiceContext) async throws -> API.CoachTurnResponse
-    /// WebSocket URL for a stream's live leaderboard, if the backend supports it.
+    /// WebSocket URL for a stream's live leaderboard.
     func streamSocketURL(_ streamId: UUID) -> URL?
-    /// Natural-sounding speech (MP3) for free-form lines, rendered server-side (ElevenLabs by
-    /// default) so no API key ever ships in the app. Nil = use the on-device voice.
+    /// Natural-sounding speech (MP3) for free-form lines, rendered server-side with ElevenLabs
+    /// so no API key ever ships in the app. Nil = use the on-device voice.
     func speech(_ text: String) async -> Data?
 }
 

@@ -26,7 +26,7 @@ public struct LaileRootView: View {
 
     public var body: some View {
         Group {
-            if app.settings.onboardingComplete {
+            if app.isSignedIn && app.settings.onboardingComplete {
                 tabs
             } else {
                 OnboardingView(app: app)

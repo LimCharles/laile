@@ -57,14 +57,12 @@ public final class SessionViewModel {
     private var conductor: SessionConductor
     private var ticker: Timer?
     private var toastTask: Task<Void, Never>?
-    private var cloudCoach: Bool { app.settings.useCloudCoach && !app.backend.isDemo }
 
     public init(launch: SessionLaunch, app: AppModel) {
         self.launch = launch
         self.app = app
         self.stage = launch.askPain ? .painBefore : .running
-        var config = ConductorConfig(symptomPolicy: launch.policy)
-        config.speaksSymptomResponses = !(app.settings.useCloudCoach && !app.backend.isDemo)
+        let config = ConductorConfig(symptomPolicy: launch.policy)
         let conductor = SessionConductor(plan: launch.plan, kind: launch.kind, title: launch.title, mode: launch.mode, config: config,
                                          startDate: Date(), startTime: PoseClock.now, programId: launch.programId, templateId: launch.templateId)
         self.conductor = conductor
@@ -200,10 +198,10 @@ public final class SessionViewModel {
         heard = text
         guard stage == .running else { return }
 
-        if cloudCoach, let turn = try? await app.backend.coachTurn(text, context: voiceContext) {
+        if let turn = try? await app.backend.coachTurn(text, context: voiceContext) {
             if var report = turn.report {
                 report.source = .voiceLLM
-                handle(conductor.report(report, at: PoseClock.now))
+                handle(conductor.report(report, at: PoseClock.now, speakResponse: false))
                 if case .endSession? = report.action { return } // conductor already spoke the fixed escalation line
             }
             if !turn.reply.isEmpty {
@@ -213,6 +211,7 @@ public final class SessionViewModel {
             return
         }
 
+        // Offline: same rules on-device, and the conductor speaks the fixed responses.
         if MedicationBoundary.isDoseQuestion(text) {
             speaker.say(CueCatalog.medicationReferral)
             caption = MedicationBoundary.referral

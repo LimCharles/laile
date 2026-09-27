@@ -2,16 +2,22 @@ import Foundation
 import LaileCore
 import Security
 
-/// The Vapor API. The bearer token is kept in the Keychain.
+/// The hosted Laile API. The address is fixed at build time (`LaileAPIBaseURL` in Info.plist,
+/// from the `LAILE_API_BASE_URL` build setting); the bearer token is kept in the Keychain.
 @MainActor
 public final class RemoteBackend: LaileBackend {
-    public let isDemo = false
     public let baseURL: URL
-    public var displayName: String { baseURL.host ?? baseURL.absoluteString }
     private var token: String?
+
+    /// The API this build talks to.
+    public nonisolated static var configuredBaseURL: URL {
+        let raw = Bundle.main.object(forInfoDictionaryKey: "LaileAPIBaseURL") as? String ?? ""
+        return URL(string: raw.trimmingCharacters(in: .whitespaces)).flatMap { $0.scheme == nil ? nil : $0 }
+            ?? URL(string: "http://127.0.0.1:8080")!
+    }
     private let session: URLSession
 
-    public init(baseURL: URL, session: URLSession = .shared) {
+    public init(baseURL: URL = RemoteBackend.configuredBaseURL, session: URLSession = .shared) {
         self.baseURL = baseURL
         self.session = session
         self.token = Keychain.read(account: baseURL.absoluteString)

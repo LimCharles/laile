@@ -12,9 +12,8 @@ Packages/LaileKit       iOS feature modules (SwiftUI)
 iOS/                    Thin app target (XcodeGen `project.yml`) → TestFlight
 ```
 
-The server and the phone run **the same** `LaileCore` code, so a rep counted in the demo backend
-is counted exactly the way the server would count it, and the server re-derives PBs, streaks and
-XP from the same engine.
+The server and the phone run **the same** `LaileCore` code: the phone counts reps and applies
+safety rules (also offline); the server re-derives PBs, streaks and XP with the same engines.
 
 ## Modularity
 
@@ -22,8 +21,8 @@ XP from the same engine.
   registered in one list in `configure.swift`.
 - **iOS:** each tab is a `FeatureModule` in its own Swift package target (`TodayFeature`, `StreamsFeature`, …),
   registered in `FeatureRegistry`. Shared pieces: `AppCore` (state + backends), `DesignSystem`, `PoseKit`, `VoiceKit`.
-- **Backends:** `LaileBackend` protocol with `DemoBackend` (fully on-device, for TestFlight without a server)
-  and `RemoteBackend` (Vapor API).
+- **Backend:** one hosted Laile API. The app's address is fixed per build (`LAILE_API_BASE_URL`);
+  `LaileBackend` is a protocol only so previews/tests can stub it. Users never choose or run a server.
 - **Exercises are data:** adding an exercise = one `ExerciseSpec` entry; the conductor, safety checks,
   program drafter and cue catalog pick it up automatically.
 

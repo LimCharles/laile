@@ -21,7 +21,8 @@ final class StreamRoomModel {
     private(set) var segmentHold: Double = 0
     private(set) var totalReps = 0
     private(set) var leaderboard: [LeaderboardEntry] = []
-    private(set) var participants = 1
+    /// Everyone connected to this stream right now, including you (0 until you join).
+    private(set) var participants = 0
     private(set) var latestFrame: PoseFrame?
     private(set) var joined = false
     private(set) var result: API.SessionSubmitResponse?
@@ -114,7 +115,6 @@ final class StreamRoomModel {
         default:
             break
         }
-        if !joined || app.backend.streamSocketURL(stream.id) == nil { simulateLeaderboard() }
     }
 
     private func enterSegment(_ index: Int) {
@@ -215,26 +215,6 @@ final class StreamRoomModel {
     private func sendReps() {
         guard let socket, let data = try? LaileJSON.encoder().encode(StreamSocketMessage.reps(total: totalReps)) else { return }
         socket.send(.string(String(decoding: data, as: UTF8.self))) { _ in }
-    }
-
-    /// Demo mode: a handful of other participants whose totals grow with the stream clock.
-    private func simulateLeaderboard() {
-        let names = ["Wei Ling", "Arun", "Siti", "Marcus", "Hui Min", "Daniel", "Priya", "Jun Jie"]
-        var activeSeconds = 0.0
-        if case .live(let p) = phase {
-            for i in 0..<p.segmentIndex where !stream.segments[i].isRest { activeSeconds += Double(stream.segments[i].durationSeconds) }
-            if !stream.segments[p.segmentIndex].isRest { activeSeconds += p.segmentElapsed }
-        } else if case .ended = phase {
-            activeSeconds = Double(stream.segments.filter { !$0.isRest }.reduce(0) { $0 + $1.durationSeconds })
-        }
-        let seed = abs(stream.id.hashValue % 97)
-        var entries = names.enumerated().map { i, name -> LeaderboardEntry in
-            let rate = 0.28 + Double((seed + i * 13) % 20) / 50
-            return LeaderboardEntry(id: name, displayName: name, verifiedReps: Int(activeSeconds * rate))
-        }
-        if joined { entries.append(LeaderboardEntry(id: "you", displayName: "You", verifiedReps: totalReps, isYou: true)) }
-        leaderboard = entries.sorted { $0.verifiedReps > $1.verifiedReps }
-        participants = entries.count + 23
     }
 
     // MARK: Finish

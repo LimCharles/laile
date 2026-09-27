@@ -63,7 +63,8 @@ Open http://127.0.0.1:8080/portal and sign in as `clinician@laile.demo` (passwor
 `Server/Sources/LaileServer/Features/Seed/DemoSeedFeature.swift`). The fictional demo patient is
 `patient@laile.demo`; the unclaimed invite code is `LAI-DEMO42`.
 
-iOS app (runs fully on-device in demo mode; the Simulator uses a simulated skeleton):
+iOS app — Debug builds talk to the local server at http://127.0.0.1:8080 (start it first); Release builds
+use `LAILE_API_BASE_URL` in `iOS/project.yml`. The Simulator uses a simulated skeleton:
 
 ```bash
 cd iOS && xcodegen generate && open Laile.xcodeproj
@@ -87,7 +88,7 @@ TRTC Conversational AI uses ElevenLabs natively (`TTSType: elevenlabs`), so live
 
 ### TestFlight
 
-1. Set `DEVELOPMENT_TEAM` in `iOS/project.yml`, run `xcodegen generate`.
+1. Set `DEVELOPMENT_TEAM` and the Release `LAILE_API_BASE_URL` (deployed domain) in `iOS/project.yml`, run `xcodegen generate`.
 2. Xcode → Product → Archive → Distribute → App Store Connect.
 3. Add internal testers (up to 100, no review wait).
 
