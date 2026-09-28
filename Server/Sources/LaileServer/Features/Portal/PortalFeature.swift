@@ -9,7 +9,7 @@ struct PortalFeature: LaileFeature {
 
     func boot(_ app: Application) async throws {
         let web = app.grouped("portal").grouped(UserModel.sessionAuthenticator())
-        web.get("login") { req in try await req.view.render("login", LoginContext(error: nil, email: "")) }
+        web.get("login") { req in try await req.view.render("login", LoginContext.make(req, error: nil, email: "")) }
         web.post("login", use: login)
         web.post("logout") { req -> Response in
             req.auth.logout(UserModel.self)
@@ -35,14 +35,28 @@ struct PortalFeature: LaileFeature {
 
     // MARK: - Auth
 
-    struct LoginContext: Encodable { var error: String?; var email: String }
+    struct LoginContext: Encodable {
+        var error: String?
+        var email: String
+        var demoEmail: String?
+        var demoPassword: String?
+
+        static func make(_ req: Request, error: String?, email: String) -> LoginContext {
+            let demo = req.laile.config.seedDemoData
+            return LoginContext(error: error, email: email, demoEmail: demo ? DemoSeed.clinicianEmail : nil,
+                                demoPassword: demo ? DemoSeed.password : nil)
+        }
+    }
     struct LoginForm: Content { var email: String; var password: String }
 
     func login(req: Request) async throws -> Response {
         let form = try req.content.decode(LoginForm.self)
         guard let user = try await UserModel.query(on: req.db).filter(\.$email == form.email.lowercased()).first(),
               try user.verify(password: form.password), user.role == .clinician || user.role == .admin else {
-            return try await req.view.render("login", LoginContext(error: "Email or password is incorrect, or this isn't a clinician account.", email: form.email)).encodeResponse(for: req)
+            return try await req.view.render("login", LoginContext.make(req, error: "Email or password is incorrect, or this isn't a clinician account.", email: form.email)).encodeResponse(for: req)
+        }
+        if req.laile.config.seedDemoData, user.email == DemoSeed.clinicianEmail {
+            try await DemoWorld(app: req.application).cleanupGuests()
         }
         req.auth.login(user)
         return req.redirect(to: "/portal")

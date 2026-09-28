@@ -36,3 +36,6 @@ xcuserdata/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+
+# Server voice cache
+voice-cache/

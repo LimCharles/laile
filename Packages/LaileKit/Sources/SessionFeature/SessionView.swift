@@ -28,7 +28,10 @@ public struct SessionView: View {
                 SessionResultView(model: model, onDone: close)
             }
         }
-        .task { if model.stage == .running { await model.begin() } }
+        .task {
+            model.warmUp()
+            if model.stage == .running { await model.begin() }
+        }
         .onDisappear { model.teardown() }
         .statusBarHidden(model.stage == .running)
         .persistentSystemOverlays(.hidden)

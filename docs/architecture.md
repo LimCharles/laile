@@ -65,8 +65,8 @@ Design rules:
 
 | What | How | Why |
 |---|---|---|
-| Counts, cues, safety lines, exercise intros (~400 lines) | Pre-generated with ElevenLabs (`generate-cues`), bundled | Instant, offline, natural; counts never lag |
-| Free-form coach replies | `/v1/voice/speak` → ElevenLabs Flash (cached) | Natural voice; API key stays on server |
+| Counts, cues, safety lines, exercise intros (286 lines) | In the user's chosen voice: fetched via `/v1/voice/speak` ahead of time (voice selection, session start) and cached on device; optionally bundled with `generate-cues` | Instant once cached; counts never wait on the network (on-device fallback the first time) |
+| Free-form coach replies | `/v1/voice/speak` → ElevenLabs Flash, cached on the server's disk per voice | Natural voice; API key stays on server; each line paid for once |
 | Full-duplex conversation (M3) | TRTC Conversational AI with `TTSType: elevenlabs` | Barge-in, streaming ASR; Tencent stack + ElevenLabs voice |
 | Fallback | Best on-device iOS voice (Premium if installed) | Works with no network |
 

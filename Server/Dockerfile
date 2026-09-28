@@ -18,7 +18,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 WORKDIR /app
 COPY --from=build --chown=vapor:vapor /staging /app
 USER vapor
-ENV SQLITE_PATH=/app/data/laile.sqlite
+ENV SQLITE_PATH=/app/data/laile.sqlite \
+    VOICE_CACHE_DIR=/app/data/voice-cache
 RUN mkdir -p /app/data
 EXPOSE 8080
 ENTRYPOINT ["./LaileServer"]

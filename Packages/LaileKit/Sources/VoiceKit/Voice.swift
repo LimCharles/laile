@@ -17,8 +17,8 @@ public enum VoiceAudioSession {
 }
 
 /// Speaks coaching cues, best voice first:
-/// 1. `Cues/<audioKey>.mp3` in the app bundle — pre-generated (ElevenLabs by default), instant.
-/// 2. `remoteVoice` — live server TTS for lines that can't be pre-generated (LLM replies).
+/// 1. The chosen coach voice's audio from `VoiceStore` — bundled or already fetched — instant.
+/// 2. `remoteVoice` — the server renders the line in that voice (ElevenLabs), then it's cached.
 /// 3. The best on-device voice installed (premium/enhanced if available).
 ///
 /// Counting cues (low priority) are never queued: a count that would play late is dropped,
@@ -27,8 +27,10 @@ public enum VoiceAudioSession {
 public final class CueSpeaker: NSObject {
     public var isEnabled = true
     public var onSpeakingChanged: ((Bool, CueLine.Priority) -> Void)?
-    /// Fetches MP3 audio for arbitrary text (e.g. the server's `/v1/voice/speak`).
-    public var remoteVoice: ((String) async -> Data?)?
+    /// The coach voice the user picked.
+    public var voice: CoachVoice = .default
+    /// Fetches MP3 audio for text in a voice (the server's `/v1/voice/speak`).
+    public var remoteVoice: (@Sendable (String, CoachVoice) async -> Data?)?
     public private(set) var isSpeaking = false
     public private(set) var lastLine: CueLine?
 
@@ -36,12 +38,12 @@ public final class CueSpeaker: NSObject {
     private var player: AVAudioPlayer?
     private var queue: [CueLine] = []
     private var current: CueLine?
-    private let bundle: Bundle
-    private let voice: AVSpeechSynthesisVoice?
+    private let store: VoiceStore
+    private let deviceVoice: AVSpeechSynthesisVoice?
 
-    public init(bundle: Bundle = .main) {
-        self.bundle = bundle
-        self.voice = Self.bestOnDeviceVoice()
+    public init(store: VoiceStore = .shared) {
+        self.store = store
+        self.deviceVoice = Self.bestOnDeviceVoice()
         super.init()
         synthesizer.delegate = self
     }
@@ -59,7 +61,11 @@ public final class CueSpeaker: NSObject {
         } ?? AVSpeechSynthesisVoice(language: "en-GB")
     }
 
-    private var remoteCache: [String: Data] = [:]
+    /// Fetch the lines a session or stream will use, while the user gets ready.
+    public func prefetch(_ lines: [CueLine]) async {
+        guard let remoteVoice else { return }
+        await store.prefetch(lines, voice: voice, fetch: remoteVoice)
+    }
 
     public func say(_ line: CueLine) {
         lastLine = line
@@ -84,28 +90,28 @@ public final class CueSpeaker: NSObject {
     private func play(_ line: CueLine) {
         current = line
         setSpeaking(true, line.priority)
-        if let url = bundle.url(forResource: line.audioKey, withExtension: "mp3", subdirectory: "Cues"),
-           let player = try? AVAudioPlayer(contentsOf: url) {
+        let voice = self.voice
+        if let url = store.url(for: line, voice: voice), let player = try? AVAudioPlayer(contentsOf: url) {
             playAudio(player)
             return
         }
-        if let cached = remoteCache[line.audioKey], let player = try? AVAudioPlayer(data: cached) {
-            playAudio(player)
-            return
-        }
-        // Counts must never lag, so only non-count lines wait for the network.
+        // Counts must never lag: speak them on-device now and fetch the real voice for next time.
         if let remoteVoice, line.priority > .low {
             Task { @MainActor in
-                let data = await remoteVoice(line.text)
+                let data = await remoteVoice(line.text, voice)
+                if let data { self.store.store(data, for: line, voice: voice) }
                 guard self.current == line else { return }
                 if let data, let player = try? AVAudioPlayer(data: data) {
-                    self.remoteCache[line.audioKey] = data
                     self.playAudio(player)
                 } else {
                     self.speakOnDevice(line)
                 }
             }
             return
+        }
+        if let remoteVoice {
+            let store = self.store
+            Task { if let data = await remoteVoice(line.text, voice) { store.store(data, for: line, voice: voice) } }
         }
         speakOnDevice(line)
     }
@@ -118,7 +124,7 @@ public final class CueSpeaker: NSObject {
 
     private func speakOnDevice(_ line: CueLine) {
         let utterance = AVSpeechUtterance(string: line.text)
-        utterance.voice = voice
+        utterance.voice = deviceVoice
         utterance.rate = line.priority == .low ? 0.55 : 0.5
         utterance.preUtteranceDelay = 0
         synthesizer.speak(utterance)

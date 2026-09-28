@@ -146,6 +146,13 @@ struct PatientsFeature: LaileFeature {
         let user = try req.user
         let body = try req.content.decode(API.LinkClinicianRequest.self)
         let code = InviteCode.normalize(body.inviteCode)
+        if code == DemoSeed.inviteCode, req.laile.config.seedDemoData {
+            let profile = try await req.db.transaction { db in try await DemoWorld(app: req.application, db: db).linkWithDemoCode(user: user) }
+            user.role = .patient
+            user.mode = .rehab
+            try await user.save(on: req.db)
+            return try user.profile(clinicianName: profile.clinician.displayName)
+        }
         guard let profile = try await PatientProfileModel.query(on: req.db).filter(\.$inviteCode == code).with(\.$clinician).first() else {
             throw Abort(.notFound, reason: "That invite code wasn't found. Check it with your clinician.")
         }

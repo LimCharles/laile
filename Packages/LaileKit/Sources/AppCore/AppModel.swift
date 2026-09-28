@@ -2,6 +2,7 @@ import Foundation
 import LaileCore
 import Observation
 import SwiftUI
+import VoiceKit
 
 /// User preferences kept in UserDefaults.
 public struct AppSettings: Codable, Equatable {
@@ -11,6 +12,13 @@ public struct AppSettings: Codable, Equatable {
     /// Set when the readiness screen suggested checking with a doctor first.
     public var gentleOnly = false
     public var preferFrontCamera = true
+    /// `CoachVoice` raw value (optional so older saved settings still decode).
+    public var coachVoice: String?
+
+    public var voice: CoachVoice {
+        get { coachVoice.flatMap(CoachVoice.init(rawValue:)) ?? .default }
+        set { coachVoice = newValue.rawValue }
+    }
 
     public init() {}
 
@@ -143,6 +151,27 @@ public final class AppModel {
         user = try await backend.register(email: email, password: password, name: name)
         isSignedIn = true
         await refresh()
+    }
+
+    public func startDemo(_ persona: API.DemoPersona) async throws {
+        user = try await backend.startDemo(persona)
+        isSignedIn = true
+        settings.gentleOnly = false
+        await refresh()
+    }
+
+    /// Fresh demo data: a brand-new demo account of the same kind.
+    public func restartDemo() async throws {
+        try await startDemo(mode == .rehab ? .patient : .mover)
+    }
+
+    /// Fetches the everyday lines for the chosen voice in the background.
+    public func warmUpVoice() {
+        let backend = self.backend
+        let voice = settings.voice
+        Task.detached(priority: .utility) {
+            await VoiceStore.shared.prefetch(CueCatalog.core(), voice: voice, fetch: { text, voice in await backend.speech(text, voice: voice) })
+        }
     }
 
     public func signOut() {

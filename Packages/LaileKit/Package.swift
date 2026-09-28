@@ -16,14 +16,14 @@ let package = Package(
     ],
     targets: [
         .target(name: "DesignSystem", dependencies: ["LaileCore"], swiftSettings: v5),
-        .target(name: "AppCore", dependencies: ["LaileCore"], swiftSettings: v5),
+        .target(name: "AppCore", dependencies: ["LaileCore", "VoiceKit"], swiftSettings: v5),
         .target(name: "PoseKit", dependencies: ["LaileCore", "DesignSystem"], swiftSettings: v5),
         .target(name: "VoiceKit", dependencies: ["LaileCore"], swiftSettings: v5),
         .target(name: "SessionFeature", dependencies: ["LaileCore", "DesignSystem", "AppCore", "PoseKit", "VoiceKit"], swiftSettings: v5),
         .target(name: "TodayFeature", dependencies: ["LaileCore", "DesignSystem", "AppCore"], swiftSettings: v5),
         .target(name: "StreamsFeature", dependencies: ["LaileCore", "DesignSystem", "AppCore", "PoseKit", "VoiceKit"], swiftSettings: v5),
         .target(name: "ProgressFeature", dependencies: ["LaileCore", "DesignSystem", "AppCore"], swiftSettings: v5),
-        .target(name: "ProfileFeature", dependencies: ["LaileCore", "DesignSystem", "AppCore"], swiftSettings: v5),
+        .target(name: "ProfileFeature", dependencies: ["LaileCore", "DesignSystem", "AppCore", "VoiceKit"], swiftSettings: v5),
         .target(
             name: "AppShell",
             dependencies: ["LaileCore", "DesignSystem", "AppCore", "SessionFeature", "TodayFeature", "StreamsFeature", "ProgressFeature", "ProfileFeature"],

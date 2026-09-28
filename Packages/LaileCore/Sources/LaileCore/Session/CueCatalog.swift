@@ -59,13 +59,64 @@ public enum CueCatalog {
 
     public static let medicationReferral = CueLine(MedicationBoundary.referral, key: "med.referral", priority: .high)
 
+    // MARK: Subsets for fetching a voice on demand
+
+    /// Lines almost every session uses: counts, holds, rests, safety responses, setup guidance.
+    public static func core(emergencyNumber: String = "995") -> [CueLine] {
+        var lines: [CueLine] = (0...30).map(CueLine.count)
+        lines += [.go, .holdIt, .relax, .niceWork, .rest, .sessionDone, .cantSee, .paused, further, medicationReferral, CoachVoice.sampleLine]
+        lines += SymptomResponses.all + [SymptomResponses.emergency(number: emergencyNumber)]
+        lines += [SetupIssue.noPerson, .tooClose, .tooFar, .offCenter, .needSideView, .needFrontView].map(\.guidance)
+        return unique(lines)
+    }
+
+    /// Everything a particular session might say, so it can be fetched while the user gets ready.
+    public static func lines(for plan: [PlannedExercise]) -> [CueLine] {
+        var lines = core()
+        let maxCount = plan.compactMap { $0.dose.reps }.max() ?? 0
+        if maxCount > 30 { lines += (31...min(maxCount, 60)).map(CueLine.count) }
+        var previousPosture: Posture?
+        for (i, planned) in plan.enumerated() {
+            let spec = planned.spec
+            lines += [intro(spec, first: i == 0), setup(spec, withCameraTip: previousPosture != spec.posture), go(spec)]
+            lines += spec.formChecks.map(form)
+            lines += spec.requiredParts.map { missing([$0]) } + [missing([.hip, .knee])]
+            if case .hold(let rule) = spec.kind, let text = rule.correction { lines.append(correction(text)) }
+            if let hold = planned.dose.holdSeconds, hold > 30 {
+                lines += stride(from: 35, through: hold, by: 5).map(seconds)
+            }
+            if planned.dose.restSeconds > 10 { lines.append(rest(seconds: planned.dose.restSeconds)) }
+            previousPosture = spec.posture
+        }
+        return unique(lines)
+    }
+
+    public static func lines(for stream: StreamEvent, library: ExerciseLibrary = .standard) -> [CueLine] {
+        var lines = core() + [streamWelcome]
+        for (i, segment) in stream.segments.enumerated() {
+            if segment.isRest {
+                let next = stream.segments.dropFirst(i + 1).first.flatMap { library.spec($0.exerciseId) }
+                lines.append(streamRest(next: next))
+            } else if let spec = library.spec(segment.exerciseId) {
+                lines.append(streamSegment(spec, seconds: segment.durationSeconds, coachLine: segment.coachLine))
+            }
+        }
+        return unique(lines)
+    }
+
+    static func unique(_ lines: [CueLine]) -> [CueLine] {
+        var seen = Set<String>()
+        return lines.filter { seen.insert($0.audioKey).inserted }
+    }
+
     // MARK: Everything
 
     /// All pre-generatable lines, de-duplicated by audio key.
     public static func all(library: ExerciseLibrary = .standard, emergencyNumber: String = "995") -> [CueLine] {
         var lines: [CueLine] = []
         lines += (0...60).map(CueLine.count)
-        lines += [.go, .holdIt, .relax, .niceWork, .rest, .sessionDone, .cantSee, .paused, further, streamWelcome, medicationReferral]
+        lines += [.go, .holdIt, .relax, .niceWork, .rest, .sessionDone, .cantSee, .paused, further, streamWelcome, medicationReferral,
+                  CoachVoice.sampleLine]
         lines += SymptomResponses.all + [SymptomResponses.emergency(number: emergencyNumber)]
         lines += [SetupIssue.noPerson, .tooClose, .tooFar, .offCenter, .needSideView, .needFrontView].map(\.guidance)
         lines += BodyPart.allCases.map { missing([$0]) } + [missing([.hip, .knee])]
@@ -86,8 +137,7 @@ public enum CueCatalog {
                 }
             }
         }
-        var seen = Set<String>()
-        return lines.filter { seen.insert($0.audioKey).inserted }
+        return unique(lines)
     }
 
     /// 64-bit FNV-1a, hex. Stable across platforms and runs (unlike `hashValue`).

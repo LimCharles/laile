@@ -15,6 +15,8 @@ struct MeView: View {
     @State private var inviteCode = ""
     @State private var linkError: String?
     @State private var linking = false
+    @State private var restartingDemo = false
+    @State private var demoError: String?
 
     var body: some View {
         NavigationStack {
@@ -54,6 +56,26 @@ struct MeView: View {
                         LabeledContent("Clinician", value: app.user?.clinicianName ?? "—")
                     }
                 }
+
+                if app.user?.isDemo == true {
+                    Section {
+                        Button(restartingDemo ? "Starting fresh…" : "Restart demo with fresh data") {
+                            Task {
+                                restartingDemo = true
+                                defer { restartingDemo = false }
+                                do { try await app.restartDemo(); demoError = nil } catch { demoError = error.localizedDescription }
+                            }
+                        }
+                        .disabled(restartingDemo)
+                        if let demoError { Text(demoError).font(.footnote).foregroundStyle(Theme.danger) }
+                    } header: {
+                        Text("Demo account")
+                    } footer: {
+                        Text("This is a demo account with sample history. Restarting gives you a brand-new one, so the demo always starts the same way.")
+                    }
+                }
+
+                VoicePickerSection(app: app)
 
                 Section("Coach") {
                     Toggle("Speak cues and counts", isOn: $app.settings.speakCues)
@@ -136,7 +158,47 @@ public struct OnboardingView: View {
             Spacer()
             Button("Get started") { creatingAccount = true; step = .account }.buttonStyle(PrimaryButtonStyle())
             Button("I already have an account") { creatingAccount = false; step = .account }.buttonStyle(SecondaryButtonStyle())
+            demoButtons
         }
+    }
+
+    /// One tap into a ready-made account with two weeks of history. Fresh every time.
+    private var demoButtons: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Just looking? Try a demo account").font(.footnote.weight(.semibold)).foregroundStyle(Theme.muted)
+            HStack(spacing: 10) {
+                demoButton("Knee rehab", systemImage: "cross.case.fill", persona: .patient)
+                demoButton("Daily mover", systemImage: "figure.run", persona: .mover)
+            }
+            if let error, step == .welcome { Text(error).font(.footnote).foregroundStyle(Theme.danger) }
+        }
+        .padding(.top, 6)
+    }
+
+    private func demoButton(_ title: String, systemImage: String, persona: API.DemoPersona) -> some View {
+        Button {
+            Task {
+                working = true
+                defer { working = false }
+                do {
+                    try await app.startDemo(persona)
+                    error = nil
+                    if Permissions.current.all { finish() } else { step = .permissions }
+                } catch {
+                    self.error = error.localizedDescription
+                }
+            }
+        } label: {
+            Label(title, systemImage: systemImage)
+                .font(.subheadline.weight(.semibold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 12))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.surface2, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(Theme.accent)
+        .disabled(working)
     }
 
     private var account: some View {
@@ -281,6 +343,7 @@ public struct OnboardingView: View {
 
     private func finish() {
         app.settings.onboardingComplete = true
+        app.warmUpVoice()
         Task { await app.refresh() }
     }
 }

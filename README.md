@@ -59,9 +59,16 @@ Server + clinician portal (SQLite and demo data, no keys needed):
 cd Server && swift run LaileServer serve --hostname 127.0.0.1 --port 8080
 ```
 
-Open http://127.0.0.1:8080/portal and sign in as `clinician@laile.demo` (password in
-`Server/Sources/LaileServer/Features/Seed/DemoSeedFeature.swift`). The fictional demo patient is
-`patient@laile.demo`; the unclaimed invite code is `LAI-DEMO42`.
+Open http://127.0.0.1:8080/portal — the login page shows the demo clinician's credentials.
+
+### Demo accounts (`SEED_DEMO_DATA=true`; keep it on for the hackathon deployment)
+
+- **App → "Try a demo account"** (Knee rehab / Daily mover): a brand-new account with two weeks of
+  history on every tap, so each demo starts identically and simultaneous testers don't clash.
+  Me → "Restart demo with fresh data" swaps in a new one. Guests are deleted after 12 hours.
+- **Fixed logins** `patient@laile.demo` / `mover@laile.demo` reset to the seeded story on every sign-in.
+- **`clinician@laile.demo`** (portal) sees the fixed patient plus every "Mdm Tan (demo guest HH:mm)".
+- **Invite code `LAI-DEMO42`** works for anyone, any number of times (each gets their own record).
 
 iOS app — Debug builds talk to the local server at http://127.0.0.1:8080 (start it first); Release builds
 use `LAILE_API_BASE_URL` in `iOS/project.yml`. The Simulator uses a simulated skeleton:
@@ -78,13 +85,16 @@ cd Packages/LaileCore && swift test && cd ../../Server && swift test
 
 ### Voice
 
-Set `ELEVENLABS_API_KEY` (see `Server/.env.example`), then render every fixed coaching line into the app:
+Set `ELEVENLABS_API_KEY` in `Server/.env`. Users pick their coach voice (Sarah, Jessica, Matilda, Chris —
+ElevenLabs built-in voices, usable on every plan) in Me → Coach voice. The app downloads a voice's everyday
+lines when it's chosen and each session's lines while the user gets ready; the server caches every render
+(`VOICE_CACHE_DIR`), so each line costs credits once per voice. Optionally bundle a voice into the app:
 
 ```bash
-cd Server && swift run LaileServer generate-cues --output ../iOS/Laile/Resources/Cues
+cd Server && swift run LaileServer generate-cues --voice sarah
 ```
 
-TRTC Conversational AI uses ElevenLabs natively (`TTSType: elevenlabs`), so live calls get the same voice.
+TRTC Conversational AI uses ElevenLabs natively (`TTSType: elevenlabs`) with the user's chosen voice.
 
 ### TestFlight
 

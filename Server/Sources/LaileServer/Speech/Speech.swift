@@ -3,10 +3,10 @@ import Foundation
 import LaileCore
 import Vapor
 
-/// Which voice the coach uses. Configured with environment variables; see `.env.example`.
+/// How the coach speaks. Configured with environment variables; see `.env.example`.
 ///
-/// - `elevenlabs` (default): the coach's voice. Used for pre-generated cues, for live replies via
-///   `/v1/voice/speak`, and — natively — as the TTS inside TRTC Conversational AI.
+/// - `elevenlabs` (default): users pick one of the `CoachVoice` voices. Used for pre-generated cues,
+///   for `/v1/voice/speak`, and — natively — as the TTS inside TRTC Conversational AI.
 /// - `tencent`: fallback — Tencent Cloud TTS for cues; TRTC's built-in "flow" voices for live calls.
 struct SpeechConfig: Sendable {
     enum Provider: String, Sendable { case elevenlabs, tencent }
@@ -14,7 +14,6 @@ struct SpeechConfig: Sendable {
     var provider: Provider
     // ElevenLabs
     var elevenLabsKey: String?
-    var elevenLabsVoiceId: String
     /// Model for pre-generated cues (quality first).
     var elevenLabsModel: String
     /// Model for live replies (latency first).
@@ -22,6 +21,8 @@ struct SpeechConfig: Sendable {
     // Tencent
     var tencentVoiceType: Int
     var trtcFlowVoiceId: String
+    /// Rendered audio is kept here so each line costs credits once per voice, ever.
+    var cacheDirectory: String
 
     static func fromEnvironment() -> SpeechConfig? {
         func value(_ key: String) -> String? {
@@ -36,20 +37,20 @@ struct SpeechConfig: Sendable {
         return SpeechConfig(
             provider: provider,
             elevenLabsKey: eleven,
-            elevenLabsVoiceId: value("ELEVENLABS_VOICE_ID") ?? "21m00Tcm4TlvDq8ikWAM",
             elevenLabsModel: value("ELEVENLABS_MODEL") ?? "eleven_multilingual_v2",
             elevenLabsLiveModel: value("ELEVENLABS_LIVE_MODEL") ?? "eleven_flash_v2_5",
             tencentVoiceType: value("TENCENT_TTS_VOICE_TYPE").flatMap(Int.init) ?? 601005,
-            trtcFlowVoiceId: value("TRTC_FLOW_VOICE_ID") ?? "v-female-R2s4N9qJ"
+            trtcFlowVoiceId: value("TRTC_FLOW_VOICE_ID") ?? "v-female-R2s4N9qJ",
+            cacheDirectory: value("VOICE_CACHE_DIR") ?? "voice-cache"
         )
     }
 
     /// TTSConfig for TRTC Conversational AI. ElevenLabs is a native TRTC TTS provider, so the
-    /// live agent speaks with the same voice as the pre-generated cues.
-    var trtcTTSConfigJSON: String {
+    /// live agent speaks with the same voice the user picked for their cues.
+    func trtcTTSConfigJSON(voice: CoachVoice) -> String {
         let object: [String: Any]
         if provider == .elevenlabs, let key = elevenLabsKey {
-            object = ["TTSType": "elevenlabs", "Model": elevenLabsLiveModel, "APIKey": key, "VoiceId": elevenLabsVoiceId]
+            object = ["TTSType": "elevenlabs", "Model": elevenLabsLiveModel, "APIKey": key, "VoiceId": voice.elevenLabsVoiceId]
         } else {
             // No ElevenLabs key: fall back to TRTC's built-in voices.
             object = ["TTSType": "flow", "Model": "flow_01_turbo", "VoiceId": trtcFlowVoiceId, "Language": "en", "Speed": 1.0]
@@ -61,8 +62,10 @@ struct SpeechConfig: Sendable {
 
 protocol SpeechSynthesizer: Sendable {
     var name: String { get }
+    /// Folder name for cached audio, so different voices/models never mix.
+    func cacheNamespace(voice: CoachVoice, live: Bool) -> String
     /// MP3 audio. `live` trades a little quality for latency.
-    func synthesize(_ text: String, live: Bool) async throws -> Data
+    func synthesize(_ text: String, voice: CoachVoice, live: Bool) async throws -> Data
 }
 
 struct SpeechError: Error, CustomStringConvertible {
@@ -71,7 +74,6 @@ struct SpeechError: Error, CustomStringConvertible {
 
 struct ElevenLabsSynthesizer: SpeechSynthesizer {
     let apiKey: String
-    let voiceId: String
     let model: String
     let liveModel: String
     let client: any Client
@@ -85,11 +87,13 @@ struct ElevenLabsSynthesizer: SpeechSynthesizer {
         var voice_settings: VoiceSettings
     }
 
-    func synthesize(_ text: String, live: Bool) async throws -> Data {
+    func cacheNamespace(voice: CoachVoice, live: Bool) -> String { "elevenlabs-\(live ? liveModel : model)-\(voice.rawValue)" }
+
+    func synthesize(_ text: String, voice: CoachVoice, live: Bool) async throws -> Data {
         var headers = HTTPHeaders()
         headers.add(name: "xi-api-key", value: apiKey)
         headers.add(name: .accept, value: "audio/mpeg")
-        let url = URI(string: "https://api.elevenlabs.io/v1/text-to-speech/\(voiceId)?output_format=mp3_44100_128")
+        let url = URI(string: "https://api.elevenlabs.io/v1/text-to-speech/\(voice.elevenLabsVoiceId)?output_format=mp3_44100_128")
         let body = Body(text: text, model_id: live ? liveModel : model, voice_settings: .init(stability: 0.5, similarity_boost: 0.8))
         let response = try await client.post(url, headers: headers) { req in try req.content.encode(body, using: JSONEncoder()) }
         guard response.status == .ok, let buffer = response.body else {
@@ -119,7 +123,10 @@ struct TencentSynthesizer: SpeechSynthesizer {
         var Speed: Double
     }
 
-    func synthesize(_ text: String, live: Bool) async throws -> Data {
+    /// Tencent has its own voices, so every coach voice maps to the configured one.
+    func cacheNamespace(voice: CoachVoice, live: Bool) -> String { "tencent-\(voiceType)" }
+
+    func synthesize(_ text: String, voice: CoachVoice, live: Bool) async throws -> Data {
         let body = TextToVoiceRequest(Text: text, SessionId: UUID().uuidString, VoiceType: voiceType, Codec: "mp3",
                                       SampleRate: 16_000, PrimaryLanguage: 2, ModelType: 1, Speed: 0)
         let response = try await cloud.call(service: "tts", host: host, action: "TextToVoice", version: "2019-08-23", body: body)
@@ -136,8 +143,7 @@ enum SpeechFactory {
         switch config.provider {
         case .elevenlabs:
             guard let key = config.elevenLabsKey else { return nil }
-            return ElevenLabsSynthesizer(apiKey: key, voiceId: config.elevenLabsVoiceId, model: config.elevenLabsModel,
-                                         liveModel: config.elevenLabsLiveModel, client: client)
+            return ElevenLabsSynthesizer(apiKey: key, model: config.elevenLabsModel, liveModel: config.elevenLabsLiveModel, client: client)
         case .tencent:
             guard let tencent else { return nil }
             return TencentSynthesizer(cloud: TencentCloudClient(credentials: tencent, client: client), voiceType: config.tencentVoiceType)
@@ -145,23 +151,38 @@ enum SpeechFactory {
     }
 }
 
-/// Small in-memory cache so repeated live lines ("Okay, noted. Keep going.") cost nothing.
+/// Disk cache of rendered speech: `<dir>/<namespace>/<audioKey>.mp3`. Shared by every user, so a
+/// line is rendered once per voice no matter how many people hear it.
 actor SpeechCache {
-    private var entries: [String: Data] = [:]
-    private var order: [String] = []
-    private let limit = 200
+    let directory: URL
 
-    func get(_ key: String) -> Data? { entries[key] }
-
-    func put(_ key: String, _ data: Data) {
-        if entries[key] == nil { order.append(key) }
-        entries[key] = data
-        while order.count > limit { entries[order.removeFirst()] = nil }
+    init(directory: String) {
+        self.directory = URL(fileURLWithPath: directory, isDirectory: true)
     }
-}
 
-struct SpeakRequest: Content {
-    var text: String
+    private func file(_ namespace: String, _ key: String) -> URL {
+        directory.appendingPathComponent(namespace, isDirectory: true).appendingPathComponent("\(key).mp3")
+    }
+
+    func get(namespace: String, key: String) -> Data? {
+        try? Data(contentsOf: file(namespace, key))
+    }
+
+    func put(namespace: String, key: String, _ data: Data) {
+        let url = file(namespace, key)
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? data.write(to: url, options: .atomic)
+    }
+
+    /// Cached audio, or render + cache it.
+    func audio(for text: String, voice: CoachVoice, live: Bool, using synth: any SpeechSynthesizer) async throws -> Data {
+        let namespace = synth.cacheNamespace(voice: voice, live: live)
+        let key = CueLine(text).audioKey
+        if let cached = get(namespace: namespace, key: key) { return cached }
+        let data = try await synth.synthesize(text, voice: voice, live: live)
+        put(namespace: namespace, key: key, data)
+        return data
+    }
 }
 
 struct SpeechFeature: LaileFeature {
@@ -173,16 +194,10 @@ struct SpeechFeature: LaileFeature {
             guard let synth = req.laile.speech else {
                 throw Abort(.serviceUnavailable, reason: "No TTS provider configured; the app will use its on-device voice.")
             }
-            let text = try req.content.decode(SpeakRequest.self).text.trimmingCharacters(in: .whitespacesAndNewlines)
+            let body = try req.content.decode(API.SpeakRequest.self)
+            let text = body.text.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !text.isEmpty, text.count <= 600 else { throw Abort(.badRequest, reason: "Text must be 1–600 characters.") }
-            let key = CueLine(text).audioKey
-            let audio: Data
-            if let cached = await req.laile.speechCache.get(key) {
-                audio = cached
-            } else {
-                audio = try await synth.synthesize(text, live: true)
-                await req.laile.speechCache.put(key, audio)
-            }
+            let audio = try await req.laile.speechCache.audio(for: text, voice: body.voice ?? .default, live: true, using: synth)
             var headers = HTTPHeaders()
             headers.contentType = HTTPMediaType(type: "audio", subType: "mpeg")
             headers.add(name: .cacheControl, value: "private, max-age=86400")
@@ -191,13 +206,16 @@ struct SpeechFeature: LaileFeature {
     }
 }
 
-/// `swift run LaileServer generate-cues --output <dir>` — renders every line in `CueCatalog`
-/// with the ElevenLabs voice into `<audioKey>.mp3` files plus a
-/// manifest, for bundling in the iOS app. Existing files are skipped unless `--force`.
+/// `swift run LaileServer generate-cues --voice sarah` — renders every line in `CueCatalog` into
+/// `<output>/<voice>/<audioKey>.mp3` plus a manifest, for bundling in the iOS app. Voices that
+/// aren't bundled are fetched on demand by the app instead. Existing files are skipped unless `--force`.
 struct GenerateCuesCommand: AsyncCommand {
     struct Signature: CommandSignature {
-        @Option(name: "output", help: "Directory for <audioKey>.mp3 files (default ../iOS/Laile/Resources/Cues)")
+        @Option(name: "output", help: "Cues directory (default ../iOS/Laile/Resources/Cues)")
         var output: String?
+
+        @Option(name: "voice", help: "sarah, jessica, matilda, chris, or all (default: sarah)")
+        var voice: String?
 
         @Flag(name: "force", help: "Re-render files that already exist")
         var force: Bool
@@ -214,36 +232,53 @@ struct GenerateCuesCommand: AsyncCommand {
             context.console.error("No voice configured. Set ELEVENLABS_API_KEY (or Tencent Cloud credentials for the fallback voice).")
             return
         }
-        let output = URL(fileURLWithPath: signature.output ?? "../iOS/Laile/Resources/Cues")
-        try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
-        let lines = CueCatalog.all(emergencyNumber: app.laile.config.emergencyNumber)
-        context.console.print("Rendering \(lines.count) lines with \(synth.name) → \(output.path)")
-
-        var manifest: [String: [String: String]] = [:]
-        var rendered = 0, skipped = 0
-        for line in lines {
-            manifest[line.audioKey] = ["text": line.text, "label": line.key ?? ""]
-            let file = output.appendingPathComponent("\(line.audioKey).mp3")
-            if !signature.force && FileManager.default.fileExists(atPath: file.path) {
-                skipped += 1
-                continue
+        let voices: [CoachVoice]
+        switch signature.voice?.lowercased() {
+        case nil: voices = [.default]
+        case "all": voices = CoachVoice.allCases
+        case let name?:
+            guard let voice = CoachVoice(rawValue: name) else {
+                context.console.error("Unknown voice \(name). Choose: \(CoachVoice.allCases.map(\.rawValue).joined(separator: ", ")), or all.")
+                return
             }
-            do {
-                let audio = try await synth.synthesize(line.text, live: false)
-                try audio.write(to: file)
-                rendered += 1
-                context.console.print("✓ \(line.text.prefix(70))")
-            } catch {
-                context.console.error("✗ \(line.text.prefix(50)): \(error)")
-            }
+            voices = [voice]
         }
-        let manifestData = try JSONSerialization.data(withJSONObject: ["voice": synth.name, "lines": manifest], options: [.prettyPrinted, .sortedKeys])
-        try manifestData.write(to: output.appendingPathComponent("manifest.json"))
-
-        if signature.prune {
-            let keep = Set(lines.map { "\($0.audioKey).mp3" })
-            for file in (try? FileManager.default.contentsOfDirectory(atPath: output.path)) ?? [] where file.hasSuffix(".mp3") && !keep.contains(file) {
-                try? FileManager.default.removeItem(at: output.appendingPathComponent(file))
+        let root = URL(fileURLWithPath: signature.output ?? "../iOS/Laile/Resources/Cues")
+        let lines = CueCatalog.all(emergencyNumber: app.laile.config.emergencyNumber)
+        var rendered = 0, skipped = 0
+        for voice in voices {
+            let output = root.appendingPathComponent(voice.rawValue, isDirectory: true)
+            try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+            context.console.print("Rendering \(lines.count) lines in \(voice.displayName)'s voice with \(synth.name) → \(output.path)")
+            var manifest: [String: [String: String]] = [:]
+            for line in lines {
+                manifest[line.audioKey] = ["text": line.text, "label": line.key ?? ""]
+                let file = output.appendingPathComponent("\(line.audioKey).mp3")
+                if !signature.force && FileManager.default.fileExists(atPath: file.path) {
+                    skipped += 1
+                    continue
+                }
+                do {
+                    let audio = try await synth.synthesize(line.text, voice: voice, live: false)
+                    try audio.write(to: file)
+                    rendered += 1
+                    context.console.print("✓ \(line.text.prefix(70))")
+                } catch {
+                    context.console.error("✗ \(line.text.prefix(50)): \(error)")
+                    if "\(error)".contains("quota") || "\(error)".contains("402") {
+                        context.console.error("Stopping: out of ElevenLabs credits (or plan limit). Re-run later; finished lines are kept.")
+                        return
+                    }
+                }
+            }
+            let manifestData = try JSONSerialization.data(withJSONObject: ["voice": voice.rawValue, "engine": synth.name, "lines": manifest],
+                                                          options: [.prettyPrinted, .sortedKeys])
+            try manifestData.write(to: output.appendingPathComponent("manifest.json"))
+            if signature.prune {
+                let keep = Set(lines.map { "\($0.audioKey).mp3" })
+                for file in (try? FileManager.default.contentsOfDirectory(atPath: output.path)) ?? [] where file.hasSuffix(".mp3") && !keep.contains(file) {
+                    try? FileManager.default.removeItem(at: output.appendingPathComponent(file))
+                }
             }
         }
         context.console.success("Done: \(rendered) rendered, \(skipped) already present.")

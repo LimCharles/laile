@@ -19,7 +19,7 @@ func makeFeatures() -> [any LaileFeature] {
         VoiceFeature(),
         SpeechFeature(),
         PortalFeature(),
-        DemoSeedFeature(),
+        DemoFeature(),
     ]
 }
 

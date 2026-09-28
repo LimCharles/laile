@@ -39,7 +39,10 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
   into the app bundle → instant, offline, natural voice
 - ✅ `/v1/voice/speak` — server-side TTS for free-form LLM replies (keys never ship in the app)
 - ✅ TRTC Conversational AI session start with **ElevenLabs as the native TRTC TTS provider**
-- ⬜ Get ElevenLabs key → run `generate-cues`, pick the voice
+- ✅ ElevenLabs key working; users choose between 4 built-in voices (Me → Coach voice) with previews
+- ✅ Voices download on demand (everyday lines on selection, each session's lines while getting ready);
+  server disk cache so each line is paid for once per voice
+- ⬜ Optional: `generate-cues --voice sarah` to bundle the default voice (needs ~14k credits)
 - ⬜ Add TRTC iOS SDK (`TXLiteAVSDK_TRTC`) → enable `TRTCVoiceLink` for full-duplex barge-in voice
 
 ## M4 — Clinician side ✅
@@ -60,6 +63,11 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
 - ✅ Rehab precautions lock out unsuitable streams; practice stream that starts immediately
 - ✅ Clinicians/coaches schedule streams in the portal
 - ⬜ Host video: TRTC live broadcast (or pre-recorded premiere video) in the host panel
+
+## M5.5 — Demo accounts ✅
+
+- ✅ "Try a demo account" (Knee rehab / Daily mover): fresh seeded guest per tap, auto-cleanup after 12h
+- ✅ Fixed demo logins reset on sign-in; reusable demo invite code; demo creds on the portal login page
 
 ## M6 — Ship it ⬜ (target 8 Oct)
 

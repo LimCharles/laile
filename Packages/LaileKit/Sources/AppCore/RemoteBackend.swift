@@ -39,6 +39,14 @@ public final class RemoteBackend: LaileBackend {
         return auth.user
     }
 
+    public func startDemo(_ persona: API.DemoPersona) async throws -> API.UserProfile {
+        let auth: API.AuthResponse = try await send("POST", "v1/demo/sessions",
+                                                    body: API.DemoStartRequest(persona: persona, timeZone: TimeZone.current.identifier),
+                                                    authorized: token != nil)
+        setToken(auth.token)
+        return auth.user
+    }
+
     public func signOut() { setToken(nil) }
 
     private func setToken(_ value: String?) {
@@ -82,18 +90,20 @@ public final class RemoteBackend: LaileBackend {
         return components.url
     }
 
-    public func speech(_ text: String) async -> Data? {
-        guard let token else { return nil }
+    public nonisolated func speech(_ text: String, voice: CoachVoice) async -> Data? {
+        guard let token = await currentToken() else { return nil }
         var request = URLRequest(url: baseURL.appendingPathComponent("v1/voice/speak"))
         request.httpMethod = "POST"
-        request.timeoutInterval = 8
+        request.timeoutInterval = 15
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.httpBody = try? JSONEncoder().encode(["text": text])
+        request.httpBody = try? JSONEncoder().encode(API.SpeakRequest(text: text, voice: voice))
         guard let (data, response) = try? await session.data(for: request),
               (response as? HTTPURLResponse)?.statusCode == 200, !data.isEmpty else { return nil }
         return data
     }
+
+    private func currentToken() -> String? { token }
 
     // MARK: HTTP
 

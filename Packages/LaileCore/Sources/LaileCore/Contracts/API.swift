@@ -14,8 +14,11 @@ public enum API {
         public var mode: AppMode
         public var timeZone: String
         public var clinicianName: String?
+        /// Demo account: data resets whenever the demo is started or the account signs in.
+        public var isDemo: Bool
 
-        public init(id: UUID, email: String, displayName: String, role: UserRole, mode: AppMode, timeZone: String, clinicianName: String? = nil) {
+        public init(id: UUID, email: String, displayName: String, role: UserRole, mode: AppMode, timeZone: String,
+                    clinicianName: String? = nil, isDemo: Bool = false) {
             self.id = id
             self.email = email
             self.displayName = displayName
@@ -23,7 +26,21 @@ public enum API {
             self.mode = mode
             self.timeZone = timeZone
             self.clinicianName = clinicianName
+            self.isDemo = isDemo
         }
+    }
+
+    public enum DemoPersona: String, Codable, Sendable, CaseIterable {
+        /// Knee-replacement patient, linked to the demo clinician, two weeks into rehab.
+        case patient
+        /// Everyday Move-mode user with a week of quick sessions.
+        case mover
+    }
+
+    public struct DemoStartRequest: Codable, Sendable {
+        public var persona: DemoPersona
+        public var timeZone: String
+        public init(persona: DemoPersona, timeZone: String) { self.persona = persona; self.timeZone = timeZone }
     }
 
     public struct LoginRequest: Codable, Sendable {
@@ -120,7 +137,17 @@ public enum API {
     public struct VoiceSessionRequest: Codable, Sendable {
         public var language: String
         public var context: VoiceContext
-        public init(language: String, context: VoiceContext) { self.language = language; self.context = context }
+        public var voice: CoachVoice?
+        public init(language: String, context: VoiceContext, voice: CoachVoice? = nil) {
+            self.language = language; self.context = context; self.voice = voice
+        }
+    }
+
+    /// Text to speak in one of the coach voices (server-side ElevenLabs).
+    public struct SpeakRequest: Codable, Sendable {
+        public var text: String
+        public var voice: CoachVoice?
+        public init(text: String, voice: CoachVoice? = nil) { self.text = text; self.voice = voice }
     }
 
     /// Everything the phone needs to join the TRTC room the voice agent is in.

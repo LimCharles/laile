@@ -65,6 +65,12 @@ final class StreamRoomModel {
     // MARK: Lifecycle
 
     func open() {
+        let backend = app.backend
+        speaker.voice = app.settings.voice
+        speaker.remoteVoice = { text, voice in await backend.speech(text, voice: voice) }
+        let lines = CueCatalog.lines(for: stream)
+        let speaker = self.speaker
+        Task { await speaker.prefetch(lines) }
         timer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.tick() }
         }
@@ -77,8 +83,6 @@ final class StreamRoomModel {
         joinedAt = Date()
         VoiceAudioSession.activate()
         speaker.isEnabled = app.settings.speakCues
-        let backend = app.backend
-        speaker.remoteVoice = { text in await backend.speech(text) }
         pose.onFrame = { [weak self] frame in self?.onFrame(frame) }
         do { try await pose.start() } catch { cameraError = error.localizedDescription }
         connectLeaderboard()

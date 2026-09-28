@@ -85,6 +85,17 @@ public final class SessionViewModel {
 
     // MARK: Lifecycle
 
+    /// Point the speaker at the user's coach voice and fetch this session's lines in it,
+    /// while they rate their pain and set up the camera.
+    public func warmUp() {
+        let backend = app.backend
+        speaker.voice = app.settings.voice
+        speaker.remoteVoice = { text, voice in await backend.speech(text, voice: voice) }
+        let lines = CueCatalog.lines(for: launch.plan)
+        let speaker = self.speaker
+        Task { await speaker.prefetch(lines) }
+    }
+
     public func setPainBefore(_ value: Int?) {
         painBefore = value
         stage = .running
@@ -94,8 +105,6 @@ public final class SessionViewModel {
     public func begin() async {
         VoiceAudioSession.activate()
         speaker.isEnabled = app.settings.speakCues
-        let backend = app.backend
-        speaker.remoteVoice = { text in await backend.speech(text) }
         speaker.onSpeakingChanged = { [weak self] speaking, priority in
             // Mute the mic for anything longer than a count so the coach never hears itself.
             if priority > .low { self?.listener.setMuted(speaking) }

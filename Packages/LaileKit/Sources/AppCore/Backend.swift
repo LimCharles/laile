@@ -8,6 +8,8 @@ public protocol LaileBackend: AnyObject {
     var isSignedIn: Bool { get }
     func signIn(email: String, password: String) async throws -> API.UserProfile
     func register(email: String, password: String, name: String) async throws -> API.UserProfile
+    /// A fresh demo account with realistic history (replaces the current demo account, if any).
+    func startDemo(_ persona: API.DemoPersona) async throws -> API.UserProfile
     func signOut()
 
     func currentUser() async throws -> API.UserProfile
@@ -27,7 +29,7 @@ public protocol LaileBackend: AnyObject {
     func streamSocketURL(_ streamId: UUID) -> URL?
     /// Natural-sounding speech (MP3) for free-form lines, rendered server-side with ElevenLabs
     /// so no API key ever ships in the app. Nil = use the on-device voice.
-    func speech(_ text: String) async -> Data?
+    nonisolated func speech(_ text: String, voice: CoachVoice) async -> Data?
 }
 
 public enum BackendError: LocalizedError {

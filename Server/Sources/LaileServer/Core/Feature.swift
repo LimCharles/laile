@@ -83,7 +83,7 @@ final class AppServices: Sendable {
     let llm: any LLMProvider
     /// The coach's voice (ElevenLabs, or Tencent TTS as fallback), if configured.
     let speech: (any SpeechSynthesizer)?
-    let speechCache = SpeechCache()
+    let speechCache: SpeechCache
     let library = ExerciseLibrary.standard
     let streamHub = StreamHub()
     let voiceSessions = VoiceSessionStore()
@@ -92,6 +92,7 @@ final class AppServices: Sendable {
         self.config = config
         self.llm = llm
         self.speech = speech
+        self.speechCache = SpeechCache(directory: config.speech?.cacheDirectory ?? "voice-cache")
     }
 
     func rewardEngine(timeZone: String) -> RewardEngine {

@@ -1,6 +1,7 @@
 import Foundation
 import LaileCore
 @testable import LaileServer
+import Fluent
 import XCTVapor
 
 final class APITests: XCTestCase {
@@ -202,24 +203,29 @@ final class TencentSigningTests: XCTestCase {
 
 struct FakeSynth: SpeechSynthesizer {
     var name: String { "fake" }
-    func synthesize(_ text: String, live: Bool) async throws -> Data { Data("MP3:\(text)".utf8) }
+    func cacheNamespace(voice: CoachVoice, live: Bool) -> String { "fake-\(voice.rawValue)" }
+    func synthesize(_ text: String, voice: CoachVoice, live: Bool) async throws -> Data { Data("MP3:\(voice.rawValue):\(text)".utf8) }
 }
 
 final class SpeechTests: XCTestCase {
     func testTRTCUsesElevenLabsNatively() throws {
-        let config = SpeechConfig(provider: .elevenlabs, elevenLabsKey: "xi-key", elevenLabsVoiceId: "voice-1",
+        let config = SpeechConfig(provider: .elevenlabs, elevenLabsKey: "xi-key",
                                   elevenLabsModel: "eleven_multilingual_v2", elevenLabsLiveModel: "eleven_flash_v2_5",
-                                  tencentVoiceType: 0, trtcFlowVoiceId: "v")
-        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(config.trtcTTSConfigJSON.utf8)) as? [String: String])
+                                  tencentVoiceType: 0, trtcFlowVoiceId: "v", cacheDirectory: "unused")
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(config.trtcTTSConfigJSON(voice: .jessica).utf8)) as? [String: String])
         XCTAssertEqual(json["TTSType"], "elevenlabs")
         XCTAssertEqual(json["Model"], "eleven_flash_v2_5")
-        XCTAssertEqual(json["VoiceId"], "voice-1")
+        XCTAssertEqual(json["VoiceId"], CoachVoice.jessica.elevenLabsVoiceId)
     }
 
     func testSpeakEndpointReturnsCachedAudio() async throws {
         let app = try await Application.make(.testing)
         try await configure(app)
-        app.laile = AppServices(config: app.laile.config, llm: MockLLMProvider(), speech: FakeSynth())
+        var config = app.laile.config
+        config.speech = SpeechConfig(provider: .elevenlabs, elevenLabsKey: nil, elevenLabsModel: "m", elevenLabsLiveModel: "m",
+                                     tencentVoiceType: 0, trtcFlowVoiceId: "v",
+                                     cacheDirectory: NSTemporaryDirectory() + "laile-voice-\(UUID().uuidString)")
+        app.laile = AppServices(config: config, llm: MockLLMProvider(), speech: FakeSynth())
         var auth: API.AuthResponse?
         try await app.test(.POST, "v1/auth/register", beforeRequest: { req in
             try req.content.encode(API.RegisterRequest(email: "s@example.com", password: "correct horse", displayName: "S", timeZone: "UTC"))
@@ -227,12 +233,126 @@ final class SpeechTests: XCTestCase {
         var headers = HTTPHeaders()
         headers.bearerAuthorization = BearerAuthorization(token: try XCTUnwrap(auth).token)
         try await app.test(.POST, "v1/voice/speak", headers: headers, beforeRequest: { req in
-            try req.content.encode(SpeakRequest(text: "Okay, noted. Keep going."))
+            try req.content.encode(API.SpeakRequest(text: "Okay, noted. Keep going.", voice: .matilda))
         }, afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.headers.contentType?.subType, "mpeg")
-            XCTAssertEqual(res.body.string, "MP3:Okay, noted. Keep going.")
+            XCTAssertEqual(res.body.string, "MP3:matilda:Okay, noted. Keep going.")
         })
+        // No voice → the default voice.
+        try await app.test(.POST, "v1/voice/speak", headers: headers, beforeRequest: { req in
+            try req.content.encode(API.SpeakRequest(text: "Nice."))
+        }, afterResponse: { res in XCTAssertEqual(res.body.string, "MP3:sarah:Nice.") })
         try await app.asyncShutdown()
+    }
+}
+
+final class DemoTests: XCTestCase {
+    var app: Application!
+
+    override func setUp() async throws {
+        app = try await Application.make(.testing)
+        try await configure(app)
+        var config = app.laile.config
+        config.seedDemoData = true
+        app.laile = AppServices(config: config, llm: MockLLMProvider())
+    }
+
+    override func tearDown() async throws {
+        try await app.asyncShutdown()
+        app = nil
+    }
+
+    func bearer(_ token: String) -> HTTPHeaders {
+        var h = HTTPHeaders()
+        h.bearerAuthorization = BearerAuthorization(token: token)
+        return h
+    }
+
+    func startDemo(_ persona: API.DemoPersona, token: String? = nil) async throws -> API.AuthResponse {
+        var auth: API.AuthResponse?
+        try await app.test(.POST, "v1/demo/sessions", headers: token.map(bearer) ?? [:], beforeRequest: { req in
+            try req.content.encode(API.DemoStartRequest(persona: persona, timeZone: "Asia/Singapore"))
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+            auth = try res.content.decode(API.AuthResponse.self)
+        })
+        return try XCTUnwrap(auth)
+    }
+
+    func testGuestPatientDemoHasStoryAndIsReplacedOnRestart() async throws {
+        let first = try await startDemo(.patient)
+        XCTAssertTrue(first.user.isDemo)
+        XCTAssertEqual(first.user.mode, .rehab)
+        XCTAssertEqual(first.user.clinicianName, "Dr. Priya Nair (demo)")
+        try await app.test(.GET, "v1/today", headers: bearer(first.token)) { res in
+            XCTAssertNotNil(try res.content.decode(API.TodayPlan.self).program)
+        }
+        try await app.test(.GET, "v1/progress", headers: bearer(first.token)) { res in
+            let overview = try res.content.decode(API.ProgressOverview.self)
+            XCTAssertEqual(overview.trends.first { $0.kind == .kneeFlexion }?.latest?.value, 86)
+        }
+        try await app.test(.GET, "v1/rewards/summary", headers: bearer(first.token)) { res in
+            XCTAssertEqual(try res.content.decode(RewardsSummary.self).moveStreak.status, .pendingToday)
+        }
+        // Restarting the demo replaces the old guest (its token stops working).
+        let second = try await startDemo(.patient, token: first.token)
+        XCTAssertNotEqual(first.user.id, second.user.id)
+        try await app.test(.GET, "v1/me", headers: bearer(first.token)) { res in XCTAssertEqual(res.status, .unauthorized) }
+        let guests = try await UserModel.query(on: app.db).filter(\.$email ~~ DemoWorld.guestDomain).count()
+        XCTAssertEqual(guests, 1)
+    }
+
+    func testFixedPatientResetsOnLogin() async throws {
+        try await DemoWorld(app: app).ensureBase()
+        func login() async throws -> String {
+            var token = ""
+            try await app.test(.POST, "v1/auth/login", beforeRequest: { req in
+                try req.content.encode(API.LoginRequest(email: DemoSeed.patientEmail, password: DemoSeed.password))
+            }, afterResponse: { res in token = try res.content.decode(API.AuthResponse.self).token })
+            return token
+        }
+        let token = try await login()
+        var extra = ExerciseResult(exerciseId: "heel-slide", side: .right, plannedSets: 1)
+        extra.repsPerSet = [5]
+        try await app.test(.POST, "v1/sessions", headers: bearer(token), beforeRequest: { req in
+            try req.content.encode(SessionSummary(kind: .program, title: "t", mode: .rehab, startedAt: Date().addingTimeInterval(-60), endedAt: Date(), exercises: [extra]))
+        }, afterResponse: { res in XCTAssertEqual(res.status, .ok) })
+        let found = try await UserModel.query(on: app.db).filter(\.$email == DemoSeed.patientEmail).first()
+        let patient = try XCTUnwrap(found)
+        let before = try await SessionModel.query(on: app.db).filter(\.$user.$id == patient.requireID()).count()
+        XCTAssertEqual(before, 15)
+        _ = try await login()
+        let after = try await SessionModel.query(on: app.db).filter(\.$user.$id == patient.requireID()).count()
+        XCTAssertEqual(after, 14)
+        // The earlier token still works after the reset.
+        try await app.test(.GET, "v1/me", headers: bearer(token)) { res in XCTAssertEqual(res.status, .ok) }
+    }
+
+    func testDemoInviteCodeIsReusable() async throws {
+        for email in ["a@example.com", "b@example.com"] {
+            var token = ""
+            try await app.test(.POST, "v1/auth/register", beforeRequest: { req in
+                try req.content.encode(API.RegisterRequest(email: email, password: "correct horse", displayName: "Tester", timeZone: "UTC"))
+            }, afterResponse: { res in token = try res.content.decode(API.AuthResponse.self).token })
+            try await app.test(.POST, "v1/patients/link", headers: bearer(token), beforeRequest: { req in
+                try req.content.encode(API.LinkClinicianRequest(inviteCode: "lai-demo42"))
+            }, afterResponse: { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqual(try res.content.decode(API.UserProfile.self).mode, .rehab)
+            })
+            try await app.test(.GET, "v1/today", headers: bearer(token)) { res in
+                XCTAssertNotNil(try res.content.decode(API.TodayPlan.self).program)
+            }
+        }
+    }
+
+    func testDemoDisabledReturnsNotFound() async throws {
+        var config = app.laile.config
+        config.seedDemoData = false
+        app.laile = AppServices(config: config, llm: MockLLMProvider())
+        try await app.test(.POST, "v1/demo/sessions", beforeRequest: { req in
+            try req.content.encode(API.DemoStartRequest(persona: .mover, timeZone: "UTC"))
+        }, afterResponse: { res in XCTAssertEqual(res.status, .notFound) })
     }
 }

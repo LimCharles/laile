@@ -38,7 +38,7 @@ final class UserModel: Model, @unchecked Sendable {
 
     func profile(clinicianName: String? = nil) throws -> API.UserProfile {
         API.UserProfile(id: try requireID(), email: email, displayName: displayName, role: role, mode: mode,
-                        timeZone: timeZone, clinicianName: clinicianName)
+                        timeZone: timeZone, clinicianName: clinicianName, isDemo: DemoWorld.isDemo(email: email))
     }
 
     func generateToken() throws -> UserTokenModel {
@@ -143,6 +143,10 @@ struct AuthFeature: LaileFeature {
         guard let user = try await UserModel.query(on: req.db).filter(\.$email == body.email.lowercased()).first(),
               try user.verify(password: body.password) else {
             throw Abort(.unauthorized, reason: "Email or password is incorrect.")
+        }
+        // Fixed demo accounts start from the same story on every sign-in.
+        if req.laile.config.seedDemoData, DemoWorld.resetsOnLogin(user) {
+            try await req.db.transaction { db in try await DemoWorld(app: req.application, db: db).reset(user) }
         }
         let token = try user.generateToken()
         try await token.save(on: req.db)

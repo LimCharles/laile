@@ -103,7 +103,7 @@ struct VoiceFeature: LaileFeature {
 
         await req.laile.voiceSessions.create(.init(key: key, userID: try user.requireID(), userName: user.displayName, mode: user.mode,
                                                    policy: try await policy(for: user, on: req.db), context: body.context))
-        let ttsJSON = req.laile.config.speech?.trtcTTSConfigJSON
+        let ttsJSON = req.laile.config.speech?.trtcTTSConfigJSON(voice: body.voice ?? .default)
             ?? #"{"TTSType":"flow","Model":"flow_01_turbo","VoiceId":"v-female-R2s4N9qJ","Language":"en"}"#
         let conversation = TRTCConversationClient(cloud: TencentCloudClient(credentials: credentials, client: req.client), trtc: trtc,
                                                   ttsConfigJSON: ttsJSON)

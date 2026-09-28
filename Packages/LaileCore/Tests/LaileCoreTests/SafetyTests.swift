@@ -163,3 +163,17 @@ import Testing
         #expect(all.count > 150)
     }
 }
+
+@Suite struct VoiceSubsetTests {
+    @Test func sessionSubsetCoversWhatTheConductorSays() {
+        let plan = Array(SessionTemplate.builtIn("knee-rehab-early")!.plan().prefix(3))
+        let subset = Set(CueCatalog.lines(for: plan).map(\.audioKey))
+        var h = ConductorHarness(plan: plan)
+        h.getReady()
+        for _ in 0..<3 { h.rep() }
+        let spoken = h.events.compactMap { e -> CueLine? in if case .say(let l) = e { return l }; return nil }
+        let missing = spoken.filter { !subset.contains($0.audioKey) }.map(\.text)
+        #expect(missing.isEmpty, "Not prefetched: \(missing)")
+        #expect(subset.count < CueCatalog.all().count)
+    }
+}
