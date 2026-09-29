@@ -90,10 +90,23 @@ public enum API {
         public var medicationDoses: [MedicationDose]
         /// Lele's active notes. Sessions apply them (easier targets) with `CareMemory.adjust`.
         public var careNotes: [CareNote]
+        /// Programs the person is in (active ones), supervised first.
+        public var enrollments: [Enrollment]
+        /// What they told Lele, and the precautions that follow them into every program.
+        public var health: HealthProfile?
+        /// Lele's latest messages (newest first), including open questions.
+        public var lele: [LeleMessage]
         public init(mode: AppMode, program: Program?, clinicianName: String?, templates: [SessionTemplate], medicationDoses: [MedicationDose],
-                    careNotes: [CareNote] = []) {
+                    careNotes: [CareNote] = [], enrollments: [Enrollment] = [], health: HealthProfile? = nil, lele: [LeleMessage] = []) {
             self.mode = mode; self.program = program; self.clinicianName = clinicianName
             self.templates = templates; self.medicationDoses = medicationDoses; self.careNotes = careNotes
+            self.enrollments = enrollments; self.health = health; self.lele = lele
+        }
+
+        /// Precautions for any session: the person's own plus their clinician's.
+        public var precautions: Precautions {
+            let base = health?.precautions ?? .none
+            return enrollments.filter { $0.isActive && $0.isSupervised }.reduce(base) { $0.merged(with: $1.program.precautions) }
         }
     }
 
@@ -101,6 +114,71 @@ public enum API {
         public var trends: [MetricTrend]
         public var recentSessions: [SessionSummary]
         public init(trends: [MetricTrend], recentSessions: [SessionSummary]) { self.trends = trends; self.recentSessions = recentSessions }
+    }
+
+    public struct JoinProgramRequest: Codable, Sendable {
+        public var catalogId: String
+        public init(catalogId: String) { self.catalogId = catalogId }
+    }
+
+    /// The goals conversation at onboarding (or later, "build me a new plan").
+    public struct PlanRequest: Codable, Sendable {
+        public var profile: HealthProfile
+        public init(profile: HealthProfile) { self.profile = profile }
+    }
+
+    public struct PlanResponse: Codable, Sendable {
+        public var enrollment: Enrollment
+        /// Lele explaining the plan (and suggesting a physio when that's wise).
+        public var messages: [LeleMessage]
+        public init(enrollment: Enrollment, messages: [LeleMessage]) { self.enrollment = enrollment; self.messages = messages }
+    }
+
+    public struct LeleReplyRequest: Codable, Sendable {
+        public var actionId: String?
+        public var text: String?
+        public init(actionId: String? = nil, text: String? = nil) { self.actionId = actionId; self.text = text }
+    }
+
+    public struct LeleChatRequest: Codable, Sendable {
+        public var text: String
+        public init(text: String) { self.text = text }
+    }
+
+    /// New messages to show (the person's own turn plus Lele's reply), and anything Lele noted.
+    public struct LeleTurnResponse: Codable, Sendable {
+        public var messages: [LeleMessage]
+        public var careNotes: [CareNote]
+        public init(messages: [LeleMessage], careNotes: [CareNote] = []) { self.messages = messages; self.careNotes = careNotes }
+    }
+
+    /// Sent every couple of seconds during a session so a supervising clinician can watch live.
+    public struct LiveSessionUpdate: Codable, Sendable, Hashable {
+        public var sessionTitle: String
+        public var exerciseName: String
+        public var exerciseIndex: Int
+        public var exerciseCount: Int
+        public var setIndex: Int
+        public var totalSets: Int
+        public var phase: String
+        public var reps: Int
+        public var targetReps: Int?
+        public var holdSeconds: Int
+        public var targetHoldSeconds: Int?
+        /// e.g. "Knee bent to 88°" / "Arm lifted to 140°".
+        public var angleLabel: String?
+        public var lastHeard: String?
+        public var symptomsLogged: Int
+        public var ended: Bool
+
+        public init(sessionTitle: String, exerciseName: String, exerciseIndex: Int, exerciseCount: Int, setIndex: Int, totalSets: Int,
+                    phase: String, reps: Int, targetReps: Int?, holdSeconds: Int, targetHoldSeconds: Int?, angleLabel: String?,
+                    lastHeard: String?, symptomsLogged: Int, ended: Bool) {
+            self.sessionTitle = sessionTitle; self.exerciseName = exerciseName; self.exerciseIndex = exerciseIndex
+            self.exerciseCount = exerciseCount; self.setIndex = setIndex; self.totalSets = totalSets; self.phase = phase
+            self.reps = reps; self.targetReps = targetReps; self.holdSeconds = holdSeconds; self.targetHoldSeconds = targetHoldSeconds
+            self.angleLabel = angleLabel; self.lastHeard = lastHeard; self.symptomsLogged = symptomsLogged; self.ended = ended
+        }
     }
 
     public struct LinkClinicianRequest: Codable, Sendable {

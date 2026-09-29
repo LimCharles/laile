@@ -11,6 +11,7 @@ public enum MetricKind: String, Codable, Sendable, CaseIterable, Hashable {
     case jumpingJackReps
     case plankHoldSeconds
     case wallSitSeconds
+    case shoulderElevation
     case painAtRest
 
     public var displayName: String {
@@ -25,13 +26,14 @@ public enum MetricKind: String, Codable, Sendable, CaseIterable, Hashable {
         case .jumpingJackReps: return "Jumping jacks"
         case .plankHoldSeconds: return "Plank hold"
         case .wallSitSeconds: return "Wall sit"
+        case .shoulderElevation: return "Arm lift"
         case .painAtRest: return "Pain at rest"
         }
     }
 
     public var unit: String {
         switch self {
-        case .kneeFlexion, .kneeExtensionDeficit: return "°"
+        case .kneeFlexion, .kneeExtensionDeficit, .shoulderElevation: return "°"
         case .plankHoldSeconds, .wallSitSeconds: return "s"
         case .painAtRest: return "/10"
         default: return "reps"
@@ -49,6 +51,7 @@ public enum MetricKind: String, Codable, Sendable, CaseIterable, Hashable {
     public var meaningfulChange: Double {
         switch self {
         case .kneeFlexion: return 3
+        case .shoulderElevation: return 4
         case .kneeExtensionDeficit: return 2
         case .plankHoldSeconds, .wallSitSeconds: return 5
         case .painAtRest: return 1
@@ -60,6 +63,7 @@ public enum MetricKind: String, Codable, Sendable, CaseIterable, Hashable {
     public var regressionThreshold: Double {
         switch self {
         case .kneeFlexion: return 8
+        case .shoulderElevation: return 10
         case .kneeExtensionDeficit: return 5
         case .plankHoldSeconds, .wallSitSeconds: return 15
         case .painAtRest: return 2
@@ -134,6 +138,9 @@ public struct Milestone: Codable, Sendable, Hashable, Identifiable {
         Milestone(id: "squat-20", kind: .squatReps, threshold: 20, title: "20 squats in a set"),
         Milestone(id: "squat-40", kind: .squatReps, threshold: 40, title: "40 squats in a set"),
         Milestone(id: "wallsit-60", kind: .wallSitSeconds, threshold: 60, title: "One-minute wall sit"),
+        Milestone(id: "arm-90", kind: .shoulderElevation, threshold: 90, title: "Arm lifts to shoulder height"),
+        Milestone(id: "arm-120", kind: .shoulderElevation, threshold: 120, title: "Arm lifts to 120° — hair-brushing height"),
+        Milestone(id: "arm-150", kind: .shoulderElevation, threshold: 150, title: "Arm lifts to 150° — top-shelf reach"),
     ]
 
     public static func defaults(for mode: AppMode) -> [Milestone] {

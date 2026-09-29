@@ -18,6 +18,8 @@ public struct Precautions: Codable, Sendable, Hashable {
     public var maxKneeFlexion: Double?
     /// Maximum clinical hip flexion in degrees (e.g. 90 for posterior hip precautions).
     public var maxHipFlexion: Double?
+    /// Maximum arm elevation in degrees (e.g. 90 after some shoulder repairs).
+    public var maxShoulderElevation: Double?
     public var weightBearing: WeightBearingStatus
     public var maxImpact: ImpactLevel
     public var noWristLoading: Bool
@@ -25,11 +27,12 @@ public struct Precautions: Codable, Sendable, Hashable {
     public var affectedSide: Side?
     public var notes: String
 
-    public init(maxKneeFlexion: Double? = nil, maxHipFlexion: Double? = nil, weightBearing: WeightBearingStatus = .full,
-                maxImpact: ImpactLevel = .high, noWristLoading: Bool = false, avoidExerciseIds: [String] = [],
-                affectedSide: Side? = nil, notes: String = "") {
+    public init(maxKneeFlexion: Double? = nil, maxHipFlexion: Double? = nil, maxShoulderElevation: Double? = nil,
+                weightBearing: WeightBearingStatus = .full, maxImpact: ImpactLevel = .high, noWristLoading: Bool = false,
+                avoidExerciseIds: [String] = [], affectedSide: Side? = nil, notes: String = "") {
         self.maxKneeFlexion = maxKneeFlexion
         self.maxHipFlexion = maxHipFlexion
+        self.maxShoulderElevation = maxShoulderElevation
         self.weightBearing = weightBearing
         self.maxImpact = maxImpact
         self.noWristLoading = noWristLoading
@@ -39,6 +42,25 @@ public struct Precautions: Codable, Sendable, Hashable {
     }
 
     public static let none = Precautions()
+
+    /// Both sets of limits at once: the stricter value wins everywhere. A person's precautions
+    /// follow them into every program, so a knee limit also protects them in a squat class.
+    public func merged(with other: Precautions) -> Precautions {
+        func minOpt(_ a: Double?, _ b: Double?) -> Double? { [a, b].compactMap { $0 }.min() }
+        let weight: WeightBearingStatus = [weightBearing, other.weightBearing].contains(.none) ? .none
+            : ([weightBearing, other.weightBearing].contains(.partial) ? .partial : .full)
+        return Precautions(
+            maxKneeFlexion: minOpt(maxKneeFlexion, other.maxKneeFlexion),
+            maxHipFlexion: minOpt(maxHipFlexion, other.maxHipFlexion),
+            maxShoulderElevation: minOpt(maxShoulderElevation, other.maxShoulderElevation),
+            weightBearing: weight,
+            maxImpact: min(maxImpact, other.maxImpact),
+            noWristLoading: noWristLoading || other.noWristLoading,
+            avoidExerciseIds: Array(Set(avoidExerciseIds + other.avoidExerciseIds)).sorted(),
+            affectedSide: affectedSide ?? other.affectedSide,
+            notes: [notes, other.notes].filter { !$0.isEmpty }.joined(separator: " ")
+        )
+    }
 }
 
 public enum ProgramItemSource: String, Codable, Sendable, Hashable {
@@ -126,6 +148,9 @@ public struct Program: Codable, Sendable, Hashable, Identifiable {
                 let flexion = [defaultFlexion, item.targetKneeFlexion, precautions.maxKneeFlexion].compactMap { $0 }.min() ?? defaultFlexion
                 if flexion < defaultFlexion - 0.5 { override = 180 - flexion }
             }
+            if spec.tracksShoulderElevation, case .reps(let rule) = spec.kind, let limit = precautions.maxShoulderElevation, limit < rule.target {
+                override = max(rule.start + 10, limit)
+            }
             return PlannedExercise(spec: spec, dose: item.dose, side: precautions.affectedSide, repTargetOverride: override)
         }
     }
@@ -176,10 +201,36 @@ public enum ContraindicationChecker {
         if let maxHip = precautions.maxHipFlexion, spec.loads.peakHipFlexion > maxHip {
             add("hip-flexion", "\(spec.name) needs \(Int(spec.loads.peakHipFlexion))° hip bend; limit is \(Int(maxHip))°.")
         }
+        // Arm-lift exercises are capped by lowering their target; anything else that goes higher is blocked.
+        if let maxShoulder = precautions.maxShoulderElevation, spec.loads.peakShoulderElevation > maxShoulder, !spec.tracksShoulderElevation {
+            add("shoulder-elevation", "\(spec.name) lifts the arm to \(Int(spec.loads.peakShoulderElevation))°; limit is \(Int(maxShoulder))°.")
+        }
         if precautions.noWristLoading && spec.loads.loadsWrists {
             add("wrist", "\(spec.name) loads the wrists.")
         }
         return result
+    }
+
+    /// Removes exercises the person's precautions rule out (used for classes and catalog programs).
+    public static func filter(_ plan: [PlannedExercise], precautions: Precautions) -> (kept: [PlannedExercise], removed: [ProgramViolation]) {
+        var kept: [PlannedExercise] = []
+        var removed: [ProgramViolation] = []
+        for planned in plan {
+            let problems = violations(spec: planned.spec, precautions: precautions)
+            if problems.isEmpty {
+                var p = planned
+                if p.spec.tracksKneeFlexion, case .reps(let rule) = p.spec.kind, let limit = precautions.maxKneeFlexion, 180 - rule.target > limit {
+                    p.repTargetOverride = 180 - limit
+                }
+                if p.spec.tracksShoulderElevation, case .reps(let rule) = p.spec.kind, let limit = precautions.maxShoulderElevation, limit < rule.target {
+                    p.repTargetOverride = max(rule.start + 10, limit)
+                }
+                kept.append(p)
+            } else {
+                removed += problems
+            }
+        }
+        return (kept, removed)
     }
 
     public static func violations(program: Program, library: ExerciseLibrary = .standard) -> [ProgramViolation] {

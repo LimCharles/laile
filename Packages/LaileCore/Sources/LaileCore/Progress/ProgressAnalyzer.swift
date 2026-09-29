@@ -171,6 +171,8 @@ public enum MetricExtractor {
         case .bestSetHoldSeconds:
             let best = result.holdSecondsPerSet.max() ?? 0
             value = best > 0 ? Double(best) : nil
+        case .peakFromMaxAngle:
+            value = result.maxAngle
         }
         guard let value else { return [] }
         return [MetricSample(kind: binding.kind, value: value.rounded(), date: date, isBaseline: isBaseline, exerciseId: spec.id, sessionId: sessionId)]

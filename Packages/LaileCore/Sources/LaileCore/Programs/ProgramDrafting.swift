@@ -5,6 +5,8 @@ public enum Procedure: String, Codable, Sendable, CaseIterable, Hashable {
     case totalHipReplacement
     case kneeOsteoarthritis
     case lowBackPain
+    case stiffShoulder
+    case shoulderPain
     case generalDeconditioning
     case other
 
@@ -14,6 +16,8 @@ public enum Procedure: String, Codable, Sendable, CaseIterable, Hashable {
         case .totalHipReplacement: return "Total hip replacement"
         case .kneeOsteoarthritis: return "Knee osteoarthritis"
         case .lowBackPain: return "Low back pain"
+        case .stiffShoulder: return "Stiff / frozen shoulder"
+        case .shoulderPain: return "Shoulder pain (rotator cuff)"
         case .generalDeconditioning: return "General deconditioning"
         case .other: return "Other"
         }
@@ -153,6 +157,22 @@ public enum TemplateDrafter {
             items.append(.init(exerciseId: "plank", sets: 2, holdSeconds: 20, rationale: "Core endurance."))
             items.append(.init(exerciseId: "hip-flexor-stretch", sets: 2, holdSeconds: 30, rationale: "Eases tight hip flexors from sitting."))
             items.append(.init(exerciseId: "hamstring-stretch", sets: 2, holdSeconds: 30, rationale: "Hamstring flexibility."))
+        case .stiffShoulder:
+            title = "Shoulder mobility — getting the reach back"
+            summary = "Gentle, frequent movement to regain range in a stiff shoulder, working inside comfort."
+            items.append(.init(exerciseId: "pendulum", sets: 1, holdSeconds: 45, timesPerDay: 2, rationale: "Unloaded movement to ease stiffness and pain."))
+            items.append(.init(exerciseId: "wall-slide", sets: 2, reps: 8, timesPerDay: 2, rationale: "Assisted elevation; the wall takes the arm's weight."))
+            items.append(.init(exerciseId: "shoulder-flexion", sets: 2, reps: 10, rationale: "Active forward elevation to rebuild reach, tracked as arm-lift angle."))
+            items.append(.init(exerciseId: "shoulder-abduction", sets: 2, reps: 8, rationale: "Active side elevation, the direction that stiffens most."))
+            items.append(.init(exerciseId: "scapular-squeeze", sets: 8, holdSeconds: 5, restSeconds: 5, rationale: "Scapular control to support the shoulder."))
+        case .shoulderPain:
+            title = "Shoulder strength and control"
+            summary = "Pain-guided shoulder movement and scapular strength for rotator-cuff related shoulder pain."
+            items.append(.init(exerciseId: "scapular-squeeze", sets: 10, holdSeconds: 5, restSeconds: 5, rationale: "Scapular stabiliser activation."))
+            items.append(.init(exerciseId: "shoulder-flexion", sets: 2, reps: 10, rationale: "Graded active elevation below the painful arc."))
+            items.append(.init(exerciseId: "shoulder-abduction", sets: 2, reps: 8, rationale: "Graded side elevation, thumb up."))
+            items.append(.init(exerciseId: "incline-push-up", sets: 2, reps: 8, rationale: "Closed-chain loading at an easy angle."))
+            items.append(.init(exerciseId: "chest-opener", sets: 1, holdSeconds: 30, rationale: "Posture and pectoral flexibility."))
         case .generalDeconditioning, .other:
             title = "Foundations"
             summary = "Whole-body strength and mobility basics."

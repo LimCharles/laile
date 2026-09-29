@@ -23,7 +23,7 @@ public struct ExerciseLibrary: Sendable {
 }
 
 enum BuiltInExercises {
-    static let all: [ExerciseSpec] = rehab + move
+    static let all: [ExerciseSpec] = rehab + shoulder + move
 
     // MARK: Rehab (knee/hip replacement home programs)
 
@@ -129,6 +129,81 @@ enum BuiltInExercises {
                 go: "Bend your knees a little, as if starting to sit, then stand tall."
             ),
             intensity: 2
+        ),
+    ]
+
+    // MARK: Shoulder (stiff / frozen shoulder, rotator-cuff and desk shoulders)
+
+    static let shoulder: [ExerciseSpec] = [
+        ExerciseSpec(
+            id: "pendulum", name: "Pendulum swings", modes: [.rehab], category: .mobility,
+            posture: .standing, cameraView: .any, kind: .hold(.presenceOnly),
+            defaultDose: Dose(sets: 1, holdSeconds: 45, restSeconds: 10),
+            limits: DoseLimits(sets: 1...3, holdSeconds: 20...90),
+            loads: ExerciseLoads(weightBearing: true, impact: .none, peakKneeFlexion: 10, peakHipFlexion: 60, peakShoulderElevation: 30),
+            cues: ExerciseCues(
+                purpose: "Letting the arm hang and swing gently loosens a stiff shoulder without asking the muscles to work.",
+                setup: "Lean on a table with your good hand and let the sore arm hang down.",
+                go: "Rock your body gently so the hanging arm swings in small circles. Keep the shoulder relaxed."
+            ),
+            intensity: 1
+        ),
+        ExerciseSpec(
+            id: "shoulder-flexion", name: "Forward arm raise", modes: [.rehab, .move], category: .mobility,
+            posture: .standing, cameraView: .side,
+            kind: .reps(RepRule(angle: .armRaise, start: 25, target: 150)),
+            formChecks: [FormCheck(id: "arm-straight", angle: .elbow, condition: .atLeast(140), cue: "Keep your elbow fairly straight as you lift.")],
+            defaultDose: Dose(sets: 2, reps: 10, restSeconds: 30),
+            limits: DoseLimits(sets: 1...3, reps: 5...20),
+            loads: ExerciseLoads(weightBearing: false, impact: .none, peakKneeFlexion: 0, peakHipFlexion: 0, peakShoulderElevation: 150),
+            cues: ExerciseCues(
+                purpose: "Lifting your arm forward rebuilds the reach you need for shelves, hair and getting dressed.",
+                setup: "Stand side-on to the phone with your arms by your sides.",
+                go: "Lift your arm forward and up as high as is comfortable, then lower it slowly."
+            ),
+            metric: MetricBinding(.shoulderElevation, .peakFromMaxAngle),
+            intensity: 1, perSide: true
+        ),
+        ExerciseSpec(
+            id: "shoulder-abduction", name: "Side arm raise", modes: [.rehab, .move], category: .mobility,
+            posture: .standing, cameraView: .front,
+            kind: .reps(RepRule(angle: .armRaise, start: 25, target: 140)),
+            defaultDose: Dose(sets: 2, reps: 10, restSeconds: 30),
+            limits: DoseLimits(sets: 1...3, reps: 5...20),
+            loads: ExerciseLoads(weightBearing: false, impact: .none, peakKneeFlexion: 0, peakHipFlexion: 0, peakShoulderElevation: 140),
+            cues: ExerciseCues(
+                purpose: "Lifting your arm out to the side gets the shoulder moving in the direction that stiffens most.",
+                setup: "Face the phone with your arms by your sides and your whole body in view.",
+                go: "Lift your arm out to the side, thumb up, as high as is comfortable, then lower slowly."
+            ),
+            intensity: 1, perSide: true
+        ),
+        ExerciseSpec(
+            id: "wall-slide", name: "Wall slides", modes: [.rehab, .move], category: .mobility,
+            posture: .standing, cameraView: .side,
+            kind: .reps(RepRule(angle: .armRaise, start: 70, target: 150)),
+            defaultDose: Dose(sets: 2, reps: 8, restSeconds: 30),
+            limits: DoseLimits(sets: 1...3, reps: 5...15),
+            loads: ExerciseLoads(weightBearing: false, impact: .none, peakKneeFlexion: 0, peakHipFlexion: 0, peakShoulderElevation: 150),
+            cues: ExerciseCues(
+                purpose: "The wall takes some of the arm's weight, so you can reach higher with less effort.",
+                setup: "Stand facing a wall, side-on to the phone, fingertips on the wall at chest height.",
+                go: "Walk or slide your fingers up the wall as high as is comfortable, then slide back down."
+            ),
+            intensity: 1, perSide: true
+        ),
+        ExerciseSpec(
+            id: "scapular-squeeze", name: "Shoulder blade squeeze", modes: [.rehab, .move], category: .strength,
+            posture: .seated, cameraView: .any, kind: .hold(.presenceOnly),
+            defaultDose: Dose(sets: 8, holdSeconds: 5, restSeconds: 5),
+            limits: DoseLimits(sets: 3...15, holdSeconds: 3...10, restSeconds: 3...30),
+            loads: ExerciseLoads(weightBearing: false, impact: .none, peakKneeFlexion: 90, peakHipFlexion: 90),
+            cues: ExerciseCues(
+                purpose: "Squeezing your shoulder blades wakes up the muscles that steady the shoulder and fix a desk slump.",
+                setup: "Sit tall in a chair with your arms relaxed.",
+                go: "Draw your shoulder blades back and down, as if tucking them into your back pockets, and hold."
+            ),
+            intensity: 1
         ),
     ]
 
@@ -263,7 +338,7 @@ enum BuiltInExercises {
             kind: .reps(RepRule(angle: .armRaise, start: 40, target: 140, partialFraction: 0.6)),
             defaultDose: Dose(sets: 2, reps: 20, restSeconds: 20),
             limits: DoseLimits(sets: 1...5, reps: 10...60),
-            loads: ExerciseLoads(weightBearing: true, impact: .high, peakKneeFlexion: 20, peakHipFlexion: 10),
+            loads: ExerciseLoads(weightBearing: true, impact: .high, peakKneeFlexion: 20, peakHipFlexion: 10, peakShoulderElevation: 170),
             cues: ExerciseCues(
                 purpose: "A quick burst to get your heart rate up.",
                 setup: "Face the phone, with your whole body in view.",

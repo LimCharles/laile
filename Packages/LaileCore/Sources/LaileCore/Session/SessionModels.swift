@@ -114,6 +114,8 @@ public struct SessionSummary: Codable, Sendable, Hashable, Identifiable {
     public var programId: UUID?
     public var templateId: String?
     public var streamId: UUID?
+    /// The program enrollment this session belongs to (a check-in session calibrates it).
+    public var enrollmentId: UUID?
     public var exercises: [ExerciseResult]
     public var symptoms: [SymptomReport]
     public var painBefore: Int?
@@ -121,7 +123,7 @@ public struct SessionSummary: Codable, Sendable, Hashable, Identifiable {
     public var escalation: EscalationLevel?
 
     public init(id: UUID = UUID(), kind: Kind, title: String, mode: AppMode, startedAt: Date, endedAt: Date,
-                programId: UUID? = nil, templateId: String? = nil, streamId: UUID? = nil,
+                programId: UUID? = nil, templateId: String? = nil, streamId: UUID? = nil, enrollmentId: UUID? = nil,
                 exercises: [ExerciseResult] = [], symptoms: [SymptomReport] = [],
                 painBefore: Int? = nil, painAfter: Int? = nil, escalation: EscalationLevel? = nil) {
         self.id = id
@@ -133,6 +135,7 @@ public struct SessionSummary: Codable, Sendable, Hashable, Identifiable {
         self.programId = programId
         self.templateId = templateId
         self.streamId = streamId
+        self.enrollmentId = enrollmentId
         self.exercises = exercises
         self.symptoms = symptoms
         self.painBefore = painBefore

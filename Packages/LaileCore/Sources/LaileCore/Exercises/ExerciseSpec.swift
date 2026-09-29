@@ -181,13 +181,17 @@ public struct ExerciseLoads: Codable, Sendable, Hashable {
     /// Clinical hip flexion (0° = standing straight) reached at full range.
     public var peakHipFlexion: Double
     public var loadsWrists: Bool
+    /// How high the arm goes (0° = by your side, 180° = straight overhead).
+    public var peakShoulderElevation: Double
 
-    public init(weightBearing: Bool, impact: ImpactLevel, peakKneeFlexion: Double, peakHipFlexion: Double, loadsWrists: Bool = false) {
+    public init(weightBearing: Bool, impact: ImpactLevel, peakKneeFlexion: Double, peakHipFlexion: Double, loadsWrists: Bool = false,
+                peakShoulderElevation: Double = 0) {
         self.weightBearing = weightBearing
         self.impact = impact
         self.peakKneeFlexion = peakKneeFlexion
         self.peakHipFlexion = peakHipFlexion
         self.loadsWrists = loadsWrists
+        self.peakShoulderElevation = peakShoulderElevation
     }
 }
 
@@ -216,6 +220,8 @@ public enum MetricSource: String, Codable, Sendable, Hashable {
     case bestSetReps
     /// Best set's verified hold seconds.
     case bestSetHoldSeconds
+    /// Largest interior angle reached (e.g. how high the arm lifted).
+    case peakFromMaxAngle
 }
 
 public struct MetricBinding: Codable, Sendable, Hashable {
@@ -288,6 +294,13 @@ public struct ExerciseSpec: Codable, Sendable, Hashable, Identifiable {
     /// knee-flexion limit can be enforced by lowering the rep target).
     public var tracksKneeFlexion: Bool {
         if case .reps(let rule) = kind, rule.angle.vertex == .knee, rule.isFlexion { return true }
+        return false
+    }
+
+    /// True for controlled arm lifts, where a shoulder limit can lower the target. Ballistic
+    /// moves that swing the arms overhead (jumping jacks) are blocked instead.
+    public var tracksShoulderElevation: Bool {
+        if case .reps(let rule) = kind, rule.angle == .armRaise, !rule.isFlexion, category == .mobility { return true }
         return false
     }
 }

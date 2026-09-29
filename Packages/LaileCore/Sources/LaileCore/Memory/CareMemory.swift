@@ -11,12 +11,18 @@ public struct CareNote: Codable, Sendable, Hashable, Identifiable {
         case feelsWrong
         /// Written by the clinician, for the patient and Lele to follow.
         case clinicianNote
+        /// Worse the next morning: the whole next session is gentler.
+        case flare
+        /// What's been getting in the way of exercising, in the person's words.
+        case barrier
 
         public var label: String {
             switch self {
             case .soreSpot: return "Sore spot"
             case .feelsWrong: return "Felt wrong"
             case .clinicianNote: return "Clinician note"
+            case .flare: return "Flare-up"
+            case .barrier: return "Barrier"
             }
         }
     }
@@ -109,7 +115,7 @@ public struct CareNote: Codable, Sendable, Hashable, Identifiable {
     /// Plain-language headline for the person, e.g. "Sore on the inside of your right knee".
     public var plainSummary: String {
         switch kind {
-        case .clinicianNote:
+        case .clinicianNote, .flare, .barrier:
             return text
         case .soreSpot, .feelsWrong:
             let what = kind == .feelsWrong ? "Felt wrong" : "Sore"
@@ -121,7 +127,7 @@ public struct CareNote: Codable, Sendable, Hashable, Identifiable {
 
     /// One line for Lele's context and the pre-visit report.
     public var contextLine: String {
-        var parts = [exerciseName.map { "\($0): " } ?? "", kind == .clinicianNote ? "Clinician (\(author ?? "care team")): \(text)" : text]
+        var parts = [exerciseName.map { "\($0): " } ?? "", kind == .clinicianNote ? "Clinician (\(author ?? "care team")): \(text)" : (kind == .barrier ? "Barrier: \(text)" : text)]
         if let adjustment, !adjustment.isNeutral, let spec = exerciseId.flatMap({ ExerciseLibrary.standard.spec($0) }) {
             parts.append(" — eased (\(adjustment.summary(for: spec)))\(adjustment.keptByClinician ? ", kept by clinician" : "")")
         }
@@ -201,7 +207,7 @@ public enum CareMemory {
                   case let (kind, ease)? = easing(for: report) else { continue }
             soreThisSession.insert(exerciseId)
             let date = report.timestamp
-            if let i = working.firstIndex(where: { $0.isActive && $0.exerciseId == exerciseId && $0.kind != .clinicianNote }) {
+            if let i = working.firstIndex(where: { $0.isActive && $0.exerciseId == exerciseId && ($0.kind == .soreSpot || $0.kind == .feelsWrong) }) {
                 var note = working[i]
                 note.kind = (kind == .feelsWrong || note.kind == .feelsWrong) ? .feelsWrong : .soreSpot
                 note.severity = [note.severity, report.severity].compactMap { $0 }.max()
@@ -226,6 +232,16 @@ public enum CareMemory {
         }
 
         let doneComfortably = Set(summary.exercises.filter { $0.completedSets > 0 && $0.stopReason == nil }.map(\.exerciseId))
+        // A flare-up only lasts for a gentle day: one session without new soreness closes it.
+        if !doneComfortably.isEmpty, soreThisSession.isEmpty {
+            for i in working.indices where working[i].isActive && working[i].kind == .flare {
+                working[i].status = .resolved
+                working[i].adjustment = nil
+                working[i].updatedAt = summary.endedAt
+                working[i].events.append(.init(date: summary.endedAt, text: "A gentle session went fine, so it's back to the normal plan."))
+                changed.insert(working[i].id)
+            }
+        }
         for i in working.indices {
             var note = working[i]
             guard note.isEasing, let exerciseId = note.exerciseId, let adjustment = note.adjustment, !adjustment.keptByClinician,
@@ -276,8 +292,9 @@ public enum CareMemory {
     /// normal range, and holds never go below the exercise's minimum.
     public static func adjust(_ plan: [PlannedExercise], notes: [CareNote]) -> [PlannedExercise] {
         plan.map { planned in
-            guard let note = notes.first(where: { $0.isEasing && $0.exerciseId == planned.spec.id }),
-                  let adjustment = note.adjustment else { return planned }
+            let note = notes.first(where: { $0.isEasing && $0.exerciseId == planned.spec.id })
+                ?? notes.first(where: { $0.isEasing && $0.kind == .flare && $0.exerciseId == nil })
+            guard let note, let adjustment = note.adjustment else { return planned }
             var eased = planned
             switch planned.spec.kind {
             case .reps:
@@ -302,14 +319,31 @@ public enum CareMemory {
         let what: String
         switch note.kind {
         case .feelsWrong: what = "something felt wrong with this one"
-        case .soreSpot, .clinicianNote: what = "this one was sore" + (note.whereText.map { " \($0)" } ?? "")
+        case .soreSpot, .clinicianNote, .barrier: what = "this one was sore" + (note.whereText.map { " \($0)" } ?? "")
+        case .flare:
+            return CueLine("You said things were worse this morning, so I've made this one gentler today. Tell me how it feels.", key: "care.flare", priority: .normal)
         }
         return CueLine("Last time \(what), so I've made it a little easier today. Tell me how it feels.", key: "care.\(note.id.uuidString.prefix(8))", priority: .normal)
     }
 
+    /// "Worse than yesterday" at the morning check-in: today's session is gentler for every exercise.
+    public static func flare(at date: Date, reply: String) -> CareNote {
+        CareNote(createdAt: date, kind: .flare, source: .lele, text: "Worse than yesterday at the morning check-in",
+                 quote: reply, adjustment: ExerciseAdjustment(rangeEase: 10, holdScale: 0.75),
+                 events: [.init(date: date, text: "Said it was worse this morning. Today's session is gentler: smaller range, shorter holds.")])
+    }
+
+    /// What's getting in the way, recorded for the clinician.
+    public static func barrier(_ barrier: Barrier, at date: Date) -> CareNote {
+        var note = CareNote(createdAt: date, kind: .barrier, source: .lele, text: barrier.label,
+                            events: [.init(date: date, text: "Asked about missed sessions; said: \(barrier.label.lowercased()).")])
+        note.status = .resolved // a record, not something that changes the plan
+        return note
+    }
+
     /// Resolves a note because the person says it feels better (unless the clinician is keeping it).
     public static func markBetter(_ note: CareNote, at date: Date) -> CareNote? {
-        guard note.isActive, note.kind != .clinicianNote, !(note.adjustment?.keptByClinician ?? false) else { return nil }
+        guard note.isActive, note.kind != .clinicianNote, note.kind != .barrier, !(note.adjustment?.keptByClinician ?? false) else { return nil }
         var resolved = note
         resolved.status = .resolved
         resolved.adjustment = nil

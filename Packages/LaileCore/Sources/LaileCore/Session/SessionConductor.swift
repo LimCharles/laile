@@ -84,6 +84,7 @@ public struct SessionConductor: Sendable {
     public var programId: UUID?
     public var templateId: String?
     public var streamId: UUID?
+    public var enrollmentId: UUID?
 
     public private(set) var phase: ConductorPhase = .setup
     public private(set) var exerciseIndex = 0
@@ -355,7 +356,7 @@ public struct SessionConductor: Sendable {
     public func summary(painBefore: Int? = nil, painAfter: Int? = nil) -> SessionSummary {
         SessionSummary(
             kind: kind, title: title, mode: mode, startedAt: startDate, endedAt: date(for: now),
-            programId: programId, templateId: templateId, streamId: streamId,
+            programId: programId, templateId: templateId, streamId: streamId, enrollmentId: enrollmentId,
             exercises: results, symptoms: symptoms, painBefore: painBefore, painAfter: painAfter, escalation: escalation
         )
     }
