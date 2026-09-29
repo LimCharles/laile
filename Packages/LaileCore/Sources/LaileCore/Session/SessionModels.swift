@@ -51,7 +51,9 @@ public struct CueLine: Codable, Sendable, Hashable {
         return CueLine(text, key: "count.\(n)", priority: .low)
     }
 
-    public static let go = CueLine("Go!", key: "cue.go")
+    /// Hands the turn to the user: no countdown, no "Go!", they start when they're ready.
+    public static let go = CueLine("In your own time.", key: "cue.go")
+    public static let resumed = CueLine("Welcome back. Carry on whenever you're ready.", key: "cue.resumed")
     public static let holdIt = CueLine("Hold it there.", key: "cue.hold")
     public static let relax = CueLine("And relax.", key: "cue.relax")
     public static let niceWork = CueLine("Nice work.", key: "cue.nice-work")

@@ -81,7 +81,7 @@ struct ElevenLabsSynthesizer: SpeechSynthesizer {
     var name: String { "ElevenLabs (\(model))" }
 
     struct Body: Content {
-        struct VoiceSettings: Codable { var stability: Double; var similarity_boost: Double }
+        struct VoiceSettings: Codable { var stability: Double; var similarity_boost: Double; var speed: Double }
         var text: String
         var model_id: String
         var voice_settings: VoiceSettings
@@ -94,7 +94,8 @@ struct ElevenLabsSynthesizer: SpeechSynthesizer {
         headers.add(name: "xi-api-key", value: apiKey)
         headers.add(name: .accept, value: "audio/mpeg")
         let url = URI(string: "https://api.elevenlabs.io/v1/text-to-speech/\(voice.elevenLabsVoiceId)?output_format=mp3_44100_128")
-        let body = Body(text: text, model_id: live ? liveModel : model, voice_settings: .init(stability: 0.5, similarity_boost: 0.8))
+        // A calm coach, not a drill sergeant: steadier delivery and a slightly unhurried pace.
+        let body = Body(text: text, model_id: live ? liveModel : model, voice_settings: .init(stability: 0.65, similarity_boost: 0.8, speed: 0.95))
         let response = try await client.post(url, headers: headers) { req in try req.content.encode(body, using: JSONEncoder()) }
         guard response.status == .ok, let buffer = response.body else {
             let detail = response.body.map { String(buffer: $0) } ?? ""

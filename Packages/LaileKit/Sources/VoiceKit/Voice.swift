@@ -27,6 +27,9 @@ public enum VoiceAudioSession {
 public final class CueSpeaker: NSObject {
     public var isEnabled = true
     public var onSpeakingChanged: ((Bool, CueLine.Priority) -> Void)?
+    /// Called when a line's audio actually starts, so captions show what is being heard
+    /// (not what was queued, fetched late, or dropped).
+    public var onLineStarted: ((CueLine) -> Void)?
     /// The coach voice the user picked.
     public var voice: CoachVoice = .default
     /// Fetches MP3 audio for text in a voice (the server's `/v1/voice/speak`).
@@ -36,7 +39,9 @@ public final class CueSpeaker: NSObject {
 
     private let synthesizer = AVSpeechSynthesizer()
     private var player: AVAudioPlayer?
-    private var queue: [CueLine] = []
+    private var queue: [(line: CueLine, at: Date)] = []
+    /// A queued line older than this is stale (the moment has passed), so it's skipped.
+    private let maxQueueAge: TimeInterval = 6
     private var current: CueLine?
     private let store: VoiceStore
     private let deviceVoice: AVSpeechSynthesisVoice?
@@ -75,8 +80,8 @@ public final class CueSpeaker: NSObject {
             stopPlayback()
         } else if isSpeaking {
             guard line.priority > .low else { return }
-            queue.removeAll { $0.priority == .low }
-            if queue.count < 3 { queue.append(line) }
+            queue.removeAll { $0.line.priority == .low }
+            if queue.count < 3 { queue.append((line, Date())) }
             return
         }
         play(line)
@@ -85,6 +90,7 @@ public final class CueSpeaker: NSObject {
     public func stop() {
         queue.removeAll()
         stopPlayback()
+        current = nil // a line still being fetched must not start playing later
     }
 
     private func play(_ line: CueLine) {
@@ -92,7 +98,7 @@ public final class CueSpeaker: NSObject {
         setSpeaking(true, line.priority)
         let voice = self.voice
         if let url = store.url(for: line, voice: voice), let player = try? AVAudioPlayer(contentsOf: url) {
-            playAudio(player)
+            playAudio(player, line)
             return
         }
         // Counts must never lag: speak them on-device now and fetch the real voice for next time.
@@ -102,7 +108,7 @@ public final class CueSpeaker: NSObject {
                 if let data { self.store.store(data, for: line, voice: voice) }
                 guard self.current == line else { return }
                 if let data, let player = try? AVAudioPlayer(data: data) {
-                    self.playAudio(player)
+                    self.playAudio(player, line)
                 } else {
                     self.speakOnDevice(line)
                 }
@@ -116,13 +122,15 @@ public final class CueSpeaker: NSObject {
         speakOnDevice(line)
     }
 
-    private func playAudio(_ player: AVAudioPlayer) {
+    private func playAudio(_ player: AVAudioPlayer, _ line: CueLine) {
         self.player = player
         player.delegate = self
         player.play()
+        onLineStarted?(line)
     }
 
     private func speakOnDevice(_ line: CueLine) {
+        onLineStarted?(line)
         let utterance = AVSpeechUtterance(string: line.text)
         utterance.voice = deviceVoice
         utterance.rate = line.priority == .low ? 0.55 : 0.5
@@ -141,9 +149,10 @@ public final class CueSpeaker: NSObject {
         player = nil
         let priority = current?.priority ?? .normal
         current = nil
+        queue.removeAll { Date().timeIntervalSince($0.at) > maxQueueAge && $0.line.priority < .high }
         if let next = queue.first {
             queue.removeFirst()
-            play(next)
+            play(next.line)
         } else {
             setSpeaking(false, priority)
         }

@@ -266,13 +266,15 @@ public enum SymptomResponses {
     public static let stopExercise = CueLine("Let's stop this exercise. I've noted exactly what happened for your records.", key: "sym.stop-exercise", priority: .high)
     public static let careTeamToday = CueLine("Please stop exercising and contact your care team today. I've noted what you told me.", key: "sym.care-team", priority: .high)
     public static let doctorToday = CueLine("Please stop exercising and get this checked by a doctor today.", key: "sym.doctor", priority: .high)
+    /// Answer to "how did that feel?" when it felt fine.
+    public static let goodToHear = CueLine("Good to hear.", key: "sym.good-to-hear")
 
     public static func emergency(number: String) -> CueLine {
         CueLine("Stop now. This could be serious. Call \(number) for an ambulance, or ask someone nearby to help you.", key: "sym.emergency.\(number)", priority: .high)
     }
 
     public static var all: [CueLine] {
-        [clarify, rate, acknowledgeStretch, acknowledgeEffort, acknowledgeWithinLimit, stopSet, stopExercise, careTeamToday, doctorToday, emergency(number: "995")]
+        [clarify, rate, acknowledgeStretch, acknowledgeEffort, acknowledgeWithinLimit, goodToHear, stopSet, stopExercise, careTeamToday, doctorToday, emergency(number: "995")]
     }
 
     public static func line(for action: SymptomAction, category: SymptomCategory, policy: SymptomPolicy) -> CueLine? {

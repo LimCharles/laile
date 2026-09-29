@@ -23,7 +23,12 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
 - ✅ Talk-during-exercise: on-device speech recognition → symptom classification → deterministic rules
   (continue / clarify / rate 0–10 / stop set / stop exercise / escalate); quick-reply chips as backup
 - ✅ Pain before/after, results screen with verified reps and "noted for your records"
-- ⬜ **Test on a real iPhone** with real bodies — tune angle thresholds per exercise (biggest remaining risk)
+- ✅ Sessions take turns like a conversation:
+  - the coach finishes speaking before the next turn;
+  - no countdown or "Go!": the coach says "In your own time" and your first move is the reply;
+  - "How did that feel?" after the first set, listening during the rest;
+  - captions follow the audio actually playing, and Skip, Pause and End cut off stale lines
+- ⬜ **Test on a real iPhone** with real bodies (see M5.7)
 
 ## M2 — Rewards & habit loop ✅
 
@@ -42,6 +47,7 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
 - ✅ ElevenLabs key working; users choose between 4 built-in voices (Me → Coach voice) with previews
 - ✅ Voices download on demand (everyday lines on selection, each session's lines while getting ready);
   server disk cache so each line is paid for once per voice
+- ✅ Calmer ElevenLabs delivery for new renders: stability 0.65, speed 0.95
 - ⬜ Optional: `generate-cues --voice sarah` to bundle the default voice (needs ~14k credits)
 - ⬜ Add TRTC iOS SDK (`TXLiteAVSDK_TRTC`) → enable `TRTCVoiceLink` for full-duplex barge-in voice
 
@@ -90,6 +96,30 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
   - visit prep;
   - PATIENT CONTEXT and CARE NOTES are sent with each message;
   - `remember` JSON is parsed into care notes
+
+## M5.7 — Real-phone test ⬜ (next; biggest remaining risk)
+
+**Setup:**
+- ⬜ Run on your own iPhone from Xcode. A free Personal Team is enough; no TestFlight needed yet.
+- ⬜ Reach the server from the phone. Either:
+  - run `serve --hostname 0.0.0.0` and point Debug `LAILE_API_BASE_URL` at `http://<your-mac>.local:8080`, or
+  - deploy first (M6).
+
+**Check on the phone:**
+- ⬜ Phone placement per posture: lying, seated, standing, plank.
+- ⬜ Lighting and clothing.
+- ⬜ Rep and hold thresholds for heel slides, straight-leg raises, sit-to-stands, squats and push-ups. Tune in `ExerciseLibrary`.
+- ⬜ Voice from across the room:
+  - Is the coach loud enough?
+  - Does the mic pick up speech mid-exercise?
+  - Does the coach ever hear itself?
+  - ElevenLabs latency on mobile data.
+- ⬜ Captions stay in step with the voice.
+- ⬜ Safety and memory flows:
+  - pain and "feels wrong";
+  - a red-flag phrase;
+  - "How did that feel?";
+  - a sore spot eases the exercise the next day.
 
 ## M6 — Ship it ⬜ (target 8 Oct)
 

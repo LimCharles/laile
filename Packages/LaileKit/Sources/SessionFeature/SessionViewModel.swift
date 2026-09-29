@@ -106,8 +106,15 @@ public final class SessionViewModel {
         VoiceAudioSession.activate()
         speaker.isEnabled = app.settings.speakCues
         speaker.onSpeakingChanged = { [weak self] speaking, priority in
-            // Mute the mic for anything longer than a count so the coach never hears itself.
-            if priority > .low { self?.listener.setMuted(speaking) }
+            guard let self else { return }
+            // Mute the mic for anything longer than a count so the coach never hears itself,
+            // and hold the next turn until the coach has finished its sentence.
+            if priority > .low { self.listener.setMuted(speaking) }
+            self.handle(self.conductor.coachSpeechChanged(speaking && priority > .low, at: PoseClock.now))
+        }
+        // Captions follow the audio actually playing.
+        speaker.onLineStarted = { [weak self] line in
+            if line.priority > .low { self?.caption = line.text }
         }
         pose.onFrame = { [weak self] frame in self?.onFrame(frame) }
         do {
@@ -154,8 +161,7 @@ public final class SessionViewModel {
         for event in events {
             switch event {
             case .say(let line):
-                speaker.say(line)
-                if line.priority > .low { caption = line.text }
+                speak(line)
             case .repCompleted:
                 repPulse += 1
                 Haptics.rep()
@@ -172,6 +178,12 @@ public final class SessionViewModel {
             }
         }
         snapshot = conductor.snapshot
+    }
+
+    /// Captions come from the speaker as each line starts; with voice off, show them directly.
+    private func speak(_ line: CueLine) {
+        speaker.say(line)
+        if !speaker.isEnabled && line.priority > .low { caption = line.text }
     }
 
     static func toastText(for report: SymptomReport) -> String {
@@ -213,23 +225,19 @@ public final class SessionViewModel {
                 handle(conductor.report(report, at: PoseClock.now, speakResponse: false))
                 if case .endSession? = report.action { return } // conductor already spoke the fixed escalation line
             }
-            if !turn.reply.isEmpty {
-                speaker.say(CueLine(turn.reply))
-                caption = turn.reply
-            }
+            if !turn.reply.isEmpty { speak(CueLine(turn.reply)) }
             return
         }
 
         // Offline: same rules on-device, and the conductor speaks the fixed responses.
         if MedicationBoundary.isDoseQuestion(text) {
-            speaker.say(CueCatalog.medicationReferral)
-            caption = MedicationBoundary.referral
+            speak(CueCatalog.medicationReferral)
             return
         }
         var report = UtteranceClassifier.classify(text, awaitingRating: conductor.isAwaitingPainRating)
         report.source = source
         // Plain "fine"/counting doesn't need logging unless we asked a question.
-        if report.category == .normal && !conductor.isAwaitingPainRating && !conductor.isClarifying { return }
+        if report.category == .normal && !conductor.isAwaitingPainRating && !conductor.isClarifying && !conductor.isCheckingIn { return }
         handle(conductor.report(report, at: PoseClock.now))
     }
 
@@ -248,11 +256,20 @@ public final class SessionViewModel {
     public var isPaused: Bool { if case .paused = snapshot.phase { return true }; return false }
 
     public func togglePause() {
+        if !isPaused { speaker.stop() }
         handle(isPaused ? conductor.resume(at: PoseClock.now) : conductor.pause(at: PoseClock.now))
     }
 
-    public func skip() { handle(conductor.skipExercise(at: PoseClock.now)) }
-    public func endEarly() { handle(conductor.endSession(at: PoseClock.now)) }
+    // The user took the turn: whatever the coach was saying about the old moment no longer applies.
+    public func skip() {
+        speaker.stop()
+        handle(conductor.skipExercise(at: PoseClock.now))
+    }
+
+    public func endEarly() {
+        speaker.stop()
+        handle(conductor.endSession(at: PoseClock.now))
+    }
 
     private func finish(_ summary: SessionSummary) {
         ticker?.invalidate()

@@ -112,6 +112,11 @@ public struct SessionConductor: Sendable {
     var lastPartialCueAt: TimeInterval = -.infinity
     var lastCorrectionCueAt: TimeInterval = -.infinity
     var phaseBeforePause: ConductorPhase?
+    /// True while the coach is mid-sentence. Turns wait for it, like people on a call do.
+    public private(set) var coachSpeaking = false
+    /// We asked "how did that feel?" during this rest and haven't had an answer yet.
+    public private(set) var isCheckingIn = false
+    var reasonBeforeResume: PauseReason?
 
     public init(plan: [PlannedExercise], kind: SessionSummary.Kind, title: String, mode: AppMode, config: ConductorConfig,
                 startDate: Date = Date(), startTime: TimeInterval, programId: UUID? = nil, templateId: String? = nil, streamId: UUID? = nil) {
@@ -183,25 +188,29 @@ public struct SessionConductor: Sendable {
         now = max(now, t)
         var events: [ConductorEvent] = []
         switch phase {
-        case .countdown(let remaining) where now >= countdownNextAt:
-            let next = remaining - 1
-            if next <= 0 {
-                phase = .active
-                lastSeenAt = now
-                events += [.phaseChanged(.active), .say(.go)]
-            } else {
-                phase = .countdown(remaining: next)
-                countdownNextAt = now + 1
-                events += [.phaseChanged(phase), .say(.count(next))]
-            }
-        case .rest(let until) where now >= until:
+        case .countdown where now >= countdownNextAt && !coachSpeaking:
+            events += beginActive()
+        case .rest(let until) where now >= until && !coachSpeaking:
+            // The user's turn: no countdown, they start moving when they're ready.
             setIndex += 1
             beginSet()
-            events += startCountdown(delay: 0.3)
+            isCheckingIn = false
+            if let planned = currentExercise {
+                events.append(.say(CueCatalog.nextSet(setIndex + 1, of: planned.dose.sets, hold: planned.spec.kind.isHold)))
+            }
+            events += beginActive()
         default:
             break
         }
         return events
+    }
+
+    /// The app tells the conductor when the coach starts and stops talking (counts excluded),
+    /// so the next turn (the user's move, or the next instruction) waits until the coach is done.
+    public mutating func coachSpeechChanged(_ speaking: Bool, at t: TimeInterval) -> [ConductorEvent] {
+        now = max(now, t)
+        coachSpeaking = speaking
+        return speaking ? [] : tick(at: now)
     }
 
     public mutating func pause(at t: TimeInterval, reason: PauseReason = .user) -> [ConductorEvent] {
@@ -220,16 +229,22 @@ public struct SessionConductor: Sendable {
 
     public mutating func resume(at t: TimeInterval) -> [ConductorEvent] {
         now = max(now, t)
-        guard case .paused = phase else { return [] }
+        guard case .paused(let reason) = phase else { return [] }
+        reasonBeforeResume = reason
         let previous = phaseBeforePause
         phaseBeforePause = nil
         switch previous {
         case .setup, .none:
             return enterSetup(introduce: false)
+        case .rest?:
+            // Resting when paused: pick the rest back up for its remaining time.
+            phase = previous!
+            return [.phaseChanged(phase)]
         default:
-            // Re-arm with a short countdown; reps and hold time already done are kept.
+            // Reps and hold time already done are kept; the user carries on when ready.
             repCounter?.interrupt()
-            return startCountdown(delay: 0.3)
+            let wasUserPause = reasonBeforeResume == .user
+            return (wasUserPause ? [.say(.resumed)] : []) + beginActive()
         }
     }
 
@@ -290,12 +305,17 @@ public struct SessionConductor: Sendable {
         }
         symptoms.append(report)
 
+        let answeredCheckIn = isCheckingIn
+        isCheckingIn = false
         var events: [ConductorEvent] = [.symptomLogged(report)]
         let isEscalation: Bool
         if case .endSession = decision.action { isEscalation = true } else { isEscalation = false }
-        if speakResponse ?? config.speaksSymptomResponses || isEscalation,
-           let line = SymptomResponses.line(for: decision.action, category: report.category, policy: config.symptomPolicy) {
-            events.append(.say(line))
+        if speakResponse ?? config.speaksSymptomResponses || isEscalation {
+            if let line = SymptomResponses.line(for: decision.action, category: report.category, policy: config.symptomPolicy) {
+                events.append(.say(line))
+            } else if answeredCheckIn, report.category == .normal {
+                events.append(.say(SymptomResponses.goodToHear))
+            }
         }
 
         switch decision.action {
@@ -368,16 +388,17 @@ public struct SessionConductor: Sendable {
         var events: [ConductorEvent] = [.setupStatus(status)]
         if status.isReady {
             if setupReadySince == nil { setupReadySince = now }
-            if let since = setupReadySince, now - since >= config.setupStableSeconds {
+            // Wait for the coach to finish the setup instructions before answering the user's move.
+            if let since = setupReadySince, now - since >= config.setupStableSeconds, !coachSpeaking {
                 side = status.side
                 current?.side = status.side
                 setupIssues = []
                 events.append(.say(CueCatalog.go(planned.spec)))
-                events += startCountdown(delay: 2.5)
+                events += beginActive()
             }
         } else {
             setupReadySince = nil
-            if let issue = status.issues.first, now - lastSetupCueAt >= config.setupCueCooldown {
+            if let issue = status.issues.first, !coachSpeaking, now - lastSetupCueAt >= config.setupCueCooldown {
                 lastSetupCueAt = now
                 events.append(.say(issue.guidance))
             }
@@ -385,10 +406,11 @@ public struct SessionConductor: Sendable {
         return events
     }
 
-    mutating func startCountdown(delay: TimeInterval) -> [ConductorEvent] {
-        phase = .countdown(remaining: 4)
-        countdownNextAt = now + delay
-        return [.phaseChanged(phase)]
+    /// Counting is live from here; the user's first move is their reply.
+    mutating func beginActive() -> [ConductorEvent] {
+        phase = .active
+        lastSeenAt = now
+        return [.phaseChanged(.active)]
     }
 
     mutating func beginSet() {
@@ -536,7 +558,11 @@ public struct SessionConductor: Sendable {
             let rest = planned.dose.restSeconds
             phase = .rest(until: now + Double(rest))
             events.append(.phaseChanged(phase))
-            if rest > 10 {
+            if rest >= 10 && setIndex == 0 {
+                // A natural gap in the conversation: ask, then listen during the rest.
+                isCheckingIn = true
+                events.append(.say(CueCatalog.restCheckIn(seconds: rest)))
+            } else if rest > 10 {
                 events.append(.say(CueCatalog.rest(seconds: rest)))
             } else if !planned.spec.kind.isHold {
                 events.append(.say(.rest))

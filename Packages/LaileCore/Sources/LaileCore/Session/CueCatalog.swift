@@ -20,8 +20,22 @@ public enum CueCatalog {
         CueLine(withCameraTip ? "\(spec.cues.setup) \(spec.posture.cameraTip)" : spec.cues.setup, key: "ex.\(spec.id).setup")
     }
 
+    /// Said once the camera sees the user in position (their "reply" to the setup instructions).
     public static func go(_ spec: ExerciseSpec) -> CueLine {
-        CueLine("Perfect, I can see you. \(spec.cues.go)", key: "ex.\(spec.id).go")
+        CueLine("Perfect, I can see you. \(spec.cues.go) In your own time.", key: "ex.\(spec.id).go")
+    }
+
+    /// Start of the second and later sets, after the rest.
+    public static func nextSet(_ number: Int, of total: Int, hold: Bool) -> CueLine {
+        let words = CueLine.numberWords
+        let n = number < words.count ? words[number] : "\(number)"
+        let t = total < words.count ? words[total] : "\(total)"
+        return CueLine("Set \(n) of \(t). \(hold ? "Get back into position" : "Start") whenever you're ready.", key: "set.\(number).\(total)")
+    }
+
+    /// After the first set: a natural gap to ask, then listen during the rest.
+    public static func restCheckIn(seconds: Int) -> CueLine {
+        CueLine("Nice. Take \(seconds) seconds. How did that feel?", key: "rest.checkin.\(seconds)")
     }
 
     public static func form(_ check: FormCheck) -> CueLine { CueLine(check.cue, key: "form.\(check.id)") }
@@ -64,7 +78,7 @@ public enum CueCatalog {
     /// Lines almost every session uses: counts, holds, rests, safety responses, setup guidance.
     public static func core(emergencyNumber: String = "995") -> [CueLine] {
         var lines: [CueLine] = (0...30).map(CueLine.count)
-        lines += [.go, .holdIt, .relax, .niceWork, .rest, .sessionDone, .cantSee, .paused, further, medicationReferral, CoachVoice.sampleLine]
+        lines += [.go, .resumed, .holdIt, .relax, .niceWork, .rest, .sessionDone, .cantSee, .paused, further, medicationReferral, CoachVoice.sampleLine]
         lines += SymptomResponses.all + [SymptomResponses.emergency(number: emergencyNumber)]
         lines += [SetupIssue.noPerson, .tooClose, .tooFar, .offCenter, .needSideView, .needFrontView].map(\.guidance)
         return unique(lines)
@@ -87,6 +101,10 @@ public enum CueCatalog {
                 lines += stride(from: 35, through: hold, by: 5).map(seconds)
             }
             if planned.dose.restSeconds > 10 { lines.append(rest(seconds: planned.dose.restSeconds)) }
+            if planned.dose.sets > 1 {
+                if planned.dose.restSeconds >= 10 { lines.append(restCheckIn(seconds: planned.dose.restSeconds)) }
+                lines += (2...planned.dose.sets).map { nextSet($0, of: planned.dose.sets, hold: spec.kind.isHold) }
+            }
             previousPosture = spec.posture
         }
         return unique(lines)
@@ -116,12 +134,14 @@ public enum CueCatalog {
     public static func all(library: ExerciseLibrary = .standard, emergencyNumber: String = "995") -> [CueLine] {
         var lines: [CueLine] = []
         lines += (0...60).map(CueLine.count)
-        lines += [.go, .holdIt, .relax, .niceWork, .rest, .sessionDone, .cantSee, .paused, further, streamWelcome, medicationReferral,
+        lines += [.go, .resumed, .holdIt, .relax, .niceWork, .rest, .sessionDone, .cantSee, .paused, further, streamWelcome, medicationReferral,
                   CoachVoice.sampleLine]
         lines += SymptomResponses.all + [SymptomResponses.emergency(number: emergencyNumber)]
         lines += [SetupIssue.noPerson, .tooClose, .tooFar, .offCenter, .needSideView, .needFrontView].map(\.guidance)
         lines += BodyPart.allCases.map { missing([$0]) } + [missing([.hip, .knee])]
         lines += stride(from: 5, through: 120, by: 5).map { rest(seconds: $0) }
+        lines += stride(from: 10, through: 120, by: 5).map { restCheckIn(seconds: $0) }
+        for total in 2...5 { for n in 2...total { lines += [nextSet(n, of: total, hold: false), nextSet(n, of: total, hold: true)] } }
         lines += stride(from: 35, through: 180, by: 5).map { seconds($0) }
         for spec in library.all {
             lines += [intro(spec, first: true), intro(spec, first: false), setup(spec, withCameraTip: true), setup(spec, withCameraTip: false), go(spec)]

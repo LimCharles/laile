@@ -174,3 +174,51 @@ struct ConductorHarness {
         #expect(summary.exercises[0].repsPerSet == [1])
     }
 }
+
+/// The session should feel like a call: the coach finishes speaking before the next turn,
+/// hands the turn to the user without a countdown, and asks how a set felt.
+@Suite struct TurnTakingTests {
+    let library = ExerciseLibrary.standard
+
+    @Test func noCountdownOrGoJustInYourOwnTime() {
+        let heel = library.spec("heel-slide")!
+        var h = ConductorHarness(plan: [PlannedExercise(spec: heel, dose: Dose(sets: 1, reps: 2))])
+        h.getReady()
+        #expect(h.conductor.phase == .active)
+        #expect(!h.said.contains("Go!"))
+        #expect(!h.said.contains("Three"))
+        #expect(h.said.contains { $0.hasPrefix("Perfect, I can see you.") && $0.hasSuffix("In your own time.") })
+    }
+
+    @Test func waitsForTheCoachToFinishBeforeAnsweringTheUsersMove() {
+        let heel = library.spec("heel-slide")!
+        var h = ConductorHarness(plan: [PlannedExercise(spec: heel, dose: Dose(sets: 1, reps: 2))])
+        _ = h.conductor.coachSpeechChanged(true, at: h.t) // still reading the setup instructions
+        h.hold(170, seconds: 3)
+        #expect(h.conductor.phase == .setup)
+        #expect(!h.said.contains { $0.hasPrefix("Perfect") })
+        h.events += h.conductor.coachSpeechChanged(false, at: h.t)
+        h.hold(170, seconds: 0.2)
+        #expect(h.conductor.phase == .active)
+        #expect(h.said.contains { $0.hasPrefix("Perfect") })
+    }
+
+    @Test func asksHowItFeltAndAcknowledgesTheAnswer() {
+        let heel = library.spec("heel-slide")!
+        var h = ConductorHarness(plan: [PlannedExercise(spec: heel, dose: Dose(sets: 2, reps: 2, restSeconds: 20))])
+        h.getReady()
+        h.rep(); h.rep()
+        #expect(h.said.last == "Nice. Take 20 seconds. How did that feel?")
+        #expect(h.conductor.isCheckingIn)
+        h.events += h.conductor.report(SymptomReport(category: .normal, utterance: "felt good", source: .voiceOnDevice), at: h.t)
+        #expect(h.said.last == "Good to hear.")
+        #expect(!h.conductor.isCheckingIn)
+        // Rest end waits while the coach is talking, then the user gets the turn.
+        _ = h.conductor.coachSpeechChanged(true, at: h.t)
+        h.hold(170, seconds: 21)
+        if case .rest = h.conductor.phase {} else { Issue.record("expected to still be resting, got \(h.conductor.phase)") }
+        h.events += h.conductor.coachSpeechChanged(false, at: h.t)
+        #expect(h.conductor.phase == .active)
+        #expect(h.said.last == "Set two of two. Start whenever you're ready.")
+    }
+}
