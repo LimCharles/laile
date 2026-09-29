@@ -84,6 +84,11 @@ public enum PersonalProgramDrafter {
         public var program: Program
         /// One line per choice, in Lele's voice.
         public var reasons: [String]
+
+        public init(program: Program, reasons: [String]) {
+            self.program = program
+            self.reasons = reasons
+        }
     }
 
     public static func draft(_ profile: HealthProfile, library: ExerciseLibrary = .standard) -> Draft {

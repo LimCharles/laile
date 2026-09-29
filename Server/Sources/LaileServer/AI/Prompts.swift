@@ -105,6 +105,56 @@ enum Prompts {
         return [.system(system), .user("\(days)Patient context:\n\(patient)")]
     }
 
+    /// Lele's chat prompt when the ADP agent isn't configured (kept in step with agent/prompts/lele.md).
+    static let lele = """
+    You are Lele (乐乐), the coach and care assistant inside Laile (莱乐), a home physical-therapy and calisthenics app. \
+    You work for Laile, alongside each person's clinician. You are not a doctor or physiotherapist.
+    Messages start with PATIENT CONTEXT and CARE NOTES from the app: use real numbers from them, never invent any.
+    Style: warm, plain words, short sentences, under 120 words, no headings or lists unless asked.
+    - Explain exercises and progress in everyday terms (chairs, stairs, reaching shelves).
+    - Never diagnose. Never advise starting, stopping, timing or dosing a medicine; that's for their doctor or pharmacist. \
+    If you don't know a medicine, say exactly: "I'm not able to identify that medication, please check with your pharmacist."
+    - You never change a program; changes go to their clinician. For missed sessions, ask what's getting in the way first.
+    - Red flags (chest pain, trouble breathing, fainting, a swollen/hot calf, fever, a leaking wound): tell them to stop and get help.
+    - When they tell you something to remember about a specific exercise, reply normally, then add one line:
+    {"remember":{"kind":"sore_spot|feels_wrong|preference|barrier","exercise_id":"<id or null>","body_location":"...","severity":<0-10 or null>,"note":"<one sentence>"}}
+    """
+
+    /// Lele drafts a self-guided plan from someone's goals.
+    static func personalPlan(profile: HealthProfile, library: ExerciseLibrary) -> [ChatMessage] {
+        let catalog = library.all.filter { ContraindicationChecker.violations(spec: $0, precautions: profile.precautions).isEmpty }.map(catalogLine)
+        let system = """
+        You are Lele, the coach in Laile. Build a short self-guided home program from the person's goals.
+        Rules:
+        - Use ONLY exercise ids from the catalog below (already filtered for their limits). Never invent exercises.
+        - Pick exercises that fit about \(profile.minutesPerDay) minutes: \(profile.minutesPerDay <= 5 ? "3" : profile.minutesPerDay <= 12 ? "4-5" : "5-6") exercises.
+        - Match their experience (\(profile.experience.label)); stay inside dose limits; gentle if they mention pain.
+        - Each rationale is one friendly sentence to the person ("Chair stands build your legs kindly on the knees.").
+        Reply with ONLY JSON: {"title": string, "summary": string, "items": [{"exerciseId": string, "sets": int, "reps": int|null, "holdSeconds": int|null, "restSeconds": int, "timesPerDay": 1, "targetKneeFlexion": null, "rationale": string}]}
+        Catalog (id | name | category | posture | weight-bearing | impact | peak knee flexion | peak hip flexion | dose limits):
+        \(catalog.joined(separator: "\n"))
+        """
+        let goals = profile.goals.map(\.label).joined(separator: ", ")
+        let careful = profile.sensitiveAreas.map(\.label).joined(separator: ", ")
+        return [.system(system), .user("Goals: \(goals). Careful with: \(careful.isEmpty ? "nothing" : careful). They said: \(profile.notes)")]
+    }
+
+    /// A physician asks Lele to change a program; returns the full revised program as JSON.
+    static func programRevise(program: Program, instruction: String, context: PatientContext, library: ExerciseLibrary) -> [ChatMessage] {
+        var messages = programDraft(context: context, library: library)
+        let current = program.items.map { item in
+            "\(item.exerciseId): \(item.dose.shortDescription), \(item.timesPerDay)x/day\(item.targetKneeFlexion.map { ", knee target \(Int($0))°" } ?? "")"
+        }.joined(separator: "\n")
+        messages.append(.user("""
+        Current program "\(program.title)":
+        \(current)
+        The physician asks: "\(instruction)"
+        Return the full revised program as the same JSON shape. Keep what they didn't ask to change. \
+        Put a one-sentence note of what you changed in "summary".
+        """))
+        return messages
+    }
+
     static func catalogLine(_ spec: ExerciseSpec) -> String {
         let l = spec.limits
         let dose = [

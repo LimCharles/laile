@@ -14,12 +14,12 @@
   #else:
   <table>
     <thead>
-      <tr><th>Patient</th><th>Procedure</th><th>Last session</th><th>Adherence</th><th>Knee bend</th><th>Program</th><th>Flags</th></tr>
+      <tr><th>Patient</th><th>Condition</th><th>Last session</th><th>Adherence</th><th>Key measure</th><th>Program</th><th>Flags</th></tr>
     </thead>
     <tbody>
     #for(p in patients):
       <tr>
-        <td><a href="/portal/patients/#(p.id)"><strong>#(p.name)</strong></a><br><span class="muted small">#(p.dayLabel)</span></td>
+        <td><a href="/portal/patients/#(p.id)"><strong>#(p.name)</strong></a>#if(p.isLive): <span class="pill pill-live">● Live now</span>#endif#if(p.isDischarged): <span class="pill">Discharged</span>#endif<br><span class="muted small">#(p.dayLabel)</span></td>
         <td>#(p.procedure)</td>
         <td>#if(p.linked):#(p.lastSession)#else:<span class="pill">Invite <span class="code">#(p.inviteCode)</span></span>#endif</td>
         <td class="small">#(p.adherence)</td>

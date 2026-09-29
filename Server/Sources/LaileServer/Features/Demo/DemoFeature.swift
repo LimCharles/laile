@@ -22,6 +22,7 @@ enum DemoSeed {
     static let clinicianEmail = "clinician@laile.demo"
     static let patientEmail = "patient@laile.demo"
     static let moverEmail = "mover@laile.demo"
+    static let shoulderEmail = "shoulder@laile.demo"
 }
 
 struct DemoWorld {
@@ -44,7 +45,7 @@ struct DemoWorld {
     static func isGuest(_ user: UserModel) -> Bool { user.email.hasSuffix(guestDomain) }
 
     static func resetsOnLogin(_ user: UserModel) -> Bool {
-        user.email == DemoSeed.patientEmail || user.email == DemoSeed.moverEmail
+        user.email == DemoSeed.patientEmail || user.email == DemoSeed.moverEmail || user.email == DemoSeed.shoulderEmail
     }
 
     // MARK: Base accounts
@@ -63,6 +64,10 @@ struct DemoWorld {
         let mover = try await fixedUser(DemoSeed.moverEmail, name: "Alex (demo)", role: .mover, mode: .move)
         if try await SessionModel.query(on: db).filter(\.$user.$id == mover.requireID()).count() == 0 {
             try await seedMoverStory(user: mover)
+        }
+        let shoulder = try await fixedUser(DemoSeed.shoulderEmail, name: "Mr Ong (demo)", role: .patient, mode: .rehab)
+        if try await PatientProfileModel.query(on: db).filter(\.$user.$id == shoulder.requireID()).first() == nil {
+            try await seedShoulderStory(user: shoulder, clinician: clinician)
         }
         return clinician
     }
@@ -87,6 +92,11 @@ struct DemoWorld {
             user.mode = .rehab
             try await user.save(on: db)
             try await seedPatientStory(user: user, clinician: clinician, profileName: "Mdm Tan (demo)")
+        } else if user.email == DemoSeed.shoulderEmail {
+            user.role = .patient
+            user.mode = .rehab
+            try await user.save(on: db)
+            try await seedShoulderStory(user: user, clinician: clinician)
         } else {
             user.role = .mover
             user.mode = .move
@@ -138,6 +148,9 @@ struct DemoWorld {
         try await SymptomReportModel.query(on: db).filter(\.$user.$id == id).delete()
         try await MedicationLogModel.query(on: db).filter(\.$user.$id == id).delete()
         try await CareNoteModel.query(on: db).filter(\.$user.$id == id).delete()
+        try await EnrollmentModel.query(on: db).filter(\.$user.$id == id).delete()
+        try await HealthProfileModel.query(on: db).filter(\.$user.$id == id).delete()
+        try await LeleMessageModel.query(on: db).filter(\.$user.$id == id).delete()
         for profile in try await PatientProfileModel.query(on: db).filter(\.$user.$id == id).all() {
             try await ProgramModel.query(on: db).filter(\.$patient.$id == profile.requireID()).delete()
             try await profile.delete(on: db)
@@ -228,6 +241,7 @@ struct DemoWorld {
         )
         profile.$user.id = try user.requireID()
         profile.consentedAt = now.addingTimeInterval(-15 * day)
+        profile.nextVisitAt = Self.pastDay(-2, hour: 10, timeZone: tz, now: now)
         try await profile.create(on: db)
 
         var program = TemplateDrafter.draft(context: profile.context, patientId: try profile.requireID(), now: now.addingTimeInterval(-15 * day))
@@ -236,6 +250,11 @@ struct DemoWorld {
         program.signedBy = clinician.displayName
         program.painStopSetAbove = 4
         try await ProgramModel(patientID: profile.requireID(), program: program).create(on: db)
+        let enrollment = try await EnrollmentStore(db: db).ensureClinical(profile: profile, userID: user.requireID(),
+                                                                          joinedAt: now.addingTimeInterval(-15 * day))
+        try await HealthStore(db: db).save(HealthProfile(goals: [.recoverInjury, .getStronger], minutesPerDay: 15, experience: .new,
+                                                         sensitiveAreas: [.knees], notes: "Knee replacement, working with Dr Nair."),
+                                           userID: user.requireID())
 
         let ledger = RewardsLedger(user: user, db: db, engine: app.laile.rewardEngine(timeZone: user.timeZone))
         let recorder = SessionRecorder(db: db, library: app.laile.library, ledger: ledger)
@@ -276,20 +295,27 @@ struct DemoWorld {
                                               angle: 104, action: .continueExercise))
             }
             let summary = SessionSummary(
-                kind: i == 0 ? .baseline : .program, title: i == 0 ? "Knee check-in" : program.title, mode: .rehab,
-                startedAt: start, endedAt: start.addingTimeInterval(14 * 60), programId: program.id,
+                kind: i == 0 ? .baseline : .program, title: i == 0 ? "First-session check-in" : program.title, mode: .rehab,
+                startedAt: start, endedAt: start.addingTimeInterval(14 * 60), programId: program.id, enrollmentId: try enrollment.requireID(),
                 exercises: [ankle, quad, heel, slr], symptoms: symptoms, painBefore: max(1, 5 - i / 3), painAfter: max(1, 4 - i / 4)
             )
             _ = try await recorder.record(summary, userID: user.requireID(), now: summary.endedAt)
         }
     }
 
-    /// Everyday user with six days of lunch-break sessions and improving push-ups.
+    /// Everyday user: Ten-minute strength for six days (first session was the check-in), improving
+    /// push-ups, and a fresh plan from Lele waiting for its check-in.
     func seedMoverStory(user: UserModel) async throws {
         let now = Date()
         let tz = TimeZone(identifier: user.timeZone) ?? TimeZone(identifier: DemoSeed.timeZone)!
         let ledger = RewardsLedger(user: user, db: db, engine: app.laile.rewardEngine(timeZone: user.timeZone))
         let recorder = SessionRecorder(db: db, library: app.laile.library, ledger: ledger)
+        let userID = try user.requireID()
+        let health = HealthProfile(goals: [.getStronger, .moveMore], minutesPerDay: 10, experience: .some, sensitiveAreas: [],
+                                   notes: "Desk job, wants to do a full push-up.")
+        try await HealthStore(db: db).save(health, userID: userID)
+        let strength = try await EnrollmentStore(db: db).joinCatalog(SessionTemplate.builtIn("strength-10")!, userID: userID,
+                                                                    joinedAt: Self.pastDay(6, hour: 12, timeZone: tz, now: now))
         let pushUps = [6, 7, 7, 9, 10, 11]
         for (i, reps) in pushUps.enumerated() {
             let start = Self.pastDay(pushUps.count - i, hour: 12.5, timeZone: tz, now: now)
@@ -301,10 +327,59 @@ struct DemoWorld {
             squat.repsPerSet = [15 + i * 2]
             var plank = ExerciseResult(exerciseId: "plank", side: .left, plannedSets: 1)
             plank.holdSecondsPerSet = [30 + i * 6]
-            let summary = SessionSummary(kind: i == 0 ? .baseline : .snack, title: i == 0 ? "Fitness check" : "Lunch-break blast",
+            let summary = SessionSummary(kind: i == 0 ? .baseline : .workout, title: i == 0 ? "First-session check-in" : "Ten-minute strength",
                                          mode: .move, startedAt: start, endedAt: start.addingTimeInterval(7 * 60),
-                                         templateId: i == 0 ? "move-baseline" : "lunch-blast", exercises: [push, squat, plank])
-            _ = try await recorder.record(summary, userID: user.requireID(), now: summary.endedAt)
+                                         templateId: "strength-10", enrollmentId: try strength.requireID(), exercises: [push, squat, plank])
+            _ = try await recorder.record(summary, userID: userID, now: summary.endedAt)
+        }
+        let plan = PersonalProgramDrafter.draft(health).program
+        _ = try await EnrollmentStore(db: db).createPersonal(plan, userID: userID)
+    }
+
+    /// Stiff-shoulder patient, day 30: arm lift climbing from 95° to 128° over twelve sessions.
+    func seedShoulderStory(user: UserModel, clinician: UserModel) async throws {
+        let now = Date()
+        let tz = TimeZone(identifier: user.timeZone) ?? TimeZone(identifier: DemoSeed.timeZone)!
+        let day: TimeInterval = 86_400
+        let userID = try user.requireID()
+        let profile = PatientProfileModel(
+            clinicianID: try clinician.requireID(), displayName: "Mr Ong (demo)", age: 54, procedure: .stiffShoulder,
+            procedureDate: now.addingTimeInterval(-30 * day),
+            precautions: Precautions(affectedSide: .right, notes: "Stay within comfortable range; no forcing into pain."),
+            painStopSetAbove: 4, comorbidities: ["Type 2 diabetes"], goals: ["Reach the top kitchen shelf", "Put on a jacket without help"],
+            clinicalNotes: "Right frozen shoulder, thawing phase. Responding well to daily range work.", medications: []
+        )
+        profile.$user.id = userID
+        profile.consentedAt = now.addingTimeInterval(-28 * day)
+        try await profile.create(on: db)
+        var program = TemplateDrafter.draft(context: profile.context, patientId: try profile.requireID(), now: now.addingTimeInterval(-28 * day))
+        program.status = .signed
+        program.signedAt = now.addingTimeInterval(-28 * day)
+        program.signedBy = clinician.displayName
+        try await ProgramModel(patientID: profile.requireID(), program: program).create(on: db)
+        let enrollment = try await EnrollmentStore(db: db).ensureClinical(profile: profile, userID: userID, joinedAt: now.addingTimeInterval(-28 * day))
+        try await HealthStore(db: db).save(HealthProfile(goals: [.recoverInjury], minutesPerDay: 10, experience: .some, sensitiveAreas: [.shoulders]),
+                                           userID: userID)
+
+        let ledger = RewardsLedger(user: user, db: db, engine: app.laile.rewardEngine(timeZone: user.timeZone))
+        let recorder = SessionRecorder(db: db, library: app.laile.library, ledger: ledger)
+        let lift: [Double] = [95, 98, 101, 104, 106, 110, 113, 115, 119, 122, 125, 128]
+        for (i, angle) in lift.enumerated() {
+            let start = Self.pastDay((lift.count - i) * 2, hour: 19, timeZone: tz, now: now)
+            var pendulum = ExerciseResult(exerciseId: "pendulum", side: .right, plannedSets: 1)
+            pendulum.holdSecondsPerSet = [45]
+            var slides = ExerciseResult(exerciseId: "wall-slide", side: .right, plannedSets: 2)
+            slides.repsPerSet = [8, 8]
+            slides.maxAngle = angle + 12
+            var flexion = ExerciseResult(exerciseId: "shoulder-flexion", side: .right, plannedSets: 2)
+            flexion.repsPerSet = [10, i < 3 ? 8 : 10]
+            flexion.maxAngle = angle
+            flexion.minAngle = 22
+            let summary = SessionSummary(kind: i == 0 ? .baseline : .program, title: i == 0 ? "First-session check-in" : program.title,
+                                         mode: .rehab, startedAt: start, endedAt: start.addingTimeInterval(11 * 60), programId: program.id,
+                                         enrollmentId: try enrollment.requireID(), exercises: [pendulum, slides, flexion],
+                                         painBefore: max(1, 5 - i / 3), painAfter: max(1, 4 - i / 3))
+            _ = try await recorder.record(summary, userID: userID, now: summary.endedAt)
         }
     }
 

@@ -29,6 +29,9 @@ struct PortalFeature: LaileFeature {
         clinician.post("programs", ":programID", "sign", use: signProgram)
         clinician.post("programs", ":programID", "revise", use: reviseProgram)
         clinician.post("symptoms", ":symptomID", "review", use: reviewSymptom)
+        clinician.post("patients", ":patientID", "discharge", use: discharge)
+        clinician.post("patients", ":patientID", "visit", use: setNextVisit)
+        clinician.post("programs", ":programID", "ask-lele", use: askLele)
         clinician.get("streams", use: streams)
         clinician.post("streams", use: createStream)
     }
@@ -67,6 +70,7 @@ struct PortalFeature: LaileFeature {
     struct PatientRow: Encodable {
         var id: String, name: String, procedure: String, dayLabel: String, linked: Bool, inviteCode: String
         var lastSession: String, adherence: String, kneeFlexion: String, flagCount: Int, programStatus: String
+        var isLive: Bool, isDischarged: Bool
     }
 
     struct DashboardContext: Encodable {
@@ -80,17 +84,21 @@ struct PortalFeature: LaileFeature {
         let profiles = try await PatientProfileModel.query(on: req.db).filter(\.$clinician.$id == clinician.requireID())
             .sort(\.$createdAt, .descending).all()
         var rows: [PatientRow] = []
+        let live = await req.laile.live.liveUserIDs()
         for profile in profiles {
             let snapshot = try await PatientSnapshot.load(profile, on: req.db)
+            let keyMeasure = snapshot.trend(.kneeFlexion)?.latest.map { MetricKind.kneeFlexion.format($0.value) }
+                ?? snapshot.trend(.shoulderElevation)?.latest.map { "Arm " + MetricKind.shoulderElevation.format($0.value) }
             rows.append(PatientRow(
                 id: try profile.requireID().uuidString, name: profile.displayName, procedure: profile.procedure.label,
                 dayLabel: profile.context.daysSinceProcedure(now: Date()).map { "Day \($0)" } ?? "—",
                 linked: profile.$user.id != nil, inviteCode: profile.inviteCode,
                 lastSession: snapshot.sessions.first.map { Formatters.relative($0.endedAt) } ?? "No sessions yet",
                 adherence: snapshot.adherenceLabel,
-                kneeFlexion: snapshot.trend(.kneeFlexion)?.latest.map { MetricKind.kneeFlexion.format($0.value) } ?? "—",
+                kneeFlexion: keyMeasure ?? "—",
                 flagCount: snapshot.flags.count,
-                programStatus: snapshot.programs.first.map { "v\($0.version) \($0.status.rawValue)" } ?? "No program"
+                programStatus: snapshot.programs.first.map { "v\($0.version) \($0.status.rawValue)" } ?? "No program",
+                isLive: profile.$user.id.map(live.contains) ?? false, isDischarged: profile.dischargedAt != nil
             ))
         }
         return try await req.view.render("dashboard", DashboardContext(clinicianName: clinician.displayName, patients: rows, llmName: req.laile.llm.name))
@@ -185,6 +193,7 @@ struct PortalFeature: LaileFeature {
         var charts: [ChartVM], symptoms: [SymptomVM], flags: [String], programs: [ProgramRowVM]
         var medications: [MedicationVM], sessions: [SessionVM], adherence: String
         var careNotes: [CareNoteVM]
+        var lifecycle: LifecycleVM
     }
 
     func patientDetail(req: Request) async throws -> View {
@@ -205,7 +214,8 @@ struct PortalFeature: LaileFeature {
             medications: profile.medications.map { MedicationVM(name: $0.name, dose: $0.doseText, purpose: $0.purpose, times: $0.times.map(\.label).joined(separator: ", ")) },
             sessions: snapshot.sessions.prefix(12).map(Self.sessionVM),
             adherence: snapshot.adherenceLabel,
-            careNotes: snapshot.careNotes.prefix(12).map(Self.careNoteVM)
+            careNotes: snapshot.careNotes.prefix(12).map(Self.careNoteVM),
+            lifecycle: try await LifecycleVM.load(profile, on: req.db)
         )
         return try await req.view.render("patient", vm)
     }

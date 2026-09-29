@@ -12,6 +12,52 @@
   </div>
 </div>
 
+#if(lifecycle.discharged):
+<div class="notice">Discharged #(lifecycle.dischargedOn)#if(lifecycle.dischargeNote != ""): · “#(lifecycle.dischargeNote)”#endif. The patient keeps their history and continues self-guided.</div>
+#endif
+
+#if(linked):
+<div class="card live-card" id="live" data-url="/portal/patients/#(id)/live">
+  <div class="row" style="justify-content:space-between">
+    <h2><span class="live-dot" id="live-dot"></span> Live session</h2>
+    <span class="muted small" id="live-status">Not exercising right now. This updates every 2 seconds.</span>
+  </div>
+  <div id="live-body" class="live-body" hidden>
+    <div class="live-main"><strong id="live-exercise"></strong> <span class="muted" id="live-progress"></span></div>
+    <div class="live-stats">
+      <div><p class="muted small">Reps / hold</p><p class="stat" id="live-count">–</p></div>
+      <div><p class="muted small">Measured</p><p class="stat" id="live-angle">–</p></div>
+      <div><p class="muted small">Reports this session</p><p class="stat" id="live-reports">0</p></div>
+    </div>
+    <p class="small" id="live-heard"></p>
+  </div>
+</div>
+<script>
+(function () {
+  const card = document.getElementById('live');
+  async function poll() {
+    try {
+      const r = await fetch(card.dataset.url, { credentials: 'same-origin' });
+      const v = await r.json();
+      const on = v.live && v.update;
+      document.getElementById('live-dot').classList.toggle('on', !!on);
+      document.getElementById('live-body').hidden = !on;
+      if (!on) { document.getElementById('live-status').textContent = 'Not exercising right now. This updates every 2 seconds.'; return; }
+      const u = v.update;
+      document.getElementById('live-status').textContent = 'Live · ' + u.sessionTitle;
+      document.getElementById('live-exercise').textContent = u.exerciseName;
+      document.getElementById('live-progress').textContent = 'exercise ' + (u.exerciseIndex + 1) + ' of ' + u.exerciseCount + ' · set ' + (u.setIndex + 1) + ' of ' + u.totalSets + ' · ' + u.phase;
+      document.getElementById('live-count').textContent = u.targetHoldSeconds ? (u.holdSeconds + ' / ' + u.targetHoldSeconds + 's') : (u.reps + (u.targetReps ? ' / ' + u.targetReps : ''));
+      document.getElementById('live-angle').textContent = u.angleLabel || '–';
+      document.getElementById('live-reports').textContent = u.symptomsLogged;
+      document.getElementById('live-heard').textContent = u.lastHeard ? '“' + u.lastHeard + '”' : '';
+    } catch (e) {}
+  }
+  poll(); setInterval(poll, 2000);
+})();
+</script>
+#endif
+
 #if(!linked):
 <div class="notice">Not linked yet. Give the patient invite code <span class="code">#(inviteCode)</span> — they enter it in the Laile app under Me → Link my clinician.</div>
 #endif
@@ -93,6 +139,28 @@
   </div>
 </div>
 
+<div class="grid grid-2">
+  <div class="card">
+    <h2>First-session check-in</h2>
+    <p class="muted small">The patient's first session measured where they are; Lele set their working targets from it, never above what you prescribed.</p>
+    #if(count(lifecycle.calibration) == 0):<p class="muted">Not done yet. Lele will prompt them.</p>#else:
+    <ul>#for(c in lifecycle.calibration):<li>#(c)</li>#endfor</ul>
+    <p class="muted small">Measured #(lifecycle.calibratedOn)</p>#endif
+    #if(count(lifecycle.otherPrograms) > 0):
+    <p class="small"><strong>Also doing:</strong> #for(o in lifecycle.otherPrograms):#(o) · #endfor</p>#endif
+  </div>
+  <div class="card">
+    <h2>Conversation with Lele</h2>
+    <p class="muted small">Check-ins, nudges and chats, including what they answered.</p>
+    #if(count(lifecycle.conversation) == 0):<p class="muted">Nothing yet.</p>#endif
+    <div class="convo">
+    #for(m in lifecycle.conversation):
+      <div class="bubble #if(m.isLele):lele#else:person#endif"><span class="muted small">#(m.who) · #(m.when)</span><br>#(m.text)#if(m.answer != ""):<br><span class="pill">Answered: #(m.answer)</span>#endif</div>
+    #endfor
+    </div>
+  </div>
+</div>
+
 <div class="card">
   <div class="row" style="justify-content:space-between">
     <h2>Lele's notes</h2>
@@ -128,6 +196,28 @@
   </form>
   #endif
 </div>
+
+#if(linked):
+<div class="grid grid-2 no-print">
+  <form method="post" action="/portal/patients/#(id)/visit" class="card">
+    <h2>Next appointment</h2>
+    <p class="muted small">Lele helps the patient prepare questions two days before.</p>
+    <div class="row"><input type="datetime-local" name="next_visit" value="#(lifecycle.nextVisitInput)"><button class="btn" type="submit">Save</button></div>
+    #if(lifecycle.nextVisit != ""):<p class="small">Booked: #(lifecycle.nextVisit)</p>#endif
+  </form>
+  #if(!lifecycle.discharged):
+  <form method="post" action="/portal/patients/#(id)/discharge" class="card" onsubmit="return confirm('Discharge this patient from their physio program?')">
+    <h2>Discharge</h2>
+    <p class="muted small">Only you can end physio. The patient keeps their history and continues self-guided.</p>
+    <label class="small">Continue with (Lele suggests #(lifecycle.suggestedFollowOn))</label>
+    <select name="follow_on">#for(o in lifecycle.followOnOptions):<option value="#(o.value)" #if(o.selected):selected#endif>#(o.label)</option>#endfor</select>
+    <label class="small"><input type="checkbox" name="carry_precautions" checked> Keep this patient's precautions in every program</label>
+    <input type="text" name="note" placeholder="Note for the patient (optional)" maxlength="300" style="width:100%;margin:0.4rem 0">
+    <button class="btn" type="submit">Discharge</button>
+  </form>
+  #endif
+</div>
+#endif
 
 <div class="card table-wrap">
   <h2>Recent sessions</h2>

@@ -43,6 +43,8 @@ struct LaileConfig: Sendable {
     var seedDemoData: Bool
     var emergencyNumber: String
     var speech: SpeechConfig?
+    /// Tencent Cloud ADP app key for Lele's conversations (knowledge base + Hunyuan).
+    var adpAppKey: String?
 
     static func fromEnvironment(_ env: Environment) -> LaileConfig {
         func value(_ key: String) -> String? {
@@ -72,7 +74,8 @@ struct LaileConfig: Sendable {
             trtc: trtc,
             seedDemoData: value("SEED_DEMO_DATA").map { $0 == "true" } ?? (env != .production),
             emergencyNumber: value("EMERGENCY_NUMBER") ?? "995",
-            speech: SpeechConfig.fromEnvironment()
+            speech: SpeechConfig.fromEnvironment(),
+            adpAppKey: value("ADP_APP_KEY")
         )
     }
 }
@@ -87,6 +90,8 @@ final class AppServices: Sendable {
     let library = ExerciseLibrary.standard
     let streamHub = StreamHub()
     let voiceSessions = VoiceSessionStore()
+    /// What each person is doing right now in a session, for their clinician's live view.
+    let live = LiveSessionStore()
 
     init(config: LaileConfig, llm: any LLMProvider, speech: (any SpeechSynthesizer)? = nil) {
         self.config = config

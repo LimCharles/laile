@@ -22,6 +22,9 @@ final class PatientProfileModel: Model, @unchecked Sendable {
     @Field(key: "medications") var medications: [Medication]
     @Field(key: "invite_code") var inviteCode: String
     @OptionalField(key: "consented_at") var consentedAt: Date?
+    @OptionalField(key: "next_visit_at") var nextVisitAt: Date?
+    @OptionalField(key: "discharged_at") var dischargedAt: Date?
+    @OptionalField(key: "discharge_note") var dischargeNote: String?
     @Timestamp(key: "created_at", on: .create) var createdAt: Date?
 
     init() {}
@@ -148,6 +151,7 @@ struct PatientsFeature: LaileFeature {
         let code = InviteCode.normalize(body.inviteCode)
         if code == DemoSeed.inviteCode, req.laile.config.seedDemoData {
             let profile = try await req.db.transaction { db in try await DemoWorld(app: req.application, db: db).linkWithDemoCode(user: user) }
+            try await EnrollmentStore(db: req.db).ensureClinical(profile: profile, userID: user.requireID())
             user.role = .patient
             user.mode = .rehab
             try await user.save(on: req.db)
@@ -162,6 +166,7 @@ struct PatientsFeature: LaileFeature {
         profile.$user.id = try user.requireID()
         profile.consentedAt = Date()
         try await profile.save(on: req.db)
+        try await EnrollmentStore(db: req.db).ensureClinical(profile: profile, userID: user.requireID())
         user.role = .patient
         user.mode = .rehab
         try await user.save(on: req.db)
@@ -170,18 +175,27 @@ struct PatientsFeature: LaileFeature {
 
     func today(req: Request) async throws -> API.TodayPlan {
         let user = try req.user
-        let templates = SessionTemplate.builtIn.filter { $0.mode == .move || user.mode == .rehab }
-        let careNotes = try await CareNoteStore(db: req.db).active(for: user.requireID())
-        guard user.mode == .rehab, let profile = try await user.patientProfile(on: req.db) else {
-            return API.TodayPlan(mode: .move, program: nil, clinicianName: nil, templates: templates, medicationDoses: [], careNotes: careNotes)
+        let userID = try user.requireID()
+        let careNotes = try await CareNoteStore(db: req.db).active(for: userID)
+        let enrollments = try await EnrollmentStore(db: req.db).active(for: userID)
+        let health = try await HealthStore(db: req.db).get(userID)
+        let service = LeleService(app: req.application, db: req.db, logger: req.logger)
+        try await service.round(for: user)
+        let lele = try await service.recent(for: userID, limit: 20)
+        let supervised = enrollments.first(where: \.isSupervised)
+        guard let profile = try await service.activePatientProfile(for: userID) else {
+            return API.TodayPlan(mode: supervised == nil ? .move : .rehab, program: supervised?.program, clinicianName: supervised?.supervisorName,
+                                 templates: SessionTemplate.snacks, medicationDoses: [], careNotes: careNotes,
+                                 enrollments: enrollments, health: health, lele: lele)
         }
-        let program = try await ProgramModel.activeSigned(for: profile.requireID(), on: req.db)?.program
         let timeZone = TimeZone(identifier: user.timeZone) ?? .current
         let day = DayKey(Date(), timeZone: timeZone)
-        let log = try await MedicationLogModel.query(on: req.db).filter(\.$user.$id == user.requireID())
+        let log = try await MedicationLogModel.query(on: req.db).filter(\.$user.$id == userID)
             .filter(\.$day == day.description).all().compactMap(\.entry)
-        return API.TodayPlan(mode: .rehab, program: program, clinicianName: profile.clinician.displayName, templates: templates,
-                             medicationDoses: MedicationSchedule.doses(for: profile.medications, on: day, log: log), careNotes: careNotes)
+        return API.TodayPlan(mode: .rehab, program: supervised?.program, clinicianName: profile.clinician.displayName,
+                             templates: SessionTemplate.snacks,
+                             medicationDoses: MedicationSchedule.doses(for: profile.medications, on: day, log: log), careNotes: careNotes,
+                             enrollments: enrollments, health: health, lele: lele)
     }
 
     func medicationTaken(req: Request) async throws -> HTTPStatus {

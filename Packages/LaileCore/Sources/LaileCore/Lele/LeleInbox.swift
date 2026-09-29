@@ -146,7 +146,7 @@ public enum LeleRound {
             propose("med-\(dose.medication.id)-\(day)-\(dose.scheduled.label)", initiative: false) {
                 LeleMessage(createdAt: input.now, kind: .reminder,
                             text: "It's \(dose.scheduled.label): \(dose.medication.name), \(dose.medication.doseText). \(dose.medication.purpose) Tap when you've taken it.",
-                            actions: [LeleAction(id: "taken", label: "Taken", kind: .reply, value: "\(dose.medication.id)|\(dose.scheduled.label)")])
+                            actions: [LeleAction(id: "taken", label: "Taken", kind: .reply, value: "\(dose.medication.id)|\(dose.scheduled.hour):\(dose.scheduled.minute)")])
             }
         }
 

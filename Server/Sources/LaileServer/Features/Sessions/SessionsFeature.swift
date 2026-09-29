@@ -148,6 +148,8 @@ struct SessionRecorder {
         }
         // Lele's memory: sore spots ease that exercise next time; comfortable sessions ease it back.
         let careNotes = try await CareNoteStore(db: db).record(after: summary, userID: userID)
+        // A program's first session is a check-in that sets personal targets.
+        try await EnrollmentStore(db: db).calibrate(from: summary, userID: userID)
 
         // Rewards: one movement record, plus a PB bonus when earned.
         let activityKind: ActivityKind = switch summary.kind {
