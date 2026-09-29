@@ -96,11 +96,14 @@ public enum API {
         public var health: HealthProfile?
         /// Lele's latest messages (newest first), including open questions.
         public var lele: [LeleMessage]
+        /// Programs the person asked their physio to add, newest first.
+        public var requests: [ProgramRequest]
         public init(mode: AppMode, program: Program?, clinicianName: String?, templates: [SessionTemplate], medicationDoses: [MedicationDose],
-                    careNotes: [CareNote] = [], enrollments: [Enrollment] = [], health: HealthProfile? = nil, lele: [LeleMessage] = []) {
+                    careNotes: [CareNote] = [], enrollments: [Enrollment] = [], health: HealthProfile? = nil, lele: [LeleMessage] = [],
+                    requests: [ProgramRequest] = []) {
             self.mode = mode; self.program = program; self.clinicianName = clinicianName
             self.templates = templates; self.medicationDoses = medicationDoses; self.careNotes = careNotes
-            self.enrollments = enrollments; self.health = health; self.lele = lele
+            self.enrollments = enrollments; self.health = health; self.lele = lele; self.requests = requests
         }
 
         /// Precautions for any session: the person's own plus their clinician's.

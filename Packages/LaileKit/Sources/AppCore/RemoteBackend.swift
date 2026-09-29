@@ -84,6 +84,9 @@ public final class RemoteBackend: LaileBackend {
     public func join(catalogId: String) async throws -> Enrollment {
         try await send("POST", "v1/enrollments", body: API.JoinProgramRequest(catalogId: catalogId))
     }
+    public func requestProgram(catalogId: String) async throws -> API.LeleTurnResponse {
+        try await send("POST", "v1/requests", body: API.JoinProgramRequest(catalogId: catalogId))
+    }
     public func leave(enrollmentId: UUID) async throws -> Enrollment { try await send("POST", "v1/enrollments/\(enrollmentId.uuidString)/leave") }
     public func plan(_ profile: HealthProfile) async throws -> API.PlanResponse {
         try await send("POST", "v1/plan", body: API.PlanRequest(profile: profile))

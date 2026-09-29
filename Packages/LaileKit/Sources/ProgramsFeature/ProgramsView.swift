@@ -27,14 +27,16 @@ struct ProgramsView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    mine
-                    startSomething
-                    explore
-                    liveClasses
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        mine
+                        startSomething { withAnimation { proxy.scrollTo("explore", anchor: .top) } }
+                        explore.id("explore")
+                        liveClasses
+                    }
+                    .padding(16)
                 }
-                .padding(16)
             }
             .screenBackground()
             .navigationTitle("Programs")
@@ -80,13 +82,11 @@ struct ProgramsView: View {
         }
     }
 
-    private var startSomething: some View {
+    private func startSomething(showExplore: @escaping () -> Void) -> some View {
         HStack(spacing: 12) {
             if let supervisor = app.supervisorName {
-                // While a physio supervises, extra programs go through them.
-                tile("Want to do more?", subtitle: "Lele asks \(supervisor)", symbol: "bubble.left.and.text.bubble.right", color: Theme.accent) {
-                    app.askLele("I'd like to do more alongside my program. Could you check with \(supervisor) what I can add?")
-                }
+                // While a physio supervises, extra programs go through them: pick one, Lele asks.
+                tile("Want to do more?", subtitle: "Pick one; \(supervisor) approves", symbol: "plus.circle", color: Theme.accent, action: showExplore)
             } else {
                 tile("Ask Lele for a plan", subtitle: "Tell it your goals", symbol: "sparkles", color: Theme.accent) { showGoals = true }
             }

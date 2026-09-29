@@ -28,6 +28,8 @@ public protocol LaileBackend: AnyObject {
     /// Programs the person is in, active first.
     func enrollments() async throws -> [Enrollment]
     func join(catalogId: String) async throws -> Enrollment
+    /// Asks the supervising physio to add a catalog program (Lele passes it on).
+    func requestProgram(catalogId: String) async throws -> API.LeleTurnResponse
     func leave(enrollmentId: UUID) async throws -> Enrollment
     /// The goals conversation: saves the health profile and returns Lele's plan.
     func plan(_ profile: HealthProfile) async throws -> API.PlanResponse

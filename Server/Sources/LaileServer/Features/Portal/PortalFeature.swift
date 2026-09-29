@@ -73,9 +73,16 @@ struct PortalFeature: LaileFeature {
         var isLive: Bool, isDischarged: Bool
     }
 
+    /// One line of "Today from Lele".
+    struct BriefRow: Encodable {
+        var patientId: String, patientName: String, text: String, priority: String, when: String
+        var isRequest: Bool, requestId: String, isDraft: Bool, programId: String
+    }
+
     struct DashboardContext: Encodable {
         var clinicianName: String
         var patients: [PatientRow]
+        var brief: [BriefRow]
         var llmName: String
     }
 
@@ -84,9 +91,19 @@ struct PortalFeature: LaileFeature {
         let profiles = try await PatientProfileModel.query(on: req.db).filter(\.$clinician.$id == clinician.requireID())
             .sort(\.$createdAt, .descending).all()
         var rows: [PatientRow] = []
+        var brief: [(item: BriefItem, row: BriefRow)] = []
         let live = await req.laile.live.liveUserIDs()
         for profile in profiles {
             let snapshot = try await PatientSnapshot.load(profile, on: req.db)
+            if profile.dischargedAt == nil, let userID = profile.$user.id {
+                for item in try await Self.brief(for: profile, userID: userID, snapshot: snapshot, on: req.db) {
+                    brief.append((item, BriefRow(
+                        patientId: try profile.requireID().uuidString, patientName: profile.displayName, text: item.text,
+                        priority: "\(item.priority)", when: item.at.map(Formatters.relative) ?? "",
+                        isRequest: item.requestId != nil, requestId: item.requestId?.uuidString ?? "",
+                        isDraft: item.programId != nil, programId: item.programId?.uuidString ?? "")))
+                }
+            }
             let keyMeasure = snapshot.trend(.kneeFlexion)?.latest.map { MetricKind.kneeFlexion.format($0.value) }
                 ?? snapshot.trend(.shoulderElevation)?.latest.map { "Arm " + MetricKind.shoulderElevation.format($0.value) }
             rows.append(PatientRow(
@@ -101,7 +118,30 @@ struct PortalFeature: LaileFeature {
                 isLive: profile.$user.id.map(live.contains) ?? false, isDischarged: profile.dischargedAt != nil
             ))
         }
-        return try await req.view.render("dashboard", DashboardContext(clinicianName: clinician.displayName, patients: rows, llmName: req.laile.llm.name))
+        let ordered = brief.sorted { a, b in
+            a.item.priority != b.item.priority ? a.item.priority < b.item.priority : (a.item.at ?? .distantPast) > (b.item.at ?? .distantPast)
+        }.map(\.row)
+        return try await req.view.render("dashboard", DashboardContext(clinicianName: clinician.displayName, patients: rows,
+                                                                       brief: ordered, llmName: req.laile.llm.name))
+    }
+
+    /// What Lele noticed about one patient, for the clinician's daily list.
+    static func brief(for profile: PatientProfileModel, userID: UUID, snapshot: PatientSnapshot, on db: Database) async throws -> [BriefItem] {
+        let unreviewed = snapshot.symptoms.filter { $0.reviewedAt == nil }
+        let enrollments = try await EnrollmentStore(db: db).all(for: userID)
+        return ClinicianBrief.items(for: BriefInput(
+            now: Date(), timeZone: Formatters.zone,
+            redFlags: unreviewed.filter { $0.report.category == .redFlag }.map { ($0.reportedAt, $0.report.redFlagReason ?? $0.report.utterance) },
+            unreviewedReports: unreviewed.filter { $0.report.category.needsClinicianReview && $0.report.category != .redFlag }.map(\.reportedAt),
+            careNotes: snapshot.careNotes,
+            lastSessionAt: snapshot.sessions.first?.endedAt,
+            hasSignedProgram: snapshot.programs.contains { $0.status == .signed },
+            checkIns: enrollments.compactMap { e in e.calibration.map { (e.title, $0.measuredAt) } },
+            drafts: snapshot.programs.filter { $0.status == .draft },
+            requests: try await RequestStore(db: db).pending(forProfile: profile.requireID()),
+            progressFlags: snapshot.trends.flatMap(\.flags).map(\.message),
+            nextVisitAt: profile.nextVisitAt
+        ))
     }
 
     // MARK: - Create patient

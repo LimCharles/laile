@@ -8,6 +8,38 @@
   <a class="btn btn-primary" href="/portal/patients/new">+ New patient</a>
 </div>
 
+<div class="card brief">
+  <div class="brief-head">
+    <h2>Today from Lele</h2>
+    <p class="muted small">What Lele noticed since yesterday, most pressing first. Nothing here changes a program until you do.</p>
+  </div>
+  #if(count(brief) == 0):
+    <p class="muted">All quiet. Nothing needs you today.</p>
+  #else:
+  <ul class="brief-list">
+    #for(b in brief):
+    <li class="brief-item brief-#(b.priority)">
+      <span class="brief-dot" aria-hidden="true"></span>
+      <div class="brief-body">
+        <a href="/portal/patients/#(b.patientId)"><strong>#(b.patientName)</strong></a>
+        <span>#(b.text)</span>
+        <span class="muted small">#(b.when)</span>
+      </div>
+      #if(b.isRequest):
+      <div class="brief-actions">
+        <form method="post" action="/portal/requests/#(b.requestId)/approve"><input type="hidden" name="back" value="/portal"><button class="btn btn-primary btn-small" type="submit">Approve</button></form>
+        <form method="post" action="/portal/requests/#(b.requestId)/decline" class="decline-form"><input type="hidden" name="back" value="/portal"><input type="text" name="note" placeholder="Why not yet? (optional)"><button class="btn btn-small" type="submit">Not yet</button></form>
+      </div>
+      #endif
+      #if(b.isDraft):
+      <div class="brief-actions"><a class="btn btn-small" href="/portal/programs/#(b.programId)">Review draft</a></div>
+      #endif
+    </li>
+    #endfor
+  </ul>
+  #endif
+</div>
+
 <div class="card table-wrap">
   #if(count(patients) == 0):
     <p class="muted">No patients yet. Create one to get an invite code for their app.</p>

@@ -157,12 +157,6 @@ public final class AppModel {
     public var supervisorName: String? {
         activeEnrollments.first(where: \.isSupervised).map { $0.supervisorName ?? "your physio" }
     }
-
-    /// Opens the chat with Lele with `text` ready to send.
-    public func askLele(_ text: String) {
-        leleDraft = text
-        selectedTab = "lele"
-    }
     /// Limits for every session: the person's own, their clinician's, and gentle mode.
     public var precautions: Precautions {
         let base = today?.precautions ?? .none
@@ -195,6 +189,23 @@ public final class AppModel {
         } catch {
             lastError = error.localizedDescription
             return nil
+        }
+    }
+
+    /// The latest time the person asked their physio about this catalog program.
+    public func request(for catalogId: String) -> ProgramRequest? {
+        today?.requests.first { $0.catalogId == catalogId }
+    }
+
+    /// Asks the physio to add a catalog program. Returns an error message if it couldn't be sent.
+    public func requestProgram(_ template: SessionTemplate) async -> String? {
+        do {
+            let turn = try await backend.requestProgram(catalogId: template.id)
+            merge(turn.messages)
+            today = (try? await backend.today()) ?? today
+            return nil
+        } catch {
+            return error.localizedDescription
         }
     }
 

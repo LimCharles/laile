@@ -218,6 +218,7 @@ struct EnrollmentsFeature: LaileFeature {
         api.post("enrollments") { req async throws -> Enrollment in
             let body = try req.content.decode(API.JoinProgramRequest.self)
             guard let template = SessionTemplate.catalogPrograms.first(where: { $0.id == body.catalogId }) else { throw Abort(.notFound) }
+            try await requireNotSupervised(req)
             let store = EnrollmentStore(db: req.db)
             return try await store.resolve(store.joinCatalog(template, userID: req.user.requireID()))
         }
@@ -243,8 +244,17 @@ struct EnrollmentsFeature: LaileFeature {
         api.post("plan", use: plan)
     }
 
+    /// While a physio supervises someone, anything added to their plan goes through the physio
+    /// (the app offers to ask them via Lele instead).
+    func requireNotSupervised(_ req: Request) async throws {
+        if let profile = try await LeleService(app: req.application, db: req.db, logger: req.logger).activePatientProfile(for: req.user.requireID()) {
+            throw Abort(.forbidden, reason: "You're in \(CallName.plain(profile.clinician.displayName))'s program, so they check anything you add. Ask Lele to pass it on.")
+        }
+    }
+
     /// The goals conversation's result: Lele builds a personal program and explains it.
     func plan(req: Request) async throws -> API.PlanResponse {
+        try await requireNotSupervised(req)
         let user = try req.user
         let userID = try user.requireID()
         var profile = try req.content.decode(API.PlanRequest.self).profile

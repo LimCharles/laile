@@ -253,6 +253,40 @@ final class ProgramsFlowTests: XCTestCase {
         XCTAssertEqual(clinical.program.id, signed.id)
     }
 
+    func testSupervisedPatientsAskTheirPhysioWhoApprovesFromTheDailyList() async throws {
+        let auth = try await demo(.patient)
+        try await app.test(.POST, "v1/enrollments", headers: bearer(auth.token), beforeRequest: { req in
+            try req.content.encode(API.JoinProgramRequest(catalogId: "squat-strong"))
+        }, afterResponse: { res in XCTAssertEqual(res.status, .forbidden) })
+
+        var turn: API.LeleTurnResponse?
+        try await app.test(.POST, "v1/requests", headers: bearer(auth.token), beforeRequest: { req in
+            try req.content.encode(API.JoinProgramRequest(catalogId: "squat-strong"))
+        }, afterResponse: { res in turn = try res.content.decode(API.LeleTurnResponse.self) })
+        XCTAssertTrue(turn?.messages.first?.text.contains("I've asked") ?? false)
+
+        let cookie = try await portalCookie()
+        var dashboard = ""
+        try await app.test(.GET, "portal", headers: cookie) { res in dashboard = res.body.string }
+        XCTAssertTrue(dashboard.contains("Today from Lele"))
+        XCTAssertTrue(dashboard.contains("Asks to add Squat strong"))
+
+        let requestFound = try await ProgramRequestModel.query(on: app.db).filter(\.$user.$id == auth.user.id).first()
+        let request = try XCTUnwrap(requestFound)
+        try await app.test(.POST, "portal/requests/\(try request.requireID())/approve", headers: cookie, beforeRequest: { req in
+            try req.content.encode(["back": "/portal"], as: .urlEncodedForm)
+        }, afterResponse: { res in XCTAssertEqual(res.status, .seeOther) })
+
+        let joined = try await enrollments(auth.token).first { $0.catalogId == "squat-strong" }
+        XCTAssertNotNil(joined)
+        var messages: [LeleMessage] = []
+        try await app.test(.GET, "v1/lele/messages", headers: bearer(auth.token)) { res in messages = try res.content.decode([LeleMessage].self) }
+        XCTAssertTrue(messages.contains { $0.text.contains("says yes to Squat strong") && $0.actions.first?.kind == .startSession })
+        try await app.test(.GET, "v1/today", headers: bearer(auth.token)) { res in
+            XCTAssertEqual(try res.content.decode(API.TodayPlan.self).requests.first?.status, .approved)
+        }
+    }
+
     func testShoulderDemoPatientHasAnArmLiftTrend() async throws {
         try await DemoWorld(app: app).ensureBase()
         let userFound = try await UserModel.query(on: app.db).filter(\.$email == DemoSeed.shoulderEmail).first()

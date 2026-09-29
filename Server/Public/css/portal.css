@@ -160,3 +160,20 @@ details summary { cursor: pointer; }
 .bubble.person { background: var(--surface-2, rgba(127,127,127,0.12)); }
 .ask-lele { border: 1px solid var(--accent); }
 select { padding: 0.45rem; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: inherit; width: 100%; margin: 0.3rem 0; }
+
+/* Today from Lele: the clinician's daily list */
+.brief { margin-bottom: 1rem; }
+.brief-head { margin-bottom: 0.5rem; }
+.brief-list { list-style: none; margin: 0; padding: 0; }
+.brief-item { display: flex; gap: 0.75rem; align-items: flex-start; padding: 0.65rem 0; border-top: 1px solid var(--border); flex-wrap: wrap; }
+.brief-item:first-child { border-top: none; }
+.brief-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; margin-top: 0.45rem; background: var(--muted); }
+.brief-urgent .brief-dot { background: var(--danger); }
+.brief-today .brief-dot { background: var(--warn); }
+.brief-urgent .brief-body > span:first-of-type { color: var(--danger); font-weight: 600; }
+.brief-body { flex: 1 1 18rem; min-width: 0; }
+.brief-body > * { margin-right: 0.35rem; }
+.brief-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+.brief-actions form { display: flex; gap: 0.4rem; margin: 0; }
+.decline-form input[type="text"] { width: 12rem; max-width: 100%; padding: 0.3rem 0.5rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; font-size: 0.85rem; }
+.btn-small { padding: 0.3rem 0.7rem; font-size: 0.85rem; }

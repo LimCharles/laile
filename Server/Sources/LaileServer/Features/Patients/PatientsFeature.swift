@@ -182,11 +182,12 @@ struct PatientsFeature: LaileFeature {
         let service = LeleService(app: req.application, db: req.db, logger: req.logger)
         try await service.round(for: user)
         let lele = try await service.recent(for: userID, limit: 20)
+        let requests = try await RequestStore(db: req.db).all(for: userID)
         let supervised = enrollments.first(where: \.isSupervised)
         guard let profile = try await service.activePatientProfile(for: userID) else {
             return API.TodayPlan(mode: supervised == nil ? .move : .rehab, program: supervised?.program, clinicianName: supervised?.supervisorName,
                                  templates: SessionTemplate.snacks, medicationDoses: [], careNotes: careNotes,
-                                 enrollments: enrollments, health: health, lele: lele)
+                                 enrollments: enrollments, health: health, lele: lele, requests: requests)
         }
         let timeZone = TimeZone(identifier: user.timeZone) ?? .current
         let day = DayKey(Date(), timeZone: timeZone)
@@ -195,7 +196,7 @@ struct PatientsFeature: LaileFeature {
         return API.TodayPlan(mode: .rehab, program: supervised?.program, clinicianName: profile.clinician.displayName,
                              templates: SessionTemplate.snacks,
                              medicationDoses: MedicationSchedule.doses(for: profile.medications, on: day, log: log), careNotes: careNotes,
-                             enrollments: enrollments, health: health, lele: lele)
+                             enrollments: enrollments, health: health, lele: lele, requests: requests)
     }
 
     func medicationTaken(req: Request) async throws -> HTTPStatus {

@@ -151,6 +151,7 @@ struct DemoWorld {
         try await EnrollmentModel.query(on: db).filter(\.$user.$id == id).delete()
         try await HealthProfileModel.query(on: db).filter(\.$user.$id == id).delete()
         try await LeleMessageModel.query(on: db).filter(\.$user.$id == id).delete()
+        try await ProgramRequestModel.query(on: db).filter(\.$user.$id == id).delete()
         for profile in try await PatientProfileModel.query(on: db).filter(\.$user.$id == id).all() {
             try await ProgramModel.query(on: db).filter(\.$patient.$id == profile.requireID()).delete()
             try await profile.delete(on: db)
@@ -420,6 +421,10 @@ struct DemoWorld {
                                          painBefore: max(1, 5 - i / 3), painAfter: max(1, 4 - i / 3))
             _ = try await recorder.record(summary, userID: userID, now: summary.endedAt)
         }
+        // For the clinician's daily list: something he told Lele, and a program he'd like to add.
+        try await CareNoteStore(db: db).save(CareMemory.barrier(.time, at: now.addingTimeInterval(-20 * 3600)), userID: userID)
+        try await ProgramRequestModel(userID: userID, profileID: profile.requireID(), template: SessionTemplate.builtIn("core-foundations")!,
+                                      at: now.addingTimeInterval(-5 * 3600)).create(on: db)
     }
 
     /// `hour` o'clock on the local calendar day `daysAgo` days before today, so streaks line up

@@ -189,3 +189,33 @@ import Testing
         #expect(revision.changes.contains { $0.hasPrefix("Left out Jumping jacks") })
     }
 }
+
+@Suite struct ClinicianBriefTests {
+    let now = Date(timeIntervalSince1970: 1_790_000_000)
+    let tz = TimeZone(identifier: "Asia/Singapore")!
+
+    @Test func redFlagsComeFirstThenTodayThenFYI() {
+        let flare = CareNote(createdAt: now.addingTimeInterval(-3600), kind: .flare, source: .lele, text: "Worse this morning")
+        let request = ProgramRequest(catalogId: "core-foundations", title: "Core foundations", createdAt: now.addingTimeInterval(-7200))
+        let items = ClinicianBrief.items(for: BriefInput(
+            now: now, timeZone: tz, redFlags: [(now.addingTimeInterval(-60), "calf swollen and hot")],
+            careNotes: [flare], lastSessionAt: now.addingTimeInterval(-86_400), checkIns: [("Strong knees", now.addingTimeInterval(-600))],
+            requests: [request], progressFlags: ["Arm lift hasn't improved over the last 4 sessions."]
+        ))
+        #expect(items.first?.kind == .redFlag)
+        #expect(items.map(\.priority) == items.map(\.priority).sorted())
+        #expect(items.contains { $0.kind == .request && $0.requestId == request.id })
+        #expect(items.contains { $0.kind == .worse })
+        #expect(items.last?.priority == .fyi)
+    }
+
+    @Test func missedDaysAndOldNotesAreFiltered() {
+        let oldFlare = CareNote(createdAt: now.addingTimeInterval(-3 * 86_400), kind: .flare, source: .lele, text: "Worse")
+        let answered = ProgramRequest(catalogId: "desk-reset", title: "Desk reset", status: .approved, createdAt: now)
+        let items = ClinicianBrief.items(for: BriefInput(now: now, timeZone: tz, careNotes: [oldFlare],
+                                                         lastSessionAt: now.addingTimeInterval(-4 * 86_400), requests: [answered]))
+        #expect(items.map(\.kind) == [.missed])
+        #expect(items.first?.text.contains("4 days") == true)
+        #expect(ClinicianBrief.items(for: BriefInput(now: now, timeZone: tz, lastSessionAt: now)).isEmpty)
+    }
+}

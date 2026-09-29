@@ -56,14 +56,7 @@ struct CatalogDetailSheet: View {
                         }
                         .buttonStyle(PrimaryButtonStyle())
                     } else if let supervisor = app.supervisorName {
-                        Label("You're in \(supervisor)'s program, so they check anything you add. Lele can ask for you, and \(supervisor) sees your conversation.",
-                              systemImage: "stethoscope")
-                            .font(.footnote).foregroundStyle(Theme.text)
-                        Button {
-                            onClose()
-                            app.askLele("I'd like to try \(template.title) alongside my program. Could you check with \(supervisor) that it's OK?")
-                        } label: { Label("Ask Lele to check with \(supervisor)", systemImage: "text.bubble") }
-                            .buttonStyle(PrimaryButtonStyle())
+                        physioGate(supervisor)
                     } else {
                         Button {
                             Task {
@@ -84,6 +77,33 @@ struct CatalogDetailSheet: View {
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close", action: onClose) } }
         }
         .presentationDetents([.large])
+    }
+
+    /// While a physio supervises, they approve anything added. Lele asks for you.
+    @ViewBuilder private func physioGate(_ supervisor: String) -> some View {
+        let request = app.request(for: template.id)
+        switch request?.status {
+        case .pending?:
+            Label("Asked \(supervisor) \(request!.createdAt.formatted(.relative(presentation: .named))). Lele will tell you their answer.",
+                  systemImage: "hourglass")
+                .font(.footnote).foregroundStyle(Theme.text)
+        default:
+            if request?.status == .declined {
+                Label("\(supervisor) said not yet\(request?.note.map { ": \u{201C}\($0)\u{201D}" } ?? ".")", systemImage: "hand.raised")
+                    .font(.footnote).foregroundStyle(Theme.warn)
+            }
+            Label("You're in \(supervisor)'s program, so they check anything you add. Lele can ask them for you.", systemImage: "stethoscope")
+                .font(.footnote).foregroundStyle(Theme.text)
+            Button {
+                Task {
+                    working = true
+                    defer { working = false }
+                    error = await app.requestProgram(template)
+                }
+            } label: { Label(working ? "Asking…" : "Ask \(supervisor)", systemImage: "paperplane") }
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(working)
+        }
     }
 }
 
