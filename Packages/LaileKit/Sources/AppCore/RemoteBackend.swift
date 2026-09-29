@@ -79,6 +79,12 @@ public final class RemoteBackend: LaileBackend {
         let _: EmptyResponse = try await send("POST", "v1/medications/taken", body: API.MedicationTakenRequest(medicationId: medicationId, scheduled: scheduled))
     }
 
+    public func careNotes() async throws -> [CareNote] { try await send("GET", "v1/care-notes") }
+
+    public func markCareNoteBetter(_ id: UUID) async throws -> CareNote {
+        try await send("POST", "v1/care-notes/\(id.uuidString)/better")
+    }
+
     public func coachTurn(_ utterance: String, context: API.VoiceContext) async throws -> API.CoachTurnResponse {
         try await send("POST", "v1/voice/turn", body: API.CoachTurnRequest(utterance: utterance, context: context))
     }

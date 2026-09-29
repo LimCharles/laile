@@ -69,6 +69,28 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
 - ✅ "Try a demo account" (Knee rehab / Daily mover): fresh seeded guest per tap, auto-cleanup after 12h
 - ✅ Fixed demo logins reset on sign-in; reusable demo invite code; demo creds on the portal login page
 
+## M5.6 — Lele: the agent and its memory 🟡
+
+- ✅ Coach persona **Lele (乐乐)**, Laile's coach, in the app, voice lines and prompts
+- ✅ Care notes (`LaileCore/Memory/CareMemory.swift`):
+  - sore spots and "feels wrong" moments are noted per exercise;
+  - that exercise is eased next time (smaller range or shorter holds), and Lele says so;
+  - the exercise eases back after 2 comfortable sessions in a row, then the note resolves;
+  - the patient can say "it feels better";
+  - the clinician can keep an exercise eased, close a note, or add their own note;
+  - full history in the app (Progress), the portal and the pre-visit report
+- ✅ ADP agent "Laile" (Tencent Hy3):
+  - instructions in `agent/prompts/lele.md`;
+  - 10-file knowledge base in `agent/knowledge/`, in two categories: Physical therapy (8 files) and Medicines (2 files)
+- ⬜ Publish the ADP app; `ADP_APP_KEY` in `Server/.env`
+- ⬜ Server calls ADP (`/adp/v2/chat`, SSE):
+  - "Ask Lele" chat;
+  - post-session review;
+  - morning check-in;
+  - visit prep;
+  - PATIENT CONTEXT and CARE NOTES are sent with each message;
+  - `remember` JSON is parsed into care notes
+
 ## M6 — Ship it ⬜ (target 8 Oct)
 
 - ⬜ Deploy server to **Tencent Cloud Lighthouse** (Dockerfile included) + TencentDB for PostgreSQL; HTTPS domain

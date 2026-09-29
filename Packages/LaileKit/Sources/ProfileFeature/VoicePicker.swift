@@ -47,9 +47,9 @@ struct VoicePickerSection: View {
             }
             if let previewError { Text(previewError).font(.footnote).foregroundStyle(Theme.danger) }
         } header: {
-            Text("Coach voice")
+            Text("Lele's voice")
         } footer: {
-            Text("Voices are downloaded the first time you use them, then work offline.")
+            Text("Lele is your coach. Pick the voice you like best; each is downloaded the first time you use it, then works offline.")
         }
     }
 

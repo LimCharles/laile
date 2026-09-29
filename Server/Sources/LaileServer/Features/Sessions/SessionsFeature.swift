@@ -146,6 +146,8 @@ struct SessionRecorder {
         for report in summary.symptoms {
             try await SymptomReportModel(userID: userID, sessionId: summary.id, report: report).create(on: db)
         }
+        // Lele's memory: sore spots ease that exercise next time; comfortable sessions ease it back.
+        let careNotes = try await CareNoteStore(db: db).record(after: summary, userID: userID)
 
         // Rewards: one movement record, plus a PB bonus when earned.
         let activityKind: ActivityKind = switch summary.kind {
@@ -164,7 +166,7 @@ struct SessionRecorder {
                                                    now: summary.endedAt, history: rewardHistory, extraBonuses: extras)
         try await ledger.append(movement.records)
         let rewards = ledger.engine.summary(now: now, history: rewardHistory + movement.records)
-        return API.SessionSubmitResponse(movement: movement, achievements: achievements, summary: rewards)
+        return API.SessionSubmitResponse(movement: movement, achievements: achievements, summary: rewards, careNotes: careNotes)
     }
 }
 

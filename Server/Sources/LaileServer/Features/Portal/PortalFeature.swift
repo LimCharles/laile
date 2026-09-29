@@ -173,12 +173,18 @@ struct PortalFeature: LaileFeature {
     struct ProgramRowVM: Encodable { var id: String; var title: String; var version: Int; var status: String; var draftedBy: String; var date: String }
     struct MedicationVM: Encodable { var name: String; var dose: String; var purpose: String; var times: String }
     struct SessionVM: Encodable { var when: String; var title: String; var reps: Int; var duration: String; var pain: String; var symptoms: Int }
+    struct CareNoteVM: Encodable {
+        struct EventVM: Encodable { var when: String; var text: String }
+        var id: String, kind: String, exercise: String, summary: String, quote: String, adjustment: String
+        var isActive: Bool, isEasing: Bool, isClinician: Bool, kept: Bool, updated: String, events: [EventVM]
+    }
     struct PatientContextVM: Encodable {
         var clinicianName: String
         var id: String, name: String, procedure: String, dayLabel: String, age: String, inviteCode: String, linked: Bool
         var precautions: [String], goals: String, comorbidities: String, notes: String, painStop: Int
         var charts: [ChartVM], symptoms: [SymptomVM], flags: [String], programs: [ProgramRowVM]
         var medications: [MedicationVM], sessions: [SessionVM], adherence: String
+        var careNotes: [CareNoteVM]
     }
 
     func patientDetail(req: Request) async throws -> View {
@@ -198,7 +204,8 @@ struct PortalFeature: LaileFeature {
             programs: snapshot.programs.map { ProgramRowVM(id: $0.id.uuidString, title: $0.title, version: $0.version, status: $0.status.rawValue, draftedBy: $0.draftedBy, date: SVGChart.date($0.signedAt ?? $0.createdAt)) },
             medications: profile.medications.map { MedicationVM(name: $0.name, dose: $0.doseText, purpose: $0.purpose, times: $0.times.map(\.label).joined(separator: ", ")) },
             sessions: snapshot.sessions.prefix(12).map(Self.sessionVM),
-            adherence: snapshot.adherenceLabel
+            adherence: snapshot.adherenceLabel,
+            careNotes: snapshot.careNotes.prefix(12).map(Self.careNoteVM)
         )
         return try await req.view.render("patient", vm)
     }
@@ -221,6 +228,19 @@ struct PortalFeature: LaileFeature {
                          needsReview: r.category.needsClinicianReview && model.reviewedAt == nil, isRedFlag: r.category == .redFlag)
     }
 
+    static func careNoteVM(_ n: CareNote) -> CareNoteVM {
+        var adjustment = ""
+        if n.isEasing, let a = n.adjustment, let spec = n.exerciseId.flatMap({ ExerciseLibrary.standard.spec($0) }) {
+            adjustment = "Eased: \(a.summary(for: spec))" + (a.keptByClinician ? " · kept by clinician"
+                : " · \(n.comfortableSessions)/\(CareMemory.comfortableSessionsPerStep) comfortable sessions towards the next step")
+        }
+        return CareNoteVM(id: n.id.uuidString, kind: n.kind.label, exercise: n.exerciseName ?? "",
+                          summary: n.text, quote: n.quote ?? "", adjustment: adjustment,
+                          isActive: n.isActive, isEasing: n.isEasing, isClinician: n.kind == .clinicianNote,
+                          kept: n.adjustment?.keptByClinician ?? false, updated: Formatters.relative(n.updatedAt),
+                          events: n.events.reversed().map { .init(when: Formatters.dateTime($0.date), text: $0.text) })
+    }
+
     static func sessionVM(_ s: SessionSummary) -> SessionVM {
         SessionVM(when: Formatters.dateTime(s.startedAt), title: s.title, reps: s.verifiedReps, duration: Formatters.duration(s.durationSeconds),
                   pain: [s.painBefore.map { "before \($0)" }, s.painAfter.map { "after \($0)" }].compactMap { $0 }.joined(separator: " · "),
@@ -232,7 +252,7 @@ struct PortalFeature: LaileFeature {
     struct ReportVM: Encodable {
         var name: String, procedure: String, dayLabel: String, generated: String, clinicianName: String
         var adherence: String, headline: [String], charts: [ChartVM], symptoms: [SymptomVM], flags: [String]
-        var program: String, sessionsCount: Int, totalReps: Int
+        var program: String, sessionsCount: Int, totalReps: Int, careNotes: [String]
     }
 
     func report(req: Request) async throws -> View {
@@ -252,7 +272,8 @@ struct PortalFeature: LaileFeature {
             symptoms: snapshot.symptoms.filter { $0.report.category.needsClinicianReview }.map(Self.symptomVM),
             flags: snapshot.flags,
             program: snapshot.programs.first(where: { $0.status == .signed }).map { "\($0.title) (v\($0.version))" } ?? "No signed program",
-            sessionsCount: recent.count, totalReps: recent.reduce(0) { $0 + $1.verifiedReps }
+            sessionsCount: recent.count, totalReps: recent.reduce(0) { $0 + $1.verifiedReps },
+            careNotes: snapshot.careNotes.filter { $0.isActive || $0.updatedAt > Date().addingTimeInterval(-14 * 86_400) }.map(\.contextLine)
         )
         return try await req.view.render("report", vm)
     }
@@ -480,6 +501,7 @@ struct PatientSnapshot {
     var programs: [Program]
     var flags: [String]
     var adherenceLabel: String
+    var careNotes: [CareNote] = []
 
     func trend(_ kind: MetricKind) -> MetricTrend? { trends.first { $0.kind == kind } }
 
@@ -511,7 +533,7 @@ struct PatientSnapshot {
             flags.append("No session in \(Int(Date().timeIntervalSince(last.endedAt) / 86_400)) days")
         }
         return PatientSnapshot(sessions: sessions, samples: samples, trends: trends, symptoms: symptoms, programs: programs,
-                               flags: flags, adherenceLabel: adherence)
+                               flags: flags, adherenceLabel: adherence, careNotes: try await CareNoteStore(db: db).all(for: userID))
     }
 }
 

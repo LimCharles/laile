@@ -171,8 +171,9 @@ struct PatientsFeature: LaileFeature {
     func today(req: Request) async throws -> API.TodayPlan {
         let user = try req.user
         let templates = SessionTemplate.builtIn.filter { $0.mode == .move || user.mode == .rehab }
+        let careNotes = try await CareNoteStore(db: req.db).active(for: user.requireID())
         guard user.mode == .rehab, let profile = try await user.patientProfile(on: req.db) else {
-            return API.TodayPlan(mode: .move, program: nil, clinicianName: nil, templates: templates, medicationDoses: [])
+            return API.TodayPlan(mode: .move, program: nil, clinicianName: nil, templates: templates, medicationDoses: [], careNotes: careNotes)
         }
         let program = try await ProgramModel.activeSigned(for: profile.requireID(), on: req.db)?.program
         let timeZone = TimeZone(identifier: user.timeZone) ?? .current
@@ -180,7 +181,7 @@ struct PatientsFeature: LaileFeature {
         let log = try await MedicationLogModel.query(on: req.db).filter(\.$user.$id == user.requireID())
             .filter(\.$day == day.description).all().compactMap(\.entry)
         return API.TodayPlan(mode: .rehab, program: program, clinicianName: profile.clinician.displayName, templates: templates,
-                             medicationDoses: MedicationSchedule.doses(for: profile.medications, on: day, log: log))
+                             medicationDoses: MedicationSchedule.doses(for: profile.medications, on: day, log: log), careNotes: careNotes)
     }
 
     func medicationTaken(req: Request) async throws -> HTTPStatus {

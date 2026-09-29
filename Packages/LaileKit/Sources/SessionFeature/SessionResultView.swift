@@ -32,6 +32,7 @@ struct SessionResultView: View {
                         }
                     }
                 }
+                if let notes = model.result?.careNotes, !notes.isEmpty { LeleRemembers(notes: notes) }
                 Button("Done", action: onDone).buttonStyle(PrimaryButtonStyle())
             }
             .padding(20)
@@ -115,5 +116,31 @@ struct EscalationCard: View {
         .foregroundStyle(Theme.danger)
         .padding(16)
         .background(Theme.dangerSoft, in: RoundedRectangle(cornerRadius: Theme.corner))
+    }
+}
+
+/// What Lele will do differently next time because of this session.
+struct LeleRemembers: View {
+    let notes: [CareNote]
+
+    var body: some View {
+        Card {
+            VStack(alignment: .leading, spacing: 8) {
+                Label("Lele will remember", systemImage: "heart.text.square").font(.laileHeadline)
+                ForEach(notes) { note in
+                    Text(line(for: note)).font(.subheadline)
+                }
+                Text("See Lele's notes in the Progress tab.").font(.footnote).foregroundStyle(Theme.muted)
+            }
+        }
+    }
+
+    private func line(for note: CareNote) -> String {
+        let name = note.exerciseName ?? "This exercise"
+        guard note.isActive else { return "\(name) felt comfortable again, so it's back to normal." }
+        if let adjustment = note.adjustment, !adjustment.isNeutral, let spec = note.exerciseId.flatMap({ ExerciseLibrary.standard.spec($0) }) {
+            return "\(name) will be a little easier next time: \(adjustment.summary(for: spec))."
+        }
+        return "\(name): \(note.plainSummary)."
     }
 }

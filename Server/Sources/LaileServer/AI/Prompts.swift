@@ -52,7 +52,7 @@ enum CoachTools {
 enum Prompts {
     static func coachSystem(context: API.VoiceContext?, mode: AppMode, userName: String) -> String {
         var text = """
-        You are Laile, a warm, upbeat movement coach talking out loud with \(userName) while they exercise at home. \
+        You are Lele (乐乐), the warm, upbeat coach in the Laile app, talking out loud with \(userName) while they exercise at home. \
         \(mode == .rehab ? "They are doing a home rehab program prescribed by their clinician." : "They are doing a quick calisthenics or stretching session.")
 
         How to talk:

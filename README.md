@@ -83,9 +83,23 @@ Tests:
 cd Packages/LaileCore && swift test && cd ../../Server && swift test
 ```
 
+### Lele (the agent) and care notes
+
+**Lele (乐乐)** is Laile's coach:
+- **In a session:** Lele is the voice.
+- **Between sessions:** Lele is an agent on **Tencent Cloud ADP** (Tencent Hy3 model).
+  - Instructions: `agent/prompts/lele.md`
+  - Knowledge base: `agent/knowledge/`, in two ADP categories: `physical-therapy/` and `medicines/`.
+
+**Care notes** are Lele's memory, kept in our database:
+- A sore spot during an exercise eases that exercise next time, and Lele says so.
+- After 2 comfortable sessions in a row, the exercise eases back to normal.
+- Patient and clinician see the same notes and history (app → Progress; portal → patient page and pre-visit report).
+- The clinician can keep an exercise eased, close a note, or add notes for Lele to follow.
+
 ### Voice
 
-Set `ELEVENLABS_API_KEY` in `Server/.env`. Users pick their coach voice (Sarah, Jessica, Matilda, Chris —
+Set `ELEVENLABS_API_KEY` in `Server/.env`. Users pick Lele's voice (Sarah, Jessica, Matilda, Chris —
 ElevenLabs built-in voices, usable on every plan) in Me → Coach voice. The app downloads a voice's everyday
 lines when it's chosen and each session's lines while the user gets ready; the server caches every render
 (`VOICE_CACHE_DIR`), so each line costs credits once per voice. Optionally bundle a voice into the app:

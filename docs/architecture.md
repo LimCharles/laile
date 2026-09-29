@@ -47,6 +47,10 @@ safety rules (also offline); the server re-derives PBs, streaks and XP with the 
 │ ProgramDraftService: Hunyuan drafts → schema check → contraindication     │
 │   checker removes violations → DRAFT → clinician edits → clinician SIGNS  │
 │ TRTC Conversational AI (ASR ⇄ ElevenLabs TTS) calls our /v1/voice/llm     │
+│ CareMemory (deterministic): sore spot → ease that exercise next time;     │
+│   comfortable sessions → ease back; clinician can keep/close/add notes    │
+│ Lele on Tencent Cloud ADP (Hy3 + knowledge base): explains, reviews,      │
+│   remembers; its suggestions and notes are checked by code before saving  │
 │ Clinician portal: numbers straight from the DB, never model-generated     │
 └───────────────────────────────────────────────────────────────────────────┘
 ```
@@ -60,6 +64,9 @@ Design rules:
 3. **Honest about uncertainty.** No camera visibility → no count ("I can't see you clearly, so I'm not counting
    that"). Ambiguous remarks → the app asks "stretch or sharp pain?" instead of guessing.
 4. **Never medication advice.** Dose questions get a fixed referral to the doctor/pharmacist.
+5. **Memory is a record, not a model state.** Lele's notes live in our database, not in the model provider:
+   the patient and clinician see the same notes, every change has a history line, and code (`CareMemory`)
+   decides how much an exercise is eased: never below half its range, never outside the clinician's limits.
 
 ## Voice pipeline
 

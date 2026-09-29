@@ -38,5 +38,5 @@ public enum CoachVoice: String, Codable, Sendable, CaseIterable, Identifiable, H
     }
 
     /// Played when previewing a voice.
-    public static let sampleLine = CueLine("Hi, I'm your coach. Hold it there... three, two, one, and relax. Nice work!", key: "voice.sample")
+    public static let sampleLine = CueLine("Hi, I'm Lele, your coach from Laile. Hold it there... three, two, one, and relax. Nice work!", key: "voice.sample")
 }

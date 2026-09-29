@@ -23,6 +23,10 @@ public protocol LaileBackend: AnyObject {
     func serverTimeOffset() async -> TimeInterval
     func link(inviteCode: String) async throws -> API.UserProfile
     func markMedicationTaken(_ medicationId: UUID, scheduled: TimeOfDay) async throws
+    /// Lele's notes (care memory), open ones first, with their history.
+    func careNotes() async throws -> [CareNote]
+    /// The person says a sore spot feels better: Lele closes the note.
+    func markCareNoteBetter(_ id: UUID) async throws -> CareNote
     /// One conversational turn with the coach (Hunyuan + server-side safety rules).
     func coachTurn(_ utterance: String, context: API.VoiceContext) async throws -> API.CoachTurnResponse
     /// WebSocket URL for a stream's live leaderboard.

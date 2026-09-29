@@ -77,7 +77,7 @@ struct MeView: View {
 
                 VoicePickerSection(app: app)
 
-                Section("Coach") {
+                Section("Lele, your coach") {
                     Toggle("Speak cues and counts", isOn: $app.settings.speakCues)
                     Toggle("Listen for how it feels", isOn: $app.settings.listenForFeedback)
                     Toggle("Use front camera", isOn: $app.settings.preferFrontCamera)
@@ -90,7 +90,7 @@ struct MeView: View {
 
                 Section("Privacy & safety") {
                     Label("Video never leaves your phone. Only joint angles and counts are saved.", systemImage: "lock.shield")
-                    Label("Laile coaches movement. It doesn't diagnose, and it never gives medication or dosing advice.", systemImage: "cross.case")
+                    Label("Lele coaches movement. It doesn't diagnose, and it never gives medication or dosing advice.", systemImage: "cross.case")
                     Label("Chest pain, trouble breathing or a swollen, hot calf? Stop and call 995.", systemImage: "exclamationmark.triangle")
                         .foregroundStyle(Theme.danger)
                 }
@@ -153,7 +153,7 @@ public struct OnboardingView: View {
             Spacer()
             Text("莱乐").font(.system(size: 44, weight: .heavy, design: .rounded)).foregroundStyle(Theme.accent)
             Text("Move a little, every day.").font(.laileTitle)
-            Text("Quick camera-counted sessions and stretches, a coach you can talk to, and — if you're recovering — your clinician's plan, verified.")
+            Text("Quick camera-counted sessions and stretches, Lele, a coach you can talk to, and — if you're recovering — your clinician's plan, verified.")
                 .foregroundStyle(Theme.muted)
             Spacer()
             Button("Get started") { creatingAccount = true; step = .account }.buttonStyle(PrimaryButtonStyle())
@@ -326,7 +326,7 @@ public struct OnboardingView: View {
             Spacer()
             Text("Camera and voice").font(.laileTitle)
             Label("The camera counts your reps and measures your joints. Video never leaves your phone.", systemImage: "camera.fill")
-            Label("The microphone lets you tell your coach how things feel mid-exercise — \"it's pulling\", \"sharp pain\".", systemImage: "mic.fill")
+            Label("The microphone lets you tell Lele how things feel mid-exercise — \"it's pulling\", \"sharp pain\".", systemImage: "mic.fill")
             Label("Speech recognition turns what you say into notes and safety checks.", systemImage: "waveform")
             Spacer()
             Button("Allow camera and microphone") {

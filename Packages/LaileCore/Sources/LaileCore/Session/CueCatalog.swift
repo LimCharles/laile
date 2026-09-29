@@ -79,6 +79,7 @@ public enum CueCatalog {
         for (i, planned) in plan.enumerated() {
             let spec = planned.spec
             lines += [intro(spec, first: i == 0), setup(spec, withCameraTip: previousPosture != spec.posture), go(spec)]
+            if let careCue = planned.careCue { lines.append(careCue) }
             lines += spec.formChecks.map(form)
             lines += spec.requiredParts.map { missing([$0]) } + [missing([.hip, .knee])]
             if case .hold(let rule) = spec.kind, let text = rule.correction { lines.append(correction(text)) }

@@ -7,6 +7,7 @@ extension API.AuthResponse: @retroactive Content {}
 extension API.ServerTime: @retroactive Content {}
 extension API.UserProfile: @retroactive Content {}
 extension API.TodayPlan: @retroactive Content {}
+extension CareNote: @retroactive Content {}
 extension API.CheckInResponse: @retroactive Content {}
 extension API.SessionSubmitResponse: @retroactive Content {}
 extension API.ProgressOverview: @retroactive Content {}

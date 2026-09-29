@@ -14,6 +14,7 @@ func makeFeatures() -> [any LaileFeature] {
         PatientsFeature(),
         ProgramsFeature(),
         SessionsFeature(),
+        CareNotesFeature(),
         ProgressFeature(),
         StreamsFeature(),
         VoiceFeature(),

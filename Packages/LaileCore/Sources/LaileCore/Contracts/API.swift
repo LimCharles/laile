@@ -75,8 +75,10 @@ public enum API {
         public var movement: MovementOutcome
         public var achievements: [Achievement]
         public var summary: RewardsSummary
-        public init(movement: MovementOutcome, achievements: [Achievement], summary: RewardsSummary) {
-            self.movement = movement; self.achievements = achievements; self.summary = summary
+        /// Lele's notes that this session created or moved on (e.g. "heel slides eased for next time").
+        public var careNotes: [CareNote]
+        public init(movement: MovementOutcome, achievements: [Achievement], summary: RewardsSummary, careNotes: [CareNote] = []) {
+            self.movement = movement; self.achievements = achievements; self.summary = summary; self.careNotes = careNotes
         }
     }
 
@@ -86,9 +88,12 @@ public enum API {
         public var clinicianName: String?
         public var templates: [SessionTemplate]
         public var medicationDoses: [MedicationDose]
-        public init(mode: AppMode, program: Program?, clinicianName: String?, templates: [SessionTemplate], medicationDoses: [MedicationDose]) {
+        /// Lele's active notes. Sessions apply them (easier targets) with `CareMemory.adjust`.
+        public var careNotes: [CareNote]
+        public init(mode: AppMode, program: Program?, clinicianName: String?, templates: [SessionTemplate], medicationDoses: [MedicationDose],
+                    careNotes: [CareNote] = []) {
             self.mode = mode; self.program = program; self.clinicianName = clinicianName
-            self.templates = templates; self.medicationDoses = medicationDoses
+            self.templates = templates; self.medicationDoses = medicationDoses; self.careNotes = careNotes
         }
     }
 

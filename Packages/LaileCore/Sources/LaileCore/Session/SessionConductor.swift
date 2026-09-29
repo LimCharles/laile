@@ -355,6 +355,7 @@ public struct SessionConductor: Sendable {
         if introduce {
             let previousPosture = exerciseIndex > 0 ? plan[exerciseIndex - 1].spec.posture : nil
             events.append(.say(CueCatalog.intro(planned.spec, first: exerciseIndex == 0)))
+            if let careCue = planned.careCue { events.append(.say(careCue)) }
             events.append(.say(CueCatalog.setup(planned.spec, withCameraTip: previousPosture != planned.spec.posture)))
         }
         return events

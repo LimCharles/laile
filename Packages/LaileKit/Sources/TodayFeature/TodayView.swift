@@ -77,7 +77,7 @@ struct TodayView: View {
 
     @ViewBuilder private var rehabSection: some View {
         if let plan = app.today, let program = plan.program {
-            ProgramCard(program: program, clinician: plan.clinicianName) { app.start(.program(program)) }
+            ProgramCard(program: program, clinician: plan.clinicianName, careNotes: plan.careNotes) { app.start(.program(program)) }
             if !plan.medicationDoses.isEmpty {
                 MedicationsCard(doses: plan.medicationDoses) { dose in Task { await app.markTaken(dose) } }
             }
@@ -234,6 +234,7 @@ struct StreakCard: View {
 struct ProgramCard: View {
     let program: Program
     let clinician: String?
+    var careNotes: [CareNote] = []
     let onStart: () -> Void
 
     var body: some View {
@@ -251,6 +252,10 @@ struct ProgramCard: View {
                         HStack {
                             Image(systemName: spec.symbol).frame(width: 24).foregroundStyle(spec.category.color)
                             Text(spec.name).foregroundStyle(Theme.text)
+                            if careNotes.contains(where: { $0.isEasing && $0.exerciseId == spec.id }) {
+                                Pill("easier today", color: Theme.reward, background: Theme.rewardSoft)
+                                    .accessibilityLabel("Lele made this easier today because it was sore last time")
+                            }
                             Spacer()
                             Text(item.dose.shortDescription + (item.timesPerDay > 1 ? " · \(item.timesPerDay)×/day" : ""))
                                 .font(.subheadline).foregroundStyle(Theme.muted)

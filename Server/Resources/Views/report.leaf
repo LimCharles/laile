@@ -41,6 +41,14 @@
     #endfor
   </div>
 
+  #if(count(careNotes) > 0):
+  <div class="card">
+    <h2>Lele's notes</h2>
+    <p class="muted small">Sore spots, adjustments Lele made (within your limits), and clinician notes, from the last 14 days plus anything still open.</p>
+    <ul>#for(n in careNotes):<li>#(n)</li>#endfor</ul>
+  </div>
+  #endif
+
   <div class="card">
     <h2>Pain and symptom reports</h2>
     #if(count(symptoms) == 0):<p class="muted">None needing review.</p>#endif

@@ -144,3 +144,8 @@ input.num { width: 4.5rem; padding: 0.35rem 0.4rem; }
   body { background: #fff; color: #000; }
   .card { box-shadow: none; break-inside: avoid; }
 }
+
+.symptom.clinician { border-left-color: var(--accent); }
+.timeline { list-style: none; padding: 0; margin: 0.4rem 0 0; }
+.timeline li { padding: 0.2rem 0; }
+details summary { cursor: pointer; }

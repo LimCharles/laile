@@ -47,6 +47,8 @@ public final class AppModel {
     public var rewards: RewardsSummary?
     public var today: API.TodayPlan?
     public var progress: API.ProgressOverview?
+    /// Lele's notes, open ones first (history included).
+    public var careNotes: [CareNote] = []
     public var streams: [StreamEvent] = []
     public var serverOffset: TimeInterval = 0
     public var lastError: String?
@@ -87,11 +89,13 @@ public final class AppModel {
             async let today = backend.today()
             async let progress = backend.progress()
             async let streams = backend.streams()
+            async let careNotes = backend.careNotes()
             self.user = try await user
             self.rewards = try await rewards
             self.today = try await today
             self.progress = try await progress
             self.streams = try await streams
+            self.careNotes = (try? await careNotes) ?? []
             self.serverOffset = await backend.serverTimeOffset()
             lastError = nil
         } catch {
@@ -112,8 +116,26 @@ public final class AppModel {
         }
     }
 
+    /// Opens a session. Lele's open notes ease any exercise that was sore last time (baselines
+    /// stay unchanged so they remain a fair measurement).
     public func start(_ launch: SessionLaunch) {
+        var launch = launch
+        if launch.kind != .baseline, let notes = today?.careNotes, !notes.isEmpty {
+            launch.plan = CareMemory.adjust(launch.plan, notes: notes)
+        }
         activeSession = launch
+    }
+
+    /// The person says a sore spot feels better. Returns the reason when it can't be closed.
+    public func markBetter(_ note: CareNote) async -> String? {
+        do {
+            let updated = try await backend.markCareNoteBetter(note.id)
+            careNotes = careNotes.map { $0.id == updated.id ? updated : $0 }
+            today = try? await backend.today()
+            return nil
+        } catch {
+            return error.localizedDescription
+        }
     }
 
     public func submit(_ summary: SessionSummary) async -> API.SessionSubmitResponse? {
@@ -181,6 +203,7 @@ public final class AppModel {
         rewards = nil
         today = nil
         progress = nil
+        careNotes = []
         settings.onboardingComplete = false
     }
 }

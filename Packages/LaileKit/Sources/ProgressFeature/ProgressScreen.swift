@@ -24,6 +24,7 @@ struct ProgressScreen: View {
                     } else {
                         Card { Text("Finish a session and your numbers will show up here.").foregroundStyle(Theme.muted) }
                     }
+                    CareNotesCard(app: app)
                     if let badges = app.rewards?.badges { BadgesCard(badges: badges) }
                     if let sessions = app.progress?.recentSessions, !sessions.isEmpty { RecentSessionsCard(sessions: sessions) }
                 }

@@ -303,6 +303,53 @@ final class DemoTests: XCTestCase {
         XCTAssertEqual(guests, 1)
     }
 
+    func testDemoPatientRemembersSoreHeelSlidesAndEasesThem() async throws {
+        let auth = try await startDemo(.patient)
+        // Seeded story: sharp pain (6/10) in heel slides 3 days ago eased them by 15°, and two
+        // comfortable sessions since stepped that back to 10°.
+        var plan: API.TodayPlan?
+        try await app.test(.GET, "v1/today", headers: bearer(auth.token)) { res in plan = try res.content.decode(API.TodayPlan.self) }
+        let note = try XCTUnwrap(plan?.careNotes.first { $0.exerciseId == "heel-slide" })
+        XCTAssertEqual(note.adjustment?.rangeEase, 10)
+        XCTAssertEqual(note.events.count, 2)
+        let program = try XCTUnwrap(plan?.program)
+        let eased = CareMemory.adjust(program.plan(), notes: plan?.careNotes ?? []).first { $0.spec.id == "heel-slide" }
+        XCTAssertEqual(eased?.repRule?.target, 120)
+        XCTAssertNotNil(eased?.careCue)
+
+        // Sore again: eased a little more, and the result says so.
+        let now = Date()
+        var heel = ExerciseResult(exerciseId: "heel-slide", side: .right, plannedSets: 2)
+        heel.repsPerSet = [10, 6]
+        heel.stopReason = .symptom
+        let report = SymptomReport(timestamp: now.addingTimeInterval(-300), category: .pain, utterance: "It's sore on the inside again, about a five",
+                                   bodyLocation: "inside of knee", side: .right, severity: 5, source: .voiceLLM, exerciseId: "heel-slide")
+        let summary = SessionSummary(kind: .program, title: "Knee program", mode: .rehab, startedAt: now.addingTimeInterval(-900), endedAt: now,
+                                     exercises: [heel], symptoms: [report])
+        try await app.test(.POST, "v1/sessions", headers: bearer(auth.token), beforeRequest: { req in
+            try req.content.encode(summary)
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+            let changed = try res.content.decode(API.SessionSubmitResponse.self).careNotes
+            XCTAssertEqual(changed.count, 1)
+            XCTAssertEqual(changed.first?.id, note.id)
+            XCTAssertEqual(changed.first?.adjustment?.rangeEase, 15)
+        })
+
+        // The patient says it feels better: closed, with history kept.
+        try await app.test(.POST, "v1/care-notes/\(note.id)/better", headers: bearer(auth.token)) { res in
+            XCTAssertEqual(res.status, .ok)
+        }
+        try await app.test(.GET, "v1/care-notes", headers: bearer(auth.token)) { res in
+            let notes = try res.content.decode([CareNote].self)
+            XCTAssertEqual(notes.first { $0.id == note.id }?.status, .resolved)
+            XCTAssertEqual(notes.first { $0.id == note.id }?.events.count, 4)
+        }
+        try await app.test(.GET, "v1/today", headers: bearer(auth.token)) { res in
+            XCTAssertTrue(try res.content.decode(API.TodayPlan.self).careNotes.isEmpty)
+        }
+    }
+
     func testFixedPatientResetsOnLogin() async throws {
         try await DemoWorld(app: app).ensureBase()
         func login() async throws -> String {

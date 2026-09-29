@@ -93,6 +93,42 @@
   </div>
 </div>
 
+<div class="card">
+  <div class="row" style="justify-content:space-between">
+    <h2>Lele's notes</h2>
+    <span class="muted small">Lele is Laile's coach. The patient sees these notes too.</span>
+  </div>
+  <p class="muted small">When something is sore or feels wrong, Lele notes it and eases that exercise next time: a smaller range or shorter holds. After 2 comfortable sessions in a row it eases back a step. Keep an exercise eased, close a note, or add your own note for Lele to follow.</p>
+  #if(count(careNotes) == 0):<p class="muted">Nothing noted yet.</p>#endif
+  #for(n in careNotes):
+  <div class="symptom care #if(n.isActive):#if(n.isClinician):clinician#else:review#endif#endif">
+    <div class="row" style="justify-content:space-between">
+      <div>
+        <span class="pill #if(n.isActive):pill-warn#else:pill-ok#endif">#if(n.isActive):#(n.kind)#else:Resolved#endif</span>
+        #if(n.exercise != ""):<strong>#(n.exercise)</strong> · #endif#(n.summary)
+      </div>
+      #if(n.isActive):
+      <div class="row no-print">
+        #if(n.isEasing):<form method="post" action="/portal/care-notes/#(n.id)/keep"><button class="btn" type="submit">#if(n.kept):Let Lele ease back#else:Keep eased#endif</button></form>#endif
+        <form method="post" action="/portal/care-notes/#(n.id)/resolve"><button class="btn" type="submit">Close</button></form>
+      </div>
+      #endif
+    </div>
+    #if(n.quote != ""):<blockquote>“#(n.quote)”</blockquote>#endif
+    #if(n.adjustment != ""):<p class="small"><strong>#(n.adjustment)</strong></p>#endif
+    <details class="small"><summary class="muted">History · updated #(n.updated)</summary>
+      <ul class="timeline">#for(e in n.events):<li><span class="muted">#(e.when)</span> #(e.text)</li>#endfor</ul>
+    </details>
+  </div>
+  #endfor
+  #if(linked):
+  <form method="post" action="/portal/patients/#(id)/care-notes" class="row no-print" style="margin-top:0.8rem">
+    <input type="text" name="text" placeholder="Note for Lele and the patient, e.g. Avoid deep knee bends until review" style="flex:1" maxlength="500">
+    <button class="btn" type="submit">Add note</button>
+  </form>
+  #endif
+</div>
+
 <div class="card table-wrap">
   <h2>Recent sessions</h2>
   <table>

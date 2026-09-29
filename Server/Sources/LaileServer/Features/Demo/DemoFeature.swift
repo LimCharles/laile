@@ -137,6 +137,7 @@ struct DemoWorld {
         try await MetricSampleModel.query(on: db).filter(\.$user.$id == id).delete()
         try await SymptomReportModel.query(on: db).filter(\.$user.$id == id).delete()
         try await MedicationLogModel.query(on: db).filter(\.$user.$id == id).delete()
+        try await CareNoteModel.query(on: db).filter(\.$user.$id == id).delete()
         for profile in try await PatientProfileModel.query(on: db).filter(\.$user.$id == id).all() {
             try await ProgramModel.query(on: db).filter(\.$patient.$id == profile.requireID()).delete()
             try await profile.delete(on: db)

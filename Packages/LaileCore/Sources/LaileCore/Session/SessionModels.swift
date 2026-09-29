@@ -7,12 +7,15 @@ public struct PlannedExercise: Codable, Sendable, Hashable {
     public var side: Side?
     /// Clinician override for the rep target (interior angle). Used to enforce knee limits.
     public var repTargetOverride: Double?
+    /// Said after the introduction when Lele has eased this exercise because of a care note.
+    public var careCue: CueLine?
 
-    public init(spec: ExerciseSpec, dose: Dose, side: Side? = nil, repTargetOverride: Double? = nil) {
+    public init(spec: ExerciseSpec, dose: Dose, side: Side? = nil, repTargetOverride: Double? = nil, careCue: CueLine? = nil) {
         self.spec = spec
         self.dose = dose
         self.side = side
         self.repTargetOverride = repTargetOverride
+        self.careCue = careCue
     }
 
     public var repRule: RepRule? {
