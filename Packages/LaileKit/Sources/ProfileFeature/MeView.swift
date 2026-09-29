@@ -73,6 +73,13 @@ public struct MeView: View {
                 VoicePickerSection(app: app)
 
                 Section("Lele, your coach") {
+                    Toggle("Reminders from Lele", isOn: $app.settings.remindersEnabled)
+                        .onChange(of: app.settings.remindersEnabled) { _, on in
+                            Task {
+                                if on { await LeleNotifications.shared.requestAuthorization() }
+                                await app.scheduleReminders()
+                            }
+                        }
                     Toggle("Gentle mode (low impact only)", isOn: $app.settings.gentleOnly)
                     Toggle("Speak cues and counts", isOn: $app.settings.speakCues)
                     Toggle("Listen for how it feels", isOn: $app.settings.listenForFeedback)
@@ -309,12 +316,13 @@ public struct OnboardingView: View {
     private var permissions: some View {
         VStack(alignment: .leading, spacing: 16) {
             Spacer()
-            Text("Camera and voice").font(.laileTitle)
+            Text("Camera, voice and reminders").font(.laileTitle)
             Label("The camera counts your reps and measures how far your joints move. Video never leaves your phone.", systemImage: "camera.fill")
             Label("The microphone lets you talk to Lele and tell it how things feel mid-exercise: \"it's pulling\", \"sharp pain\".", systemImage: "mic.fill")
             Label("Speech recognition turns what you say into notes and safety checks.", systemImage: "waveform")
+            Label("Notifications let Lele remind you about sessions and medicines. Quiet between 9 pm and 7 am.", systemImage: "bell.fill")
             Spacer()
-            Button(firstProgram == nil ? "Allow camera and microphone" : "Allow, then start my check-in") {
+            Button(firstProgram == nil ? "Allow" : "Allow, then start my check-in") {
                 Task {
                     await Permissions.requestAll()
                     finish()

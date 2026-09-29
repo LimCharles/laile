@@ -15,6 +15,13 @@ public struct AppSettings: Codable, Equatable {
     /// `CoachVoice` raw value (optional so older saved settings still decode).
     public var coachVoice: String?
 
+    /// Off only when the person turns Lele's reminders off (optional so older settings decode).
+    public var leleRemindersOff: Bool?
+    public var remindersEnabled: Bool {
+        get { leleRemindersOff != true }
+        set { leleRemindersOff = !newValue }
+    }
+
     public var voice: CoachVoice {
         get { coachVoice.flatMap(CoachVoice.init(rawValue:)) ?? .default }
         set { coachVoice = newValue.rawValue }
@@ -121,6 +128,21 @@ public final class AppModel {
             lastError = error.localizedDescription
         }
         isSignedIn = backend.isSignedIn
+        await scheduleReminders()
+    }
+
+    /// Puts Lele's reminders for the next few days on the phone (or clears them).
+    public func scheduleReminders() async {
+        guard isSignedIn, settings.remindersEnabled else {
+            LeleNotifications.shared.cancelAll()
+            return
+        }
+        let doses = today?.medicationDoses ?? []
+        var medications: [Medication] = []
+        for dose in doses where !medications.contains(where: { $0.id == dose.medication.id }) { medications.append(dose.medication) }
+        let plan = LeleReminders.plan(.init(now: now, timeZone: .current, enrollments: enrollments, medications: medications,
+                                            dosesToday: doses, sessionDoneToday: rewards?.movedToday ?? false))
+        await LeleNotifications.shared.reschedule(plan)
     }
 
     @discardableResult
@@ -323,6 +345,7 @@ public final class AppModel {
     public func markTaken(_ dose: MedicationDose) async {
         try? await backend.markMedicationTaken(dose.medication.id, scheduled: dose.scheduled)
         today = try? await backend.today()
+        await scheduleReminders()
     }
 
     // MARK: Account
@@ -361,6 +384,7 @@ public final class AppModel {
     }
 
     public func signOut() {
+        LeleNotifications.shared.cancelAll()
         backend.signOut()
         isSignedIn = false
         user = nil

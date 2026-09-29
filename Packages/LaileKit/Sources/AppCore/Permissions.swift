@@ -2,7 +2,8 @@ import AVFoundation
 import Foundation
 import Speech
 
-/// Asks for everything a session needs up front, so no system prompt interrupts a workout.
+/// Asks for everything a session needs up front, so no system prompt interrupts a workout,
+/// plus notifications for Lele's reminders.
 public enum Permissions {
     public struct Status: Equatable {
         public var camera: Bool
@@ -24,6 +25,7 @@ public enum Permissions {
         _ = await withCheckedContinuation { (c: CheckedContinuation<SFSpeechRecognizerAuthorizationStatus, Never>) in
             SFSpeechRecognizer.requestAuthorization { c.resume(returning: $0) }
         }
+        await LeleNotifications.shared.requestAuthorization()
         return current
     }
 }

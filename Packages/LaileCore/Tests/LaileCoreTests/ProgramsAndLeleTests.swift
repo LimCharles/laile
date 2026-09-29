@@ -219,3 +219,38 @@ import Testing
         #expect(ClinicianBrief.items(for: BriefInput(now: now, timeZone: tz, lastSessionAt: now)).isEmpty)
     }
 }
+
+@Suite struct LeleRemindersTests {
+    let tz = TimeZone(identifier: "Asia/Singapore")!
+
+    func at(_ hour: Int, _ minute: Int = 0) -> Date {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = tz
+        return c.date(from: DateComponents(year: 2026, month: 9, day: 30, hour: hour, minute: minute))!
+    }
+
+    var knee: Enrollment {
+        let program = Program(title: "Knee program", items: [ProgramItem(exerciseId: "heel-slide", dose: Dose(sets: 2, reps: 10), source: .clinician)],
+                              precautions: .none, status: .signed, draftedBy: "Dr")
+        return Enrollment(kind: .clinical, title: "Knee program", program: program, supervisorName: "Dr Nair")
+    }
+
+    @Test func coversTheNextThreeDaysSkippingWhatsPastOrDone() {
+        let paracetamol = Medication(name: "Paracetamol", doseText: "2 tablets", purpose: "Pain relief.", howToTake: "With water.",
+                                     times: [TimeOfDay(8), TimeOfDay(14)], prescribedBy: "Dr Nair")
+        let takenAt2 = MedicationDose(medication: paracetamol, scheduled: TimeOfDay(14), taken: true)
+        let reminders = LeleReminders.plan(.init(now: at(9), timeZone: tz, enrollments: [knee], medications: [paracetamol],
+                                                 dosesToday: [takenAt2], sessionDoneToday: true))
+        #expect(reminders.allSatisfy { $0.date > at(9) })
+        // Today: 8:00 dose and the 8:30 check-in have passed, 14:00 is taken, a session is done.
+        #expect(!reminders.contains { $0.date < at(23, 59) })
+        #expect(reminders.filter { $0.kind == .medication }.count == 4)
+        #expect(reminders.filter { $0.kind == .morningCheckIn }.count == 2)
+        #expect(reminders.filter { $0.kind == .sessionNudge }.count == 2)
+        #expect(reminders.first { $0.kind == .morningCheckIn }?.body.contains("knee") == true)
+    }
+
+    @Test func noProgramsNoNudges() {
+        #expect(LeleReminders.plan(.init(now: at(9), timeZone: tz, enrollments: [])).isEmpty)
+    }
+}

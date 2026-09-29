@@ -34,7 +34,11 @@ public struct LaileRootView: View {
             }
         }
         .tint(Theme.accent)
-        .task { await app.refresh() }
+        .task {
+            LeleNotifications.shared.start()
+            LeleNotifications.shared.onOpen = { app.selectedTab = "lele" }
+            await app.refresh()
+        }
         .fullScreenCover(item: $app.activeSession) { launch in
             SessionView(launch: launch, app: app)
         }
