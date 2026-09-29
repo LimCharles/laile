@@ -32,6 +32,9 @@ struct SessionResultView: View {
                         }
                     }
                 }
+                if model.launch.isCheckIn, let summary = model.summary, !summary.exercises.isEmpty {
+                    TargetsSet(calibration: Calibration.from(summary))
+                }
                 if let notes = model.result?.careNotes, !notes.isEmpty { LeleRemembers(notes: notes) }
                 Button("Done", action: onDone).buttonStyle(PrimaryButtonStyle())
             }
@@ -142,5 +145,22 @@ struct LeleRemembers: View {
             return "\(name) will be a little easier next time: \(adjustment.summary(for: spec))."
         }
         return "\(name): \(note.plainSummary)."
+    }
+}
+
+/// After a check-in: what the camera measured, which now sets the program's targets.
+struct TargetsSet: View {
+    let calibration: Calibration
+
+    var body: some View {
+        Card {
+            VStack(alignment: .leading, spacing: 8) {
+                Label("Your targets are set", systemImage: "scope").font(.laileHeadline)
+                ForEach(calibration.exercises, id: \.exerciseId) { c in
+                    Text(c.summary).font(.subheadline)
+                }
+                Text("From now on, each session is tuned to this. Re-check any time from Progress.").font(.footnote).foregroundStyle(Theme.muted)
+            }
+        }
     }
 }

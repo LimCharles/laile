@@ -115,7 +115,8 @@ public struct Calibration: Codable, Sendable, Hashable {
     public func exercise(_ id: String) -> ExerciseCalibration? { exercises.first { $0.exerciseId == id } }
 
     /// Tunes one planned exercise to what the person showed they can comfortably do.
-    /// Reps and holds are set to about 70% of their best (a working set, not a max test);
+    /// Reps and holds are set to about 70% of their best (a working set, not a max test; holds
+    /// over ten seconds round to five, so it's "30s" rather than "31s");
     /// supervised programs are only ever made easier than the clinician's dose, never harder.
     /// A rep counts at 90% of the range they reached, if that's short of the usual target.
     public func apply(to planned: PlannedExercise, supervised: Bool) -> PlannedExercise {
@@ -129,6 +130,7 @@ public struct Calibration: Codable, Sendable, Hashable {
         }
         if let hold = c.bestHoldSeconds, hold > 0, let current = p.dose.holdSeconds {
             var personal = Int((Double(hold) * 0.7).rounded())
+            if personal > 10 { personal = Int((Double(personal) / 5).rounded()) * 5 }
             if let range = limits.holdSeconds { personal = personal.clamped(to: range) }
             p.dose.holdSeconds = supervised ? min(current, personal) : personal
         }
@@ -164,7 +166,7 @@ public struct ExerciseCalibration: Codable, Sendable, Hashable {
     public var summary: String {
         let spec = ExerciseLibrary.standard.spec(exerciseId)
         var parts: [String] = []
-        if let maxReps { parts.append("\(maxReps) reps") }
+        if let maxReps { parts.append(maxReps == 1 ? "1 rep" : "\(maxReps) reps") }
         if let bestHoldSeconds { parts.append("\(bestHoldSeconds)s hold") }
         if let peakAngle, let spec, let angle = spec.kind.trackedAngle {
             if angle.vertex == .knee, spec.tracksKneeFlexion { parts.append("knee bent to \(Int((180 - peakAngle).rounded()))°") }

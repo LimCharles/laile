@@ -25,6 +25,17 @@ public protocol LaileBackend: AnyObject {
     func markMedicationTaken(_ medicationId: UUID, scheduled: TimeOfDay) async throws
     /// Lele's notes (care memory), open ones first, with their history.
     func careNotes() async throws -> [CareNote]
+    /// Programs the person is in, active first.
+    func enrollments() async throws -> [Enrollment]
+    func join(catalogId: String) async throws -> Enrollment
+    func leave(enrollmentId: UUID) async throws -> Enrollment
+    /// The goals conversation: saves the health profile and returns Lele's plan.
+    func plan(_ profile: HealthProfile) async throws -> API.PlanResponse
+    func leleMessages() async throws -> [LeleMessage]
+    func leleReply(to messageId: UUID, actionId: String?, text: String?) async throws -> API.LeleTurnResponse
+    func leleChat(_ text: String) async throws -> API.LeleTurnResponse
+    /// A snapshot of the session in progress, for a supervising clinician's live view.
+    nonisolated func postLive(_ update: API.LiveSessionUpdate) async
     /// The person says a sore spot feels better: Lele closes the note.
     func markCareNoteBetter(_ id: UUID) async throws -> CareNote
     /// One conversational turn with the coach (Hunyuan + server-side safety rules).
@@ -61,9 +72,15 @@ public struct SessionLaunch: Identifiable, Sendable {
     public var programId: UUID?
     public var templateId: String?
     public var askPain: Bool
+    public var enrollmentId: UUID?
+    /// A program's first session: each move once, at a comfortable effort, to set personal targets.
+    public var isCheckIn = false
+    /// A clinician is supervising, so the session is shared live with them.
+    public var isSupervised = false
 
     public init(title: String, kind: SessionSummary.Kind, mode: AppMode, plan: [PlannedExercise], policy: SymptomPolicy,
-                programId: UUID? = nil, templateId: String? = nil, askPain: Bool) {
+                programId: UUID? = nil, templateId: String? = nil, askPain: Bool, enrollmentId: UUID? = nil,
+                isCheckIn: Bool = false, isSupervised: Bool = false) {
         self.title = title
         self.kind = kind
         self.mode = mode
@@ -72,6 +89,33 @@ public struct SessionLaunch: Identifiable, Sendable {
         self.programId = programId
         self.templateId = templateId
         self.askPain = askPain
+        self.enrollmentId = enrollmentId
+        self.isCheckIn = isCheckIn
+        self.isSupervised = isSupervised
+    }
+
+    /// A session of one of the person's programs: the check-in first, then their tuned plan.
+    /// `recheck` runs the check-in again to reset targets (e.g. every couple of weeks).
+    public static func enrollment(_ enrollment: Enrollment, precautions: Precautions, recheck: Bool = false) -> SessionLaunch {
+        let supervised = enrollment.isSupervised
+        let policy = supervised ? enrollment.program.symptomPolicy : .moveDefault
+        if enrollment.needsCalibration || recheck {
+            return SessionLaunch(title: "\(recheck && !enrollment.needsCalibration ? "Re-check" : "Check-in"): \(enrollment.title)", kind: .baseline, mode: supervised ? .rehab : .move,
+                                 plan: enrollment.calibrationPlan(precautions: precautions), policy: policy,
+                                 programId: supervised ? enrollment.program.id : nil, templateId: enrollment.catalogId,
+                                 askPain: supervised, enrollmentId: enrollment.id, isCheckIn: true, isSupervised: supervised)
+        }
+        return SessionLaunch(title: enrollment.title, kind: supervised ? .program : .workout, mode: supervised ? .rehab : .move,
+                             plan: enrollment.sessionPlan(precautions: precautions).plan, policy: policy,
+                             programId: supervised ? enrollment.program.id : nil, templateId: enrollment.catalogId,
+                             askPain: supervised, enrollmentId: enrollment.id, isSupervised: supervised)
+    }
+
+    /// A quick one-off session, with anything the person's precautions rule out left out.
+    public static func snack(_ template: SessionTemplate, precautions: Precautions) -> SessionLaunch {
+        var launch = SessionLaunch.template(template)
+        launch.plan = ContraindicationChecker.filter(launch.plan, precautions: precautions).kept
+        return launch
     }
 
     public static func template(_ template: SessionTemplate, gentleOnly: Bool = false) -> SessionLaunch {

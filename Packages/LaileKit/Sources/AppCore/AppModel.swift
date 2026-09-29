@@ -49,6 +49,16 @@ public final class AppModel {
     public var progress: API.ProgressOverview?
     /// Lele's notes, open ones first (history included).
     public var careNotes: [CareNote] = []
+    /// Every program the person has been in, active first.
+    public var enrollments: [Enrollment] = []
+    /// The conversation with Lele, oldest first.
+    public var leleMessages: [LeleMessage] = []
+    /// Text to put in the chat box when the Lele tab opens (e.g. from a "help me prepare" action).
+    public var leleDraft: String?
+    /// Present the voice check-in with Lele.
+    public var showLeleCall = false
+    /// Present Me (profile and settings).
+    public var showMe = false
     public var streams: [StreamEvent] = []
     public var serverOffset: TimeInterval = 0
     public var lastError: String?
@@ -77,6 +87,11 @@ public final class AppModel {
     }
 
     public var mode: AppMode { user?.mode ?? .move }
+    /// How Lele addresses the person ("Mdm Tan", "Sam"); nil before they've given a name.
+    public var callName: String? {
+        guard let name = user?.displayName, !name.isEmpty, name != "You" else { return nil }
+        return CallName.from(name)
+    }
     public var now: Date { Date().addingTimeInterval(serverOffset) }
 
     public func refresh() async {
@@ -90,12 +105,16 @@ public final class AppModel {
             async let progress = backend.progress()
             async let streams = backend.streams()
             async let careNotes = backend.careNotes()
+            async let enrollments = backend.enrollments()
+            async let lele = backend.leleMessages()
             self.user = try await user
             self.rewards = try await rewards
             self.today = try await today
             self.progress = try await progress
             self.streams = try await streams
             self.careNotes = (try? await careNotes) ?? []
+            self.enrollments = (try? await enrollments) ?? []
+            if let lele = try? await lele { self.leleMessages = lele.sorted { $0.createdAt < $1.createdAt } }
             self.serverOffset = await backend.serverTimeOffset()
             lastError = nil
         } catch {
@@ -124,6 +143,140 @@ public final class AppModel {
             launch.plan = CareMemory.adjust(launch.plan, notes: notes)
         }
         activeSession = launch
+    }
+
+    // MARK: Programs
+
+    /// Active programs, the clinician's first.
+    public var activeEnrollments: [Enrollment] {
+        enrollments.filter(\.isActive).sorted { ($0.isSupervised ? 0 : 1) < ($1.isSupervised ? 0 : 1) }
+    }
+    /// A clinician is supervising one of the person's programs.
+    public var isSupervised: Bool { activeEnrollments.contains(where: \.isSupervised) }
+    /// The supervising clinician's name, if there is one.
+    public var supervisorName: String? {
+        activeEnrollments.first(where: \.isSupervised).map { $0.supervisorName ?? "your physio" }
+    }
+
+    /// Opens the chat with Lele with `text` ready to send.
+    public func askLele(_ text: String) {
+        leleDraft = text
+        selectedTab = "lele"
+    }
+    /// Limits for every session: the person's own, their clinician's, and gentle mode.
+    public var precautions: Precautions {
+        let base = today?.precautions ?? .none
+        return settings.gentleOnly ? base.merged(with: Precautions(maxImpact: .low)) : base
+    }
+
+    public func start(_ enrollment: Enrollment, recheck: Bool = false) {
+        start(.enrollment(enrollment, precautions: precautions, recheck: recheck))
+    }
+
+    /// Runs `work` once a sheet has had time to close, so the full-screen session can open.
+    public func afterSheetCloses(_ work: @escaping @MainActor () async -> Void) {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(450))
+            await work()
+        }
+    }
+
+    public func startSnack(_ template: SessionTemplate) {
+        start(.snack(template, precautions: precautions))
+    }
+
+    @discardableResult
+    public func join(catalogId: String) async -> Enrollment? {
+        do {
+            let enrollment = try await backend.join(catalogId: catalogId)
+            enrollments = try await backend.enrollments()
+            today = try? await backend.today()
+            return enrollment
+        } catch {
+            lastError = error.localizedDescription
+            return nil
+        }
+    }
+
+    public func leave(_ enrollment: Enrollment) async -> String? {
+        do {
+            _ = try await backend.leave(enrollmentId: enrollment.id)
+            enrollments = try await backend.enrollments()
+            today = try? await backend.today()
+            return nil
+        } catch {
+            return error.localizedDescription
+        }
+    }
+
+    /// The goals conversation's result: Lele's personal plan.
+    public func plan(_ profile: HealthProfile) async throws -> API.PlanResponse {
+        let response = try await backend.plan(profile)
+        merge(response.messages)
+        enrollments = (try? await backend.enrollments()) ?? enrollments
+        today = try? await backend.today()
+        return response
+    }
+
+    // MARK: Lele
+
+    public func refreshLele() async {
+        if let messages = try? await backend.leleMessages() { leleMessages = messages.sorted { $0.createdAt < $1.createdAt } }
+    }
+
+    public func chat(_ text: String) async {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        do {
+            let turn = try await backend.leleChat(trimmed)
+            merge(turn.messages)
+            if !turn.careNotes.isEmpty { await refreshNotes() }
+        } catch {
+            lastError = error.localizedDescription
+        }
+    }
+
+    /// Something Lele offered: answer its question, start a session, join a program, open chat, or call.
+    public func perform(_ action: LeleAction, on message: LeleMessage) async {
+        switch action.kind {
+        case .reply:
+            do {
+                let turn = try await backend.leleReply(to: message.id, actionId: action.id, text: nil)
+                merge(turn.messages)
+                if !turn.careNotes.isEmpty || action.id == "taken" { await refreshNotes() }
+            } catch {
+                lastError = error.localizedDescription
+            }
+        case .startSession:
+            guard let value = action.value else { return }
+            if value.hasPrefix("snack:"), let template = SessionTemplate.builtIn(String(value.dropFirst(6))) {
+                startSnack(template)
+            } else if let id = UUID(uuidString: value), let enrollment = enrollments.first(where: { $0.id == id && $0.isActive }) {
+                start(enrollment)
+            }
+        case .joinProgram:
+            if let id = action.value, let enrollment = await join(catalogId: id) {
+                merge([LeleMessage(createdAt: Date(), kind: .chat, text: "You're in! Your first \(enrollment.title) session is a quick check-in to set your targets.",
+                                   actions: [LeleAction(id: "start", label: "Start check-in", kind: .startSession, value: enrollment.id.uuidString)])])
+            }
+        case .openChat:
+            leleDraft = action.value
+            selectedTab = "lele"
+        case .call:
+            showLeleCall = true
+        }
+    }
+
+    private func merge(_ messages: [LeleMessage]) {
+        for message in messages {
+            if let i = leleMessages.firstIndex(where: { $0.id == message.id }) { leleMessages[i] = message } else { leleMessages.append(message) }
+        }
+        leleMessages.sort { $0.createdAt < $1.createdAt }
+    }
+
+    private func refreshNotes() async {
+        careNotes = (try? await backend.careNotes()) ?? careNotes
+        today = (try? await backend.today()) ?? today
     }
 
     /// The person says a sore spot feels better. Returns the reason when it can't be closed.
@@ -204,6 +357,10 @@ public final class AppModel {
         today = nil
         progress = nil
         careNotes = []
+        enrollments = []
+        leleMessages = []
+        showMe = false
+        showLeleCall = false
         settings.onboardingComplete = false
     }
 }

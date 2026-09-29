@@ -1,10 +1,11 @@
 import AppCore
 import DesignSystem
 import LaileCore
+import LeleFeature
 import ProfileFeature
+import ProgramsFeature
 import ProgressFeature
 import SessionFeature
-import StreamsFeature
 import SwiftUI
 import TodayFeature
 
@@ -13,9 +14,9 @@ import TodayFeature
 public enum FeatureRegistry {
     public static var modules: [any FeatureModule] = [
         TodayModule(),
-        StreamsModule(),
+        ProgramsModule(),
+        LeleModule(),
         ProgressModule(),
-        ProfileModule(),
     ]
 }
 
@@ -37,6 +38,9 @@ public struct LaileRootView: View {
         .fullScreenCover(item: $app.activeSession) { launch in
             SessionView(launch: launch, app: app)
         }
+        .fullScreenCover(isPresented: $app.showLeleCall) {
+            LeleCallView(app: app) { app.showLeleCall = false }
+        }
     }
 
     private var tabs: some View {
@@ -47,5 +51,6 @@ public struct LaileRootView: View {
                     .tag(module.id)
             }
         }
+        .sheet(isPresented: $app.showMe) { MeView(app: app) }
     }
 }

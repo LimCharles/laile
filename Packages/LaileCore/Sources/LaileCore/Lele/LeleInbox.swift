@@ -145,7 +145,7 @@ public enum LeleRound {
                   input.now >= due, input.now.timeIntervalSince(due) <= 3600 else { continue }
             propose("med-\(dose.medication.id)-\(day)-\(dose.scheduled.label)", initiative: false) {
                 LeleMessage(createdAt: input.now, kind: .reminder,
-                            text: "It's \(dose.scheduled.label): \(dose.medication.name), \(dose.medication.doseText). \(dose.medication.purpose) Tap when you've taken it.",
+                            text: "Your \(dose.scheduled.label) dose: \(dose.medication.name), \(dose.medication.doseText). \(dose.medication.purpose) Tap when you've taken it.",
                             actions: [LeleAction(id: "taken", label: "Taken", kind: .reply, value: "\(dose.medication.id)|\(dose.scheduled.hour):\(dose.scheduled.minute)")])
             }
         }
@@ -167,7 +167,7 @@ public enum LeleRound {
         for enrollment in active where enrollment.needsCalibration {
             propose("calibrate-\(enrollment.id)") {
                 LeleMessage(createdAt: input.now, kind: .calibration,
-                            text: "Your first \(enrollment.title) session is a quick check-in: do each move at a comfortable effort and I'll set your targets from what the camera sees. Got a few minutes?",
+                            text: "The first session of \(enrollment.title) is a quick check-in: do each move at a comfortable effort and I'll set your targets from what the camera sees. Got a few minutes?",
                             actions: [LeleAction(id: "start", label: "Start check-in", kind: .startSession, value: enrollment.id.uuidString)])
             }
         }
@@ -258,5 +258,24 @@ extension TimeOfDay {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = timeZone
         return calendar.date(from: DateComponents(timeZone: timeZone, year: day.year, month: day.month, day: day.day, hour: hour, minute: minute))
+    }
+}
+
+/// How Lele addresses someone: "Mdm Tan" rather than "Mdm", "Sam" rather than "Sam Lee".
+public enum CallName {
+    static let titles: Set<String> = ["mdm", "mr", "mrs", "ms", "dr", "madam", "auntie", "uncle"]
+
+    /// A name without a trailing note in brackets: "Dr. Priya Nair (demo)" → "Dr. Priya Nair".
+    public static func plain(_ displayName: String) -> String {
+        guard let open = displayName.firstIndex(of: "("), displayName.hasSuffix(")") else { return displayName }
+        return displayName[..<open].trimmingCharacters(in: .whitespaces)
+    }
+
+    public static func from(_ displayName: String) -> String {
+        let parts = displayName.split(separator: " ")
+        if let first = parts.first, titles.contains(first.lowercased().trimmingCharacters(in: .punctuationCharacters)), parts.count > 1 {
+            return "\(first) \(parts[1])"
+        }
+        return parts.first.map(String.init) ?? displayName
     }
 }

@@ -114,8 +114,10 @@ final class ProgramsFlowTests: XCTestCase {
         let service = LeleService(app: app, db: app.db, logger: app.logger)
         // The seeded story has a session "today"-ish only in the past, so the morning check-in fires.
         try await SessionModel.query(on: app.db).filter(\.$user.$id == auth.user.id).filter(\.$startedAt >= c.startOfDay(for: Date())).delete()
-        let messages = try await service.round(for: user, now: morning)
-        let checkIn = try XCTUnwrap(messages.first { $0.kind == .morningCheckIn })
+        // The demo may already have asked today (it runs a daytime round when it's seeded).
+        _ = try await service.round(for: user, now: morning)
+        let messages = try await service.recent(for: auth.user.id)
+        let checkIn = try XCTUnwrap(messages.first { $0.kind == .morningCheckIn && $0.answeredAt == nil })
         XCTAssertTrue(checkIn.text.contains("knee"))
 
         var turn: API.LeleTurnResponse?

@@ -90,10 +90,11 @@ extension PortalFeature {
                 health.updatedAt = now
                 try await HealthStore(db: req.db).save(health, userID: userID)
             }
-            var text = "Great news: \(clinician.displayName) has signed off your physio program. 🎉"
+            let name = CallName.plain(clinician.displayName)
+            var text = "Great news: \(name) has signed off your physio program. 🎉"
             if let note { text += " Their note: \"\(note)\"" }
             if let followOn {
-                text += " To keep your progress going, \(clinician.displayName) suggests \(followOn.title): \(followOn.subtitle.lowercased())."
+                text += " To keep your progress going, \(name) suggests \(followOn.title): \(followOn.subtitle.lowercased())."
             }
             if form.carry_precautions == "on" { text += " Your precautions still apply in every program, and I'll keep an eye on them." }
             let message = LeleMessage(createdAt: now, kind: .discharge, text: text,

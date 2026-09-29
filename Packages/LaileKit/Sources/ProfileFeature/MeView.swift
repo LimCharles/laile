@@ -1,24 +1,19 @@
 import AppCore
 import DesignSystem
 import LaileCore
+import LeleFeature
 import SwiftUI
 
-public struct ProfileModule: FeatureModule {
-    public init() {}
-    public var id: String { "me" }
-    public var tab: FeatureTab? { FeatureTab(title: "Me", systemImage: "person.crop.circle", order: 3) }
-    public func makeRootView(app: AppModel) -> AnyView { AnyView(MeView(app: app)) }
-}
-
-struct MeView: View {
+/// Me: who you are, what you told Lele, your coach's voice and settings. Opened from Today.
+public struct MeView: View {
     @Bindable var app: AppModel
-    @State private var inviteCode = ""
-    @State private var linkError: String?
-    @State private var linking = false
     @State private var restartingDemo = false
     @State private var demoError: String?
+    @State private var showGoals = false
 
-    var body: some View {
+    public init(app: AppModel) { self.app = app }
+
+    public var body: some View {
         NavigationStack {
             Form {
                 Section {
@@ -26,34 +21,34 @@ struct MeView: View {
                         Image(systemName: "person.crop.circle.fill").font(.system(size: 44)).foregroundStyle(Theme.accent)
                         VStack(alignment: .leading) {
                             Text(app.user?.displayName ?? "You").font(.headline)
-                            Text(app.mode == .rehab ? "Rehab mode · \(app.user?.clinicianName ?? "clinician-linked")" : "Move mode")
-                                .font(.subheadline).foregroundStyle(Theme.muted)
+                            Text(app.user?.email ?? "").font(.subheadline).foregroundStyle(Theme.muted)
                         }
                     }
                 }
 
-                if app.mode == .move {
-                    Section {
-                        TextField("Invite code, e.g. LAI-7KQ2MX", text: $inviteCode)
-                            .textInputAutocapitalization(.characters)
-                            .autocorrectionDisabled()
-                        Button(linking ? "Linking…" : "Link my clinician") {
-                            Task {
-                                linking = true
-                                defer { linking = false }
-                                do { try await app.link(inviteCode: inviteCode); linkError = nil } catch { linkError = error.localizedDescription }
-                            }
+                Section {
+                    if let health = app.today?.health {
+                        LabeledContent("Goals", value: health.goals.map(\.label).joined(separator: ", "))
+                        LabeledContent("Most days", value: "\(health.minutesPerDay) min")
+                        LabeledContent("Careful with", value: health.sensitiveAreas.isEmpty ? "Nothing" : health.sensitiveAreas.map(\.label).joined(separator: ", "))
+                        if health.clinicianPrecautions != nil {
+                            Label("Limits from your physio still protect you in every program.", systemImage: "shield.lefthalf.filled")
+                                .font(.footnote).foregroundStyle(Theme.muted)
                         }
-                        .disabled(inviteCode.count < 6 || linking)
-                        if let linkError { Text(linkError).foregroundStyle(Theme.danger).font(.footnote) }
-                    } header: {
-                        Text("Recovering from surgery or an injury?")
-                    } footer: {
-                        Text("Your clinician gives you a code. Linking shares your sessions, measurements and pain reports with them only.")
                     }
-                } else {
+                    if !app.isSupervised {
+                        Button { showGoals = true } label: { Label(app.today?.health == nil ? "Tell Lele your goals" : "Update with Lele", systemImage: "sparkles") }
+                    }
+                } header: {
+                    Text("What you told Lele")
+                }
+
+                if let supervised = app.activeEnrollments.first(where: \.isSupervised) {
                     Section("Your care team") {
-                        LabeledContent("Clinician", value: app.user?.clinicianName ?? "—")
+                        LabeledContent("Physio", value: supervised.supervisorName ?? app.user?.clinicianName ?? "—")
+                        LabeledContent("Program", value: supervised.title)
+                        Text("They see your sessions, measurements, what you tell Lele about pain, and your sessions live while you're doing them.")
+                            .font(.footnote).foregroundStyle(Theme.muted)
                     }
                 }
 
@@ -78,6 +73,7 @@ struct MeView: View {
                 VoicePickerSection(app: app)
 
                 Section("Lele, your coach") {
+                    Toggle("Gentle mode (low impact only)", isOn: $app.settings.gentleOnly)
                     Toggle("Speak cues and counts", isOn: $app.settings.speakCues)
                     Toggle("Listen for how it feels", isOn: $app.settings.listenForFeedback)
                     Toggle("Use front camera", isOn: $app.settings.preferFrontCamera)
@@ -97,14 +93,24 @@ struct MeView: View {
                 .font(.footnote)
             }
             .navigationTitle("Me")
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { app.showMe = false } } }
+            .sheet(isPresented: $showGoals) {
+                GoalsConversationView(app: app) { enrollment in
+                    showGoals = false
+                    if let enrollment {
+                        app.showMe = false
+                        app.afterSheetCloses { app.start(enrollment) }
+                    }
+                }
+            }
         }
     }
 }
 
-/// First run: create an account (or sign in), pick a path, a short activity-readiness check
-/// or clinician link, then camera/mic permissions.
+/// First run: create an account (or sign in), then either Lele's goals conversation or a
+/// physio's code, then camera/mic permissions. Their first program's check-in opens at the end.
 public struct OnboardingView: View {
-    enum Step { case welcome, account, path, readiness, link, permissions }
+    enum Step { case welcome, account, path, goals, link, permissions }
 
     @Bindable var app: AppModel
     @State private var step: Step
@@ -113,47 +119,46 @@ public struct OnboardingView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var working = false
-    @State private var answers: [Bool?]
     @State private var inviteCode = ""
     @State private var error: String?
-
-    static let questions = [
-        "Has a doctor ever said you have a heart condition and should only exercise under medical advice?",
-        "Do you get chest pain when you're physically active?",
-        "In the past month, have you had chest pain while resting?",
-        "Do you lose your balance because of dizziness, or have you ever fainted?",
-        "Do you have a bone or joint problem that exercise could make worse?",
-        "Are you taking medicine for blood pressure or a heart condition?",
-        "Is there any other reason you shouldn't be exercising right now?",
-    ]
+    /// The program to open once onboarding finishes.
+    @State private var firstProgram: Enrollment?
 
     public init(app: AppModel) {
         self.app = app
         _step = State(initialValue: app.isSignedIn ? .path : .welcome)
-        _answers = State(initialValue: Array(repeating: nil, count: Self.questions.count))
     }
 
     public var body: some View {
-        VStack(spacing: 20) {
+        Group {
             switch step {
-            case .welcome: welcome
-            case .account: account
-            case .path: path
-            case .readiness: readiness
-            case .link: linkClinician
-            case .permissions: permissions
+            case .goals:
+                GoalsConversationView(app: app) { enrollment in
+                    firstProgram = enrollment
+                    step = .permissions
+                }
+            default:
+                VStack(spacing: 20) {
+                    switch step {
+                    case .welcome: welcome
+                    case .account: account
+                    case .path: path
+                    case .link: linkClinician
+                    case .permissions, .goals: permissions
+                    }
+                }
+                .padding(24)
+                .screenBackground()
             }
         }
-        .padding(24)
-        .screenBackground()
     }
 
     private var welcome: some View {
         VStack(alignment: .leading, spacing: 18) {
             Spacer()
             Text("莱乐").font(.system(size: 44, weight: .heavy, design: .rounded)).foregroundStyle(Theme.accent)
-            Text("Move a little, every day.").font(.laileTitle)
-            Text("Quick camera-counted sessions and stretches, Lele, a coach you can talk to, and — if you're recovering — your clinician's plan, verified.")
+            Text("Get strong. Get better.").font(.laileTitle)
+            Text("Physio and calisthenics programs that fit you, camera-counted, with Lele, a coach who checks in, remembers what hurt, and keeps your physio in the loop.")
                 .foregroundStyle(Theme.muted)
             Spacer()
             Button("Get started") { creatingAccount = true; step = .account }.buttonStyle(PrimaryButtonStyle())
@@ -167,8 +172,8 @@ public struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Just looking? Try a demo account").font(.footnote.weight(.semibold)).foregroundStyle(Theme.muted)
             HStack(spacing: 10) {
-                demoButton("Knee rehab", systemImage: "cross.case.fill", persona: .patient)
-                demoButton("Daily mover", systemImage: "figure.run", persona: .mover)
+                demoButton("Physio patient", systemImage: "cross.case.fill", persona: .patient)
+                demoButton("Calisthenics", systemImage: "figure.strengthtraining.traditional", persona: .mover)
             }
             if let error, step == .welcome { Text(error).font(.footnote).foregroundStyle(Theme.danger) }
         }
@@ -206,7 +211,7 @@ public struct OnboardingView: View {
             Spacer()
             Text(creatingAccount ? "Create your account" : "Welcome back").font(.laileTitle)
             if creatingAccount {
-                field(TextField("What should I call you?", text: $name).textContentType(.givenName))
+                field(TextField("What should Lele call you?", text: $name).textContentType(.givenName))
             }
             field(TextField("Email", text: $email)
                 .textContentType(.emailAddress).keyboardType(.emailAddress)
@@ -245,8 +250,8 @@ public struct OnboardingView: View {
                 step = .path
             } else {
                 try await app.signIn(email: trimmedEmail, password: password)
-                // Returning rehab patients already have their clinician linked.
-                step = app.mode == .rehab ? .permissions : .path
+                // Returning people already have their programs.
+                step = app.activeEnrollments.isEmpty ? .path : .permissions
             }
             error = nil
         } catch {
@@ -257,53 +262,23 @@ public struct OnboardingView: View {
     private var path: some View {
         VStack(alignment: .leading, spacing: 18) {
             Spacer()
-            Text("What brings you here?").font(.laileTitle)
-            Text("You can link a clinician later from the Me tab.").foregroundStyle(Theme.muted)
+            LeleAvatar(size: 56)
+            Text("Hi, I'm Lele.").font(.laileTitle)
+            Text("I'm your coach at Laile. Are you here to get stronger and move better, or has a physio given you a code for your program?")
+                .foregroundStyle(Theme.muted)
             Spacer()
-            Button("I want quick daily movement") { step = .readiness }.buttonStyle(PrimaryButtonStyle())
-            Button("I'm recovering with a clinician's plan") { step = .link }.buttonStyle(SecondaryButtonStyle())
-        }
-    }
-
-    private var readiness: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Quick safety check").font(.laileTitle)
-            Text("Seven yes/no questions before exercise.").foregroundStyle(Theme.muted)
-            ScrollView {
-                VStack(spacing: 10) {
-                    ForEach(Self.questions.indices, id: \.self) { i in
-                        Card(padding: 12) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(Self.questions[i]).font(.subheadline).foregroundStyle(Theme.text)
-                                Picker("", selection: Binding(get: { answers[i] }, set: { answers[i] = $0 })) {
-                                    Text("No").tag(Bool?.some(false))
-                                    Text("Yes").tag(Bool?.some(true))
-                                }
-                                .pickerStyle(.segmented)
-                            }
-                        }
-                    }
-                }
-            }
-            if answers.contains(where: { $0 == true }) {
-                Text("Thanks for being honest. Please check with a doctor before harder workouts — until then Laile keeps you to gentle, low-impact sessions.")
-                    .font(.footnote).foregroundStyle(Theme.warn)
-            }
-            let unanswered = answers.filter { $0 == nil }.count
-            Button(unanswered == 0 ? "Continue" : "Answer \(unanswered) more") {
-                app.settings.gentleOnly = answers.contains { $0 == true }
-                step = .permissions
-            }
-            .buttonStyle(PrimaryButtonStyle(color: unanswered == 0 ? Theme.accent : Theme.muted))
-            .disabled(unanswered > 0)
+            Button { step = .goals } label: { Label("Talk to Lele about my goals", systemImage: "sparkles") }
+                .buttonStyle(PrimaryButtonStyle())
+            Button { step = .link } label: { Label("I have a code from my physio", systemImage: "stethoscope") }
+                .buttonStyle(SecondaryButtonStyle())
         }
     }
 
     private var linkClinician: some View {
         VStack(alignment: .leading, spacing: 16) {
             Spacer()
-            Text("Link your clinician").font(.laileTitle)
-            Text("Enter the code from your physiotherapist or surgeon. Your program, limits and medications come from them.")
+            Text("Join your physio's program").font(.laileTitle)
+            Text("Enter the code from your physiotherapist or doctor. Your program, limits and medicines come from them, and they see how you're getting on.")
                 .foregroundStyle(Theme.muted)
             TextField("LAI-XXXXXX", text: $inviteCode)
                 .textInputAutocapitalization(.characters).autocorrectionDisabled()
@@ -311,13 +286,23 @@ public struct OnboardingView: View {
                 .padding(14).background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
             if let error { Text(error).font(.footnote).foregroundStyle(Theme.danger) }
             Spacer()
-            Button("Link and continue") {
+            Button(working ? "Joining…" : "Join and continue") {
                 Task {
-                    do { try await app.link(inviteCode: inviteCode); step = .permissions } catch { self.error = error.localizedDescription }
+                    working = true
+                    defer { working = false }
+                    do {
+                        try await app.link(inviteCode: inviteCode.trimmingCharacters(in: .whitespaces))
+                        firstProgram = app.activeEnrollments.first(where: \.isSupervised)
+                        error = nil
+                        step = .permissions
+                    } catch {
+                        self.error = error.localizedDescription
+                    }
                 }
             }
             .buttonStyle(PrimaryButtonStyle())
-            Button("I don't have a code yet") { step = .readiness }.buttonStyle(SecondaryButtonStyle())
+            .disabled(inviteCode.trimmingCharacters(in: .whitespaces).count < 6 || working)
+            Button("I don't have a code") { error = nil; step = .goals }.buttonStyle(SecondaryButtonStyle())
         }
     }
 
@@ -325,11 +310,11 @@ public struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 16) {
             Spacer()
             Text("Camera and voice").font(.laileTitle)
-            Label("The camera counts your reps and measures your joints. Video never leaves your phone.", systemImage: "camera.fill")
-            Label("The microphone lets you tell Lele how things feel mid-exercise — \"it's pulling\", \"sharp pain\".", systemImage: "mic.fill")
+            Label("The camera counts your reps and measures how far your joints move. Video never leaves your phone.", systemImage: "camera.fill")
+            Label("The microphone lets you talk to Lele and tell it how things feel mid-exercise: \"it's pulling\", \"sharp pain\".", systemImage: "mic.fill")
             Label("Speech recognition turns what you say into notes and safety checks.", systemImage: "waveform")
             Spacer()
-            Button("Allow camera and microphone") {
+            Button(firstProgram == nil ? "Allow camera and microphone" : "Allow, then start my check-in") {
                 Task {
                     await Permissions.requestAll()
                     finish()
@@ -344,6 +329,10 @@ public struct OnboardingView: View {
     private func finish() {
         app.settings.onboardingComplete = true
         app.warmUpVoice()
-        Task { await app.refresh() }
+        let program = firstProgram
+        Task {
+            await app.refresh()
+            if let program { app.start(program) }
+        }
     }
 }

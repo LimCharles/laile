@@ -7,7 +7,7 @@ import SwiftUI
 public struct ProgressModule: FeatureModule {
     public init() {}
     public var id: String { "progress" }
-    public var tab: FeatureTab? { FeatureTab(title: "Progress", systemImage: "chart.line.uptrend.xyaxis", order: 2) }
+    public var tab: FeatureTab? { FeatureTab(title: "Progress", systemImage: "chart.line.uptrend.xyaxis", order: 3) }
     public func makeRootView(app: AppModel) -> AnyView { AnyView(ProgressScreen(app: app)) }
 }
 
@@ -18,7 +18,7 @@ struct ProgressScreen: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    baselineCard
+                    recheckCard
                     if let trends = app.progress?.trends, !trends.isEmpty {
                         ForEach(trends, id: \.kind) { TrendCard(trend: $0) }
                     } else {
@@ -36,17 +36,29 @@ struct ProgressScreen: View {
         }
     }
 
-    private var baselineCard: some View {
-        let template = SessionTemplate.builtIn(app.mode == .rehab ? "knee-baseline" : "move-baseline")!
-        return Card {
-            VStack(alignment: .leading, spacing: 8) {
-                Label(app.mode == .rehab ? "Knee check-in" : "Fitness check", systemImage: "ruler").font(.laileHeadline).foregroundStyle(Theme.text)
-                Text(app.mode == .rehab
-                     ? "Measure your knee bend and straightening with the camera. Every couple of weeks is plenty."
-                     : "Max push-ups, squats and plank hold. Re-test every two weeks to see how far you've come.")
-                    .font(.subheadline).foregroundStyle(Theme.muted)
-                Button { app.start(.template(template)) } label: { Label("Take the \(template.minutes)-minute check", systemImage: "camera.viewfinder") }
-                    .buttonStyle(SecondaryButtonStyle())
+    /// Re-run a program's check-in every couple of weeks: it measures again and resets targets.
+    @ViewBuilder private var recheckCard: some View {
+        let calibrated = app.activeEnrollments.filter { $0.calibration != nil }
+        if !calibrated.isEmpty {
+            Card {
+                VStack(alignment: .leading, spacing: 10) {
+                    Label("Re-check", systemImage: "ruler").font(.laileHeadline).foregroundStyle(Theme.text)
+                    Text("Every couple of weeks, redo a program's check-in. Lele measures again and resets your targets.")
+                        .font(.subheadline).foregroundStyle(Theme.muted)
+                    ForEach(calibrated) { enrollment in
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(enrollment.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.text)
+                                if let at = enrollment.calibration?.measuredAt {
+                                    Text("Last measured \(at.formatted(.relative(presentation: .named)))").font(.caption).foregroundStyle(Theme.muted)
+                                }
+                            }
+                            Spacer()
+                            Button("Re-check") { app.start(enrollment, recheck: true) }
+                                .font(.caption.weight(.semibold)).buttonStyle(.bordered).tint(Theme.accent)
+                        }
+                    }
+                }
             }
         }
     }

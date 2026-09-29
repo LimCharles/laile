@@ -259,10 +259,10 @@ struct EnrollmentsFeature: LaileFeature {
 
         let now = Date()
         var messages: [LeleMessage] = []
-        let first = user.displayName.split(separator: " ").first.map(String.init) ?? user.displayName
+        let first = CallName.from(user.displayName)
         let list = draft.reasons.prefix(4).map { "• \($0)" }.joined(separator: "\n")
         messages.append(LeleMessage(createdAt: now, kind: .welcome,
-                                    text: "Thanks, \(first)! Here's your plan: \(enrollment.title), about \(profile.minutesPerDay) minutes.\n\(list)\nYour first session is a quick check-in so I can set targets from what you can comfortably do.",
+                                    text: "Thanks, \(first)! I've put together \u{201C}\(enrollment.title)\u{201D} for you:\n\(list)\nYour first session is a quick check-in so I can set targets from what you can comfortably do.",
                                     actions: [LeleAction(id: "start", label: "Start check-in", kind: .startSession, value: enrollment.id.uuidString)]))
         if profile.shouldSeeClinician {
             messages.append(LeleMessage(createdAt: now.addingTimeInterval(1), kind: .welcome,

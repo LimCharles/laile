@@ -39,7 +39,7 @@ import Testing
         enrollment.calibration = Calibration.from(summary)
         let plan = enrollment.sessionPlan().plan
         #expect(plan.first { $0.spec.id == "incline-push-up" }?.dose.reps == 10) // 70% of 14
-        #expect(plan.first { $0.spec.id == "plank" }?.dose.holdSeconds == 28)   // 70% of 40
+        #expect(plan.first { $0.spec.id == "plank" }?.dose.holdSeconds == 30)   // 70% of 40, to the nearest 5
         #expect(!enrollment.needsCalibration)
     }
 

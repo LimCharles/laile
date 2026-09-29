@@ -155,7 +155,7 @@ public enum PersonalProgramDrafter {
             case .recoverInjury: return "gentle strength"
             }
         } ?? "strength"
-        let program = Program(title: "Your \(profile.minutesPerDay)-minute \(focus) plan", items: kept, precautions: precautions,
+        let program = Program(title: "\(profile.minutesPerDay)-minute \(focus) plan".capitalizedFirst, items: kept, precautions: precautions,
                               status: .signed, draftedBy: "Lele", summary: "Built by Lele from your goals.", blockedSuggestions: blocked)
         return Draft(program: program, reasons: reasons)
     }
@@ -171,4 +171,9 @@ public enum FollowOn {
         case .generalDeconditioning, .other: return "strength-10"
         }
     }
+}
+
+extension String {
+    /// "10-minute strength plan" stays as is; "strength plan" → "Strength plan".
+    var capitalizedFirst: String { prefix(1).uppercased() + dropFirst() }
 }

@@ -185,7 +185,7 @@ struct RunningSessionView: View {
                 }
                 .buttonStyle(PrimaryButtonStyle(color: .white.opacity(0.18)))
                 Button { model.skip() } label: {
-                    Label("Skip", systemImage: "forward.fill").frame(maxWidth: .infinity)
+                    Label(model.launch.isCheckIn ? "That's enough" : "Skip", systemImage: model.launch.isCheckIn ? "checkmark" : "forward.fill").frame(maxWidth: .infinity)
                 }
                 .buttonStyle(PrimaryButtonStyle(color: .white.opacity(0.18)))
             }

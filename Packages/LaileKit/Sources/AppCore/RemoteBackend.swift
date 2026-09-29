@@ -80,6 +80,32 @@ public final class RemoteBackend: LaileBackend {
     }
 
     public func careNotes() async throws -> [CareNote] { try await send("GET", "v1/care-notes") }
+    public func enrollments() async throws -> [Enrollment] { try await send("GET", "v1/enrollments") }
+    public func join(catalogId: String) async throws -> Enrollment {
+        try await send("POST", "v1/enrollments", body: API.JoinProgramRequest(catalogId: catalogId))
+    }
+    public func leave(enrollmentId: UUID) async throws -> Enrollment { try await send("POST", "v1/enrollments/\(enrollmentId.uuidString)/leave") }
+    public func plan(_ profile: HealthProfile) async throws -> API.PlanResponse {
+        try await send("POST", "v1/plan", body: API.PlanRequest(profile: profile))
+    }
+    public func leleMessages() async throws -> [LeleMessage] { try await send("GET", "v1/lele/messages") }
+    public func leleReply(to messageId: UUID, actionId: String?, text: String?) async throws -> API.LeleTurnResponse {
+        try await send("POST", "v1/lele/messages/\(messageId.uuidString)/reply", body: API.LeleReplyRequest(actionId: actionId, text: text))
+    }
+    public func leleChat(_ text: String) async throws -> API.LeleTurnResponse {
+        try await send("POST", "v1/lele/chat", body: API.LeleChatRequest(text: text))
+    }
+
+    public nonisolated func postLive(_ update: API.LiveSessionUpdate) async {
+        guard let token = await currentToken(), let body = try? LaileJSON.encoder().encode(update) else { return }
+        var request = URLRequest(url: baseURL.appendingPathComponent("v1/sessions/live"))
+        request.httpMethod = "POST"
+        request.timeoutInterval = 5
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.httpBody = body
+        _ = try? await session.data(for: request)
+    }
 
     public func markCareNoteBetter(_ id: UUID) async throws -> CareNote {
         try await send("POST", "v1/care-notes/\(id.uuidString)/better")

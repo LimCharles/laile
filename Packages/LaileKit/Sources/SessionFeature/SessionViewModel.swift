@@ -63,8 +63,9 @@ public final class SessionViewModel {
         self.app = app
         self.stage = launch.askPain ? .painBefore : .running
         let config = ConductorConfig(symptomPolicy: launch.policy)
-        let conductor = SessionConductor(plan: launch.plan, kind: launch.kind, title: launch.title, mode: launch.mode, config: config,
+        var conductor = SessionConductor(plan: launch.plan, kind: launch.kind, title: launch.title, mode: launch.mode, config: config,
                                          startDate: Date(), startTime: PoseClock.now, programId: launch.programId, templateId: launch.templateId)
+        conductor.enrollmentId = launch.enrollmentId
         self.conductor = conductor
         self.snapshot = conductor.snapshot
         self.pose = PoseProviderFactory.make(preferFront: app.settings.preferFrontCamera)
@@ -131,14 +132,52 @@ public final class SessionViewModel {
             try? listener.start()
             listening = listener.isListening
         }
+        if launch.isCheckIn { speak(Self.checkInIntro) }
         handle(conductor.start(at: PoseClock.now))
         ticker = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.tick() }
         }
     }
 
+    static let checkInIntro = CueLine("A quick check-in first. Go at a comfortable effort and tap That's enough when it feels right.",
+                                      key: "checkin.intro")
+
+    private var lastLivePost: TimeInterval = 0
+
     private func tick() {
         handle(conductor.tick(at: PoseClock.now))
+        // A supervising clinician can watch the session live.
+        if launch.isSupervised, PoseClock.now - lastLivePost >= 2 {
+            lastLivePost = PoseClock.now
+            postLive(ended: false)
+        }
+    }
+
+    private func postLive(ended: Bool) {
+        let s = snapshot
+        var angleLabel: String?
+        if let angle = s.angle, let spec = currentExercise?.spec {
+            if spec.tracksKneeFlexion { angleLabel = "Knee bent to \(Int((180 - angle).rounded()))°" }
+            else if spec.kind.trackedAngle == .armRaise { angleLabel = "Arm lifted to \(Int(angle.rounded()))°" }
+        }
+        let update = API.LiveSessionUpdate(
+            sessionTitle: launch.title, exerciseName: s.exerciseName, exerciseIndex: s.exerciseIndex, exerciseCount: s.exerciseCount,
+            setIndex: s.setIndex, totalSets: s.totalSets, phase: Self.phaseLabel(s.phase), reps: s.reps, targetReps: s.targetReps,
+            holdSeconds: Int(s.holdSeconds), targetHoldSeconds: s.isHold ? s.targetHoldSeconds : nil, angleLabel: angleLabel,
+            lastHeard: heard.isEmpty ? nil : heard, symptomsLogged: conductor.symptoms.count, ended: ended
+        )
+        let backend = app.backend
+        Task.detached { await backend.postLive(update) }
+    }
+
+    static func phaseLabel(_ phase: ConductorPhase) -> String {
+        switch phase {
+        case .setup: return "setting up"
+        case .countdown, .active: return "exercising"
+        case .rest: return "resting"
+        case .paused: return "paused"
+        case .finished: return "finished"
+        }
     }
 
     private func onFrame(_ frame: PoseFrame) {
@@ -272,6 +311,7 @@ public final class SessionViewModel {
     }
 
     private func finish(_ summary: SessionSummary) {
+        if launch.isSupervised { postLive(ended: true) }
         ticker?.invalidate()
         pose.stop()
         listener.stop()

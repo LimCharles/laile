@@ -4,46 +4,42 @@ import LaileCore
 import PoseKit
 import SwiftUI
 
-public struct StreamsModule: FeatureModule {
-    public init() {}
-    public var id: String { "streams" }
-    public var tab: FeatureTab? { FeatureTab(title: "Streams", systemImage: "dot.radiowaves.left.and.right", order: 1) }
-    public func makeRootView(app: AppModel) -> AnyView { AnyView(StreamsView(app: app)) }
-}
-
-struct StreamsView: View {
+/// Live classes: follow a coach with everyone else. Shown from the Programs tab.
+public struct StreamsView: View {
     @Bindable var app: AppModel
     @State private var open: StreamEvent?
 
-    var body: some View {
-        NavigationStack {
-            TimelineView(.periodic(from: .now, by: 1)) { _ in
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 18) {
-                        Text("Follow along with a coach and everyone else doing the same move at the same moment. Your camera counts your reps.")
-                            .font(.subheadline).foregroundStyle(Theme.muted)
-                        Button {
-                            open = DemoStreams.practice(startingAt: app.now.addingTimeInterval(8), gentle: app.mode == .rehab || app.settings.gentleOnly)
-                        } label: {
-                            Label("Practice stream — starts now", systemImage: "play.circle.fill")
-                        }
-                        .buttonStyle(SecondaryButtonStyle())
-                        section("Live now", streams(where: { if case .live = $0 { return true }; return false }))
-                        section("Starting soon", streams(where: { if case .lobby = $0 { return true }; return false }))
-                        section("Later today", streams(where: { if case .upcoming = $0 { return true }; return false }))
+    public init(app: AppModel) { self.app = app }
+
+    public var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { _ in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    Text("Follow along with a coach and everyone else doing the same move at the same moment. Your camera counts your reps.")
+                        .font(.subheadline).foregroundStyle(Theme.muted)
+                    Button {
+                        open = DemoStreams.practice(startingAt: app.now.addingTimeInterval(8), gentle: isGentle)
+                    } label: {
+                        Label("Practice class — starts now", systemImage: "play.circle.fill")
                     }
-                    .padding(16)
+                    .buttonStyle(SecondaryButtonStyle())
+                    section("Live now", streams(where: { if case .live = $0 { return true }; return false }))
+                    section("Starting soon", streams(where: { if case .lobby = $0 { return true }; return false }))
+                    section("Later today", streams(where: { if case .upcoming = $0 { return true }; return false }))
                 }
-            }
-            .screenBackground()
-            .navigationTitle("Streams")
-            .refreshable { await app.refresh() }
-            .fullScreenCover(item: $open) { stream in StreamRoomView(stream: stream, app: app) }
-            .onChange(of: app.streamToOpen, initial: true) { _, stream in
-                if let stream { open = stream; app.streamToOpen = nil }
+                .padding(16)
             }
         }
+        .screenBackground()
+        .navigationTitle("Live classes")
+        .refreshable { await app.refresh() }
+        .fullScreenCover(item: $open) { stream in StreamRoomView(stream: stream, app: app) }
+        .onChange(of: app.streamToOpen, initial: true) { _, stream in
+            if let stream { open = stream; app.streamToOpen = nil }
+        }
     }
+
+    private var isGentle: Bool { app.isSupervised || app.settings.gentleOnly }
 
     private func streams(where match: (StreamPhase) -> Bool) -> [StreamEvent] {
         app.streams.filter { match(StreamClock.phase(of: $0, at: app.now)) }
@@ -64,12 +60,9 @@ struct StreamsView: View {
         }
     }
 
-    /// Rehab patients only see streams their clinician's precautions allow.
+    /// Classes someone's limits rule out (their own, or their clinician's) can't be joined.
     private func violations(_ stream: StreamEvent) -> [ProgramViolation] {
-        var precautions = app.today?.program?.precautions
-        if precautions == nil && app.settings.gentleOnly { precautions = Precautions(maxImpact: .low) }
-        guard let precautions else { return [] }
-        return StreamEligibility.violations(for: stream, precautions: precautions)
+        StreamEligibility.violations(for: stream, precautions: app.precautions)
     }
 }
 
@@ -194,7 +187,7 @@ struct StreamRoomView: View {
                 ProgressView(value: p.totalElapsed, total: Double(model.stream.durationSeconds)).tint(Theme.accent)
             case .ended:
                 Image(systemName: "flag.checkered").font(.system(size: 44))
-                Text("Stream finished").font(.laileTitle)
+                Text("Class finished").font(.laileTitle)
             }
         }
         .foregroundStyle(.white)
@@ -288,7 +281,7 @@ struct StreamResultOverlay: View {
     var body: some View {
         VStack(spacing: 14) {
             Image(systemName: "trophy.fill").font(.system(size: 50)).foregroundStyle(Theme.reward)
-            Text("Stream complete!").font(.laileTitle)
+            Text("Class complete!").font(.laileTitle)
             Text("+\(result.movement.xpAwarded) XP · \(result.movement.moveStreak.current)-day streak").font(.headline).foregroundStyle(Theme.reward)
             ForEach(result.movement.newBadges) { badge in Label(badge.title, systemImage: badge.symbol) }
             Button("Done", action: onClose).buttonStyle(PrimaryButtonStyle())

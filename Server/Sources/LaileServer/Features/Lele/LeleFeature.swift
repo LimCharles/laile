@@ -67,7 +67,8 @@ struct LeleService {
 
     /// Lele's round for one person: gathers what's happened and lets the rules decide whether to speak up.
     @discardableResult
-    func round(for user: UserModel, now: Date = Date()) async throws -> [LeleMessage] {
+    /// `stampedAt` overrides the messages' time (the demo runs a round as if it were daytime).
+    func round(for user: UserModel, now: Date = Date(), stampedAt: Date? = nil) async throws -> [LeleMessage] {
         let userID = try user.requireID()
         let timeZone = TimeZone(identifier: user.timeZone) ?? TimeZone(identifier: "Asia/Singapore")!
         let enrollments = try await EnrollmentStore(db: db).active(for: userID)
@@ -91,10 +92,11 @@ struct LeleService {
         let input = LeleRoundInput(
             now: now, timeZone: timeZone, firstName: Self.firstName(user.displayName), enrollments: enrollments,
             lastSessionAt: sessions.first?.startedAt, sessionsToday: sessions.filter { $0.startedAt >= startOfDay }.count,
-            dosesToday: doses, progressFlags: flags, nextVisitAt: profile?.nextVisitAt, clinicianName: profile?.clinician.displayName,
+            dosesToday: doses, progressFlags: flags, nextVisitAt: profile?.nextVisitAt, clinicianName: profile.map { CallName.plain($0.clinician.displayName) },
             recentMessages: recent
         )
-        let messages = LeleRound.decide(input)
+        var messages = LeleRound.decide(input)
+        if let stampedAt { messages = messages.map { var m = $0; m.createdAt = stampedAt; return m } }
         for message in messages { try await save(message, userID: userID) }
         return messages
     }
@@ -117,7 +119,7 @@ struct LeleService {
         try await save(question, userID: userID)
         var out: [LeleMessage] = [question, LeleMessage(createdAt: now, kind: .chat, author: .person, text: answer)]
         var notes: [CareNote] = []
-        let clinician = try await activePatientProfile(for: userID)?.clinician.displayName
+        let clinician = try await activePatientProfile(for: userID).map { CallName.plain($0.clinician.displayName) }
         func say(_ text: String, actions: [LeleAction] = []) {
             out.append(LeleMessage(createdAt: now.addingTimeInterval(1), kind: .chat, text: text, actions: actions))
         }
@@ -193,13 +195,7 @@ struct LeleService {
         return API.LeleTurnResponse(messages: out, careNotes: notes)
     }
 
-    static func firstName(_ displayName: String) -> String {
-        let parts = displayName.split(separator: " ")
-        if let first = parts.first, ["mdm", "mr", "mrs", "ms", "dr"].contains(first.lowercased().trimmingCharacters(in: .punctuationCharacters)), parts.count > 1 {
-            return "\(first) \(parts[1])"
-        }
-        return parts.first.map(String.init) ?? displayName
-    }
+    static func firstName(_ displayName: String) -> String { CallName.from(displayName) }
 
     static func parseDose(_ value: String) -> (UUID, TimeOfDay)? {
         let parts = value.split(separator: "|")

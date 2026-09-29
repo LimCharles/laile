@@ -16,7 +16,7 @@ struct CareNotesCard: View {
         Card {
             VStack(alignment: .leading, spacing: 12) {
                 Label("Lele's notes", systemImage: "heart.text.square").font(.laileHeadline).foregroundStyle(Theme.text)
-                Text(app.mode == .rehab
+                Text(app.isSupervised
                      ? "When something is sore, I note it and make that exercise easier next time. Your clinician sees these too."
                      : "When something is sore, I note it and make that exercise easier next time.")
                     .font(.footnote).foregroundStyle(Theme.muted)
@@ -79,6 +79,8 @@ struct CareNoteRow: View {
         switch note.kind {
         case .clinicianNote: return "From \(note.author ?? "your clinician")"
         case .soreSpot, .feelsWrong: return note.exerciseName ?? note.kind.label
+        case .flare: return "Worse that morning"
+        case .barrier: return "What got in the way"
         }
     }
 
@@ -97,6 +99,8 @@ struct CareNoteRow: View {
         case .soreSpot: return "bandage"
         case .feelsWrong: return "exclamationmark.triangle"
         case .clinicianNote: return "stethoscope"
+        case .flare: return "thermometer.medium"
+        case .barrier: return "calendar.badge.exclamationmark"
         }
     }
 
@@ -105,6 +109,8 @@ struct CareNoteRow: View {
         case .soreSpot: return Theme.reward
         case .feelsWrong: return Theme.warn
         case .clinicianNote: return Theme.accent
+        case .flare: return Theme.warn
+        case .barrier: return Theme.muted
         }
     }
 }

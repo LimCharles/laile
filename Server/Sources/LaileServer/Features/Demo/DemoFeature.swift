@@ -301,6 +301,38 @@ struct DemoWorld {
             )
             _ = try await recorder.record(summary, userID: user.requireID(), now: summary.endedAt)
         }
+        let first = profileName.components(separatedBy: " ").first ?? "there"
+        try await seedLele(user: user, timeZone: tz, now: now, history: [
+            (4, 8.5, LeleMessage(createdAt: now, kind: .morningCheckIn,
+                                 text: "Good morning, \(first). How's your knee this morning compared with yesterday?",
+                                 answer: "About the same", answeredAt: now)),
+            (3, 10.2, LeleMessage(createdAt: now, kind: .chat,
+                                  text: "You mentioned a sharp pain on the inside of your knee during heel slides, so you stopped that set. That was the right call. I've made heel slides gentler for your next few sessions and noted it for Dr Nair.")),
+            (3, 10.4, LeleMessage(createdAt: now, kind: .chat, author: .person, text: "Is that normal?")),
+            (3, 10.41, LeleMessage(createdAt: now, kind: .chat,
+                                   text: "Some aching as you get more bend back is expected. Sharp pain is worth stopping for, like you did. If it keeps coming back, or your knee turns hot, red or very swollen, call the clinic.")),
+            (1, 20.0, LeleMessage(createdAt: now, kind: .progress,
+                                  text: "Two weeks in and your knee bends to 86°, up from 62° at your check-in. Dr Nair will be pleased.")),
+        ])
+    }
+
+    /// A short, believable history with Lele, then today's round as if it were daytime (the demo
+    /// can be opened at any hour; Lele's real round keeps quiet hours).
+    private func seedLele(user: UserModel, timeZone tz: TimeZone, now: Date, history: [(daysAgo: Int, hour: Double, message: LeleMessage)]) async throws {
+        let service = LeleService(app: app, db: db, logger: app.logger)
+        let userID = try user.requireID()
+        for item in history {
+            var message = item.message
+            message.createdAt = Self.pastDay(item.daysAgo, hour: item.hour, timeZone: tz, now: now)
+            if message.answer != nil { message.answeredAt = message.createdAt.addingTimeInterval(300) }
+            try await service.save(message, userID: userID)
+        }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = tz
+        let hour = calendar.component(.hour, from: now)
+        let daytime = hour < LeleRound.quietBefore ? Self.pastDay(0, hour: 8, timeZone: tz, now: now)
+            : hour >= LeleRound.quietFrom ? Self.pastDay(0, hour: 20.5, timeZone: tz, now: now) : now
+        _ = try await service.round(for: user, now: daytime, stampedAt: now)
     }
 
     /// Everyday user: Ten-minute strength for six days (first session was the check-in), improving
@@ -334,6 +366,13 @@ struct DemoWorld {
         }
         let plan = PersonalProgramDrafter.draft(health).program
         _ = try await EnrollmentStore(db: db).createPersonal(plan, userID: userID)
+        try await seedLele(user: user, timeZone: tz, now: now, history: [
+            (2, 12.8, LeleMessage(createdAt: now, kind: .chat, author: .person, text: "Can you make push-ups harder? They're getting easy.")),
+            (2, 12.81, LeleMessage(createdAt: now, kind: .chat,
+                                   text: "You did 10 last time, up from 6 at your check-in. Let's keep the count and lower yourself slowly, three seconds down. After two sessions that feel comfortable I'll add reps.")),
+            (1, 19.0, LeleMessage(createdAt: now, kind: .progress,
+                                  text: "Six sessions in a row. Your plank is up from 30 to 60 seconds. That's real core strength.")),
+        ])
     }
 
     /// Stiff-shoulder patient, day 30: arm lift climbing from 95° to 128° over twelve sessions.

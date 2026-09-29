@@ -1,6 +1,7 @@
 import AppCore
 import DesignSystem
 import LaileCore
+import LeleFeature
 import SwiftUI
 
 public struct TodayModule: FeatureModule {
@@ -14,22 +15,31 @@ struct TodayView: View {
     @Bindable var app: AppModel
     @State private var claimedOutcome: CheckInOutcome?
     @State private var showConfetti = false
+    @State private var showGoals = false
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
                     greeting
+                    if let message = leleHighlight {
+                        LeleCard(message: message, app: app)
+                    }
+                    sessions
+                    if let doses = app.today?.medicationDoses, !doses.isEmpty {
+                        MedicationsCard(doses: doses) { dose in Task { await app.markTaken(dose) } }
+                    }
                     if let rewards = app.rewards {
                         DailyCheckInCard(rewards: rewards, claimed: claimedOutcome) { await claim() }
                         StreakCard(streak: rewards.moveStreak, movedToday: rewards.movedToday)
                     }
-                    if app.mode == .rehab { rehabSection }
                     snacks
-                    if let next = nextStream { NextStreamCard(stream: next, now: app.now) { app.streamToOpen = next; app.selectedTab = "streams" } }
+                    if let next = nextStream {
+                        NextStreamCard(stream: next, now: app.now) { app.streamToOpen = next; app.selectedTab = "programs" }
+                    }
                     if app.settings.gentleOnly {
                         Card {
-                            Label("Gentle mode is on because of your readiness answers. Check with a doctor before harder workouts.", systemImage: "heart.text.square")
+                            Label("Gentle mode is on because of your safety answer. Check with a doctor before harder workouts.", systemImage: "heart.text.square")
                                 .font(.footnote).foregroundStyle(Theme.muted)
                         }
                     }
@@ -40,28 +50,53 @@ struct TodayView: View {
             .refreshable { await app.refresh() }
             .navigationTitle("Today")
             .toolbar {
-                if let level = app.rewards?.level {
-                    ToolbarItem(placement: .topBarTrailing) { LevelBadge(level: level) }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { app.showMe = true } label: { Image(systemName: "person.crop.circle").font(.title3) }
+                        .accessibilityLabel("Me and settings")
                 }
             }
             .overlay { if showConfetti { Confetti().id(claimedOutcome?.dayNumber ?? 0) } }
+            .sheet(isPresented: $showGoals) {
+                GoalsConversationView(app: app) { enrollment in
+                    showGoals = false
+                    if let enrollment { app.afterSheetCloses { app.start(enrollment) } }
+                }
+            }
         }
     }
 
     private var greeting: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(greetingText).font(.laileTitle).foregroundStyle(Theme.text)
-            Text(app.mode == .rehab ? "Small, steady sessions get your knee back." : "No time? Two minutes still counts.")
-                .foregroundStyle(Theme.muted)
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(greetingText).font(.laileTitle).foregroundStyle(Theme.text)
+                Text(subtitle).foregroundStyle(Theme.muted)
+            }
+            Spacer()
+            if let level = app.rewards?.level { LevelBadge(level: level).padding(.top, 4) }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var subtitle: String {
+        if let supervisor = app.activeEnrollments.first(where: \.isSupervised)?.supervisorName {
+            return "Small, steady sessions. \(supervisor) can see how you're going."
+        }
+        return "Little and often. Two minutes still counts."
     }
 
     private var greetingText: String {
         let hour = Calendar.current.component(.hour, from: Date())
         let part = hour < 12 ? "Good morning" : (hour < 18 ? "Good afternoon" : "Good evening")
-        let name = app.user?.displayName.components(separatedBy: " ").first ?? ""
-        return name.isEmpty || name == "You" ? part : "\(part), \(name)"
+        return app.callName.map { "\(part), \($0)" } ?? part
+    }
+
+    /// What Lele most wants to say today: an open question first, else its latest word today.
+    private var leleHighlight: LeleMessage? {
+        let fromLele = app.leleMessages.filter { $0.author != .person }
+        let open = fromLele.filter(\.isOpenQuestion)
+        if let checkIn = open.last(where: { $0.kind == .morningCheckIn }) ?? open.last { return checkIn }
+        guard let last = fromLele.last, Calendar.current.isDateInToday(last.createdAt) else { return nil }
+        return last
     }
 
     private func claim() async {
@@ -75,15 +110,24 @@ struct TodayView: View {
         }
     }
 
-    @ViewBuilder private var rehabSection: some View {
-        if let plan = app.today, let program = plan.program {
-            ProgramCard(program: program, clinician: plan.clinicianName, careNotes: plan.careNotes) { app.start(.program(program)) }
-            if !plan.medicationDoses.isEmpty {
-                MedicationsCard(doses: plan.medicationDoses) { dose in Task { await app.markTaken(dose) } }
+    @ViewBuilder private var sessions: some View {
+        let active = app.activeEnrollments
+        if active.isEmpty {
+            Card {
+                VStack(alignment: .leading, spacing: 10) {
+                    Label("No program yet", systemImage: "square.stack.3d.up").font(.laileHeadline).foregroundStyle(Theme.text)
+                    Text("Tell Lele what you'd like to work on and it'll build a plan around you, or pick one of Laile's programs.")
+                        .font(.subheadline).foregroundStyle(Theme.muted)
+                    Button { showGoals = true } label: { Label("Build my plan with Lele", systemImage: "sparkles") }
+                        .buttonStyle(PrimaryButtonStyle())
+                    Button("Explore programs") { app.selectedTab = "programs" }.buttonStyle(SecondaryButtonStyle())
+                }
             }
         } else {
-            Card {
-                Label("Waiting for your clinician to sign your program.", systemImage: "hourglass").foregroundStyle(Theme.muted)
+            ForEach(active) { enrollment in
+                EnrollmentCard(enrollment: enrollment, precautions: app.precautions, careNotes: app.today?.careNotes ?? []) {
+                    app.start(enrollment)
+                }
             }
         }
     }
@@ -93,17 +137,12 @@ struct TodayView: View {
             SectionHeader("Quick sessions", subtitle: "Camera-counted. Pick one and go.")
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    ForEach(templates) { template in
-                        SnackCard(template: template) { app.start(.template(template, gentleOnly: app.settings.gentleOnly)) }
+                    ForEach(SessionTemplate.snacks.sorted { $0.minutes < $1.minutes }) { template in
+                        SnackCard(template: template) { app.startSnack(template) }
                     }
                 }
             }
         }
-    }
-
-    private var templates: [SessionTemplate] {
-        let all = app.today?.templates ?? SessionTemplate.builtIn.filter { $0.mode == .move }
-        return all.filter { $0.mode == app.mode || $0.mode == .move }.sorted { ($0.isSnack ? 0 : 1, $0.minutes) < ($1.isSnack ? 0 : 1, $1.minutes) }
     }
 
     private var nextStream: StreamEvent? {
@@ -111,6 +150,41 @@ struct TodayView: View {
             switch StreamClock.phase(of: stream, at: app.now) {
             case .live, .lobby, .upcoming: return true
             case .ended: return false
+            }
+        }
+    }
+}
+
+/// Lele's latest word on the Today screen, with its answer buttons.
+struct LeleCard: View {
+    let message: LeleMessage
+    @Bindable var app: AppModel
+
+    var body: some View {
+        Card {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 10) {
+                    if message.author == .clinician {
+                        Image(systemName: "stethoscope").frame(width: 32, height: 32).foregroundStyle(.white).background(Theme.reward, in: Circle())
+                    } else {
+                        LeleAvatar()
+                    }
+                    Text(message.author == .clinician ? "From your clinician" : "Lele").font(.laileHeadline).foregroundStyle(Theme.text)
+                    Spacer()
+                    Text(message.createdAt, style: .time).font(.caption).foregroundStyle(Theme.muted)
+                }
+                Text(message.text).foregroundStyle(Theme.text)
+                if let answer = message.answer {
+                    Label(answer, systemImage: "checkmark.circle.fill").font(.caption.weight(.semibold)).foregroundStyle(Theme.accent)
+                } else if !message.actions.isEmpty {
+                    ActionChips(actions: message.actions) { action in Task { await app.perform(action, on: message) } }
+                }
+                HStack(spacing: 16) {
+                    Button { app.selectedTab = "lele" } label: { Label("Chat", systemImage: "text.bubble") }
+                    Button { app.showLeleCall = true } label: { Label("Talk", systemImage: "phone.fill") }
+                }
+                .font(.subheadline.weight(.semibold))
+                .tint(Theme.accent)
             }
         }
     }
@@ -231,44 +305,6 @@ struct StreakCard: View {
     }
 }
 
-struct ProgramCard: View {
-    let program: Program
-    let clinician: String?
-    var careNotes: [CareNote] = []
-    let onStart: () -> Void
-
-    var body: some View {
-        Card {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Label("Your program", systemImage: "cross.case.fill").font(.laileHeadline).foregroundStyle(Theme.accent)
-                    Spacer()
-                    Pill("v\(program.version) · signed", color: Theme.accent, background: Theme.accentSoft)
-                }
-                Text(program.title).font(.title3.weight(.bold)).foregroundStyle(Theme.text)
-                if let clinician { Text("Prescribed by \(clinician)").font(.caption).foregroundStyle(Theme.muted) }
-                ForEach(program.items) { item in
-                    if let spec = ExerciseLibrary.standard.spec(item.exerciseId) {
-                        HStack {
-                            Image(systemName: spec.symbol).frame(width: 24).foregroundStyle(spec.category.color)
-                            Text(spec.name).foregroundStyle(Theme.text)
-                            if careNotes.contains(where: { $0.isEasing && $0.exerciseId == spec.id }) {
-                                Pill("easier today", color: Theme.reward, background: Theme.rewardSoft)
-                                    .accessibilityLabel("Lele made this easier today because it was sore last time")
-                            }
-                            Spacer()
-                            Text(item.dose.shortDescription + (item.timesPerDay > 1 ? " · \(item.timesPerDay)×/day" : ""))
-                                .font(.subheadline).foregroundStyle(Theme.muted)
-                        }
-                    }
-                }
-                Button(action: onStart) { Label("Start today's session", systemImage: "play.fill") }
-                    .buttonStyle(PrimaryButtonStyle())
-            }
-        }
-    }
-}
-
 struct MedicationsCard: View {
     let doses: [MedicationDose]
     let onTaken: (MedicationDose) -> Void
@@ -367,7 +403,7 @@ struct NextStreamCard: View {
         switch StreamClock.phase(of: stream, at: now) {
         case .live: return "● LIVE NOW — JOIN"
         case .lobby(let s): return "LOBBY OPEN · STARTS IN \(Int(s / 60)):\(String(format: "%02d", Int(s) % 60))"
-        case .upcoming(let s): return "NEXT STREAM IN \(Int(s / 60)) MIN"
+        case .upcoming(let s): return "NEXT CLASS IN \(Int(s / 60)) MIN"
         case .ended: return "ENDED"
         }
     }
