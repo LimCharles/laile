@@ -28,7 +28,7 @@ Lele cannot examine you. These signs need a person to check you, not an app.
 
 - If you mention any of these during a session, Laile ends the session and tells you what to do. The report is saved for your clinician.
 - Laile checks for these words with fixed rules, so a warning sign is never left to the AI's judgement.
-- In rehab mode, same-day concerns go to your care team. In Move mode, Laile tells you to see a doctor.
+- In a physio program, same-day concerns go to your care team. Otherwise, Laile tells you to see a doctor.
 
 ## If you are unsure
 

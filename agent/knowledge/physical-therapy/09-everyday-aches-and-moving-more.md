@@ -1,6 +1,6 @@
-# Everyday aches and moving more (Move mode)
+# Everyday aches and moving more
 
-Move mode is for people who sit a lot and have little time. The idea: short, frequent movement beats rare long workouts you never get round to.
+Laile's quick sessions and Lele's plans are for people who sit a lot and have little time. The idea: short, frequent movement beats rare long workouts you never get round to.
 
 ## How much movement helps
 
@@ -42,9 +42,9 @@ Move mode is for people who sit a lot and have little time. The idea: short, fre
 - Then gradually return to gentle movement and loading. Complete rest for long periods tends to slow recovery.
 - **See a professional if:** you can't put weight on it, it's very swollen or misshapen, or it isn't improving.
 
-## When Move mode isn't the right place
+## When you need a physio instead
 
-- **After surgery, or with a condition a clinician is treating:** ask your clinician before starting new exercise. They can link you to Laile's rehab mode.
+- **After surgery, or with a condition a clinician is treating:** ask your clinician before starting new exercise. Their physio can give you a Laile code for a program they supervise.
 - **Before starting a new exercise routine:** check with a doctor if you have heart problems, chest pain with exertion, dizziness or fainting, or have been told not to exercise.
 
 ## What Lele will and won't say

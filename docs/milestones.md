@@ -87,7 +87,7 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
   - full history in the app (Progress), the portal and the pre-visit report
 - ✅ ADP agent "Laile" (Tencent Hy3):
   - instructions in `agent/prompts/lele.md`;
-  - 10-file knowledge base in `agent/knowledge/`, in two categories: Physical therapy (8 files) and Medicines (2 files)
+  - 12-file knowledge base in `agent/knowledge/`, in two categories: Physical therapy (10 files) and Medicines (2 files)
 - ⬜ Publish the ADP app; `ADP_APP_KEY` in `Server/.env`
 - ⬜ Server calls ADP (`/adp/v2/chat`, SSE):
   - "Ask Lele" chat;
@@ -96,6 +96,17 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
   - visit prep;
   - PATIENT CONTEXT and CARE NOTES are sent with each message;
   - `remember` JSON is parsed into care notes
+
+## M5.8 — Programs as the unit, Lele takes initiative ✅
+
+- ✅ Tabs: Today, Programs, Lele, Progress (Me opens from Today)
+- ✅ Programs: physio code, Lele's plans from a goals conversation, calisthenics/mobility catalog, live classes
+- ✅ First session of every program is a check-in that sets targets; re-check from Progress
+- ✅ Lele tab: chat with inbox and reply chips; voice check-in call
+- ✅ Lele's round (morning check-in, reminders, nudges, barriers, plateau, visit prep) and local notifications
+- ✅ Portal: live session view, Today from Lele daily list, approve/decline program requests, ask Lele to change a program, discharge to a follow-on program
+- ✅ Second condition: stiff or painful shoulder (arm lift measured)
+- ⬜ Re-upload `agent/knowledge/` (01, 02, 03, 05, 06, 09 changed; 11 and 12 new) and `agent/prompts/lele.md` to ADP
 
 ## M5.7 — Real-phone test ⬜ (next; biggest remaining risk)
 

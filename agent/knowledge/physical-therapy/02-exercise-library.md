@@ -9,7 +9,7 @@ These are the exercises Laile can track with the camera. Each entry says:
 
 Your clinician (rehab) or your chosen session (Move) decides which ones you do, and how many.
 
-## Rehab exercises (after knee or hip replacement)
+## Knee and hip exercises (after knee or hip replacement, knee pain or arthritis)
 
 ### Ankle pumps
 - **For:** keeping blood moving in your legs, which helps prevent clots after surgery. It is often done many times a day in the first weeks.
@@ -67,6 +67,41 @@ Your clinician (rehab) or your chosen session (Move) decides which ones you do, 
 - **How:** squeeze your buttocks and lift your hips until your body is straight from knees to shoulders, then lower.
 - **Common mistake:** arching the lower back. Lift with the buttocks.
 
+## Shoulder exercises (stiff or painful shoulder)
+
+### Pendulum swings
+- **For:** loosening a stiff shoulder without asking the muscles to work.
+- **Setup:** lean on a table with your good hand and let the sore arm hang down.
+- **How:** rock your body gently so the arm swings in small circles or side to side. The arm stays relaxed.
+- **Normal to feel:** a gentle loosening. It should not hurt.
+
+### Forward arm raise
+- **For:** the reach you need for shelves, doing your hair and getting dressed.
+- **Setup:** stand side-on to the phone with your arms by your sides.
+- **How:** lift your arm forward and up as high as is comfortable, thumb up and elbow fairly straight, then lower slowly.
+- **Measured:** arm lift, in degrees. 180° is straight up. A rep counts when you reach your target height.
+- **Normal to feel:** a stretch or mild ache at the top that eases as you lower.
+- **Easier:** a lower target, or bend the elbow a little.
+- **Common mistake:** hitching the shoulder up towards the ear. Keep it down and relaxed.
+
+### Side arm raise
+- **For:** moving the shoulder in the direction that stiffens most.
+- **Setup:** face the phone with your arms by your sides and your whole body in view.
+- **How:** lift your arm out to the side, thumb up, as high as is comfortable, then lower slowly.
+- **Easier:** stop at shoulder height.
+
+### Wall slides
+- **For:** reaching higher with less effort, because the wall takes some of the arm's weight.
+- **Setup:** stand facing a wall, side-on to the phone, fingertips on the wall at chest height.
+- **How:** walk or slide your fingers up the wall as far as is comfortable, then slide back down.
+- **Easier:** stand further from the wall, or stop lower.
+
+### Shoulder blade squeeze
+- **For:** the muscles that steady the shoulder, and undoing a desk slump.
+- **Setup:** sit tall in a chair with your arms relaxed.
+- **How:** squeeze your shoulder blades back and down, hold, then relax.
+- **Common mistake:** shrugging. Think "back pockets", not "ears".
+
 ## Move exercises (everyday strength and stretching)
 
 ### Bodyweight squat
@@ -80,7 +115,7 @@ Your clinician (rehab) or your chosen session (Move) decides which ones you do, 
 - **For:** chest, shoulders, arms and core.
 - **Levels:** Incline push-up: hands on a counter or table. Knee push-up: on the floor, knees down. Full push-up: on your toes.
 - **How:** lower your chest towards your hands, keeping your body in a straight line, then push away.
-- **Laile:** moves you to the next level when you are ready.
+- **Next level:** when you can do about 15 good reps, move on to the next version. A re-check then sets your new targets.
 - **Common mistake:** sagging hips. Lele reminds you to keep your hips in line.
 - **Watch out:** wrist pain. Tell Lele; the incline version puts less load on the wrists.
 
@@ -105,7 +140,7 @@ Your clinician (rehab) or your chosen session (Move) decides which ones you do, 
 - **Setup:** face the phone, with your whole body in view.
 - **How:** jump your feet out and swing your arms overhead, then back in.
 - **Easier:** step out one foot at a time, with no jump.
-- **Note:** high impact. Not used in rehab mode, or when a clinician has limited impact.
+- **Note:** high impact. Left out of physio programs, and whenever your limits rule out impact (for example, sore knees).
 
 ### High knees
 - **For:** fast cardio in a small space.
@@ -134,6 +169,7 @@ Your clinician (rehab) or your chosen session (Move) decides which ones you do, 
 
 ## How Laile makes an exercise easier or harder
 
-- **Easier:** After a sore or painful moment, Lele lowers the target range, or shortens holds, for that exercise. See "Lele's notes". Your clinician can also set lower targets or avoid exercises altogether.
-- **Harder:** in Move mode, Laile moves you up a level (for example, knee push-ups to full push-ups) when you are ready.
-- **Rehab mode:** moving to a harder stage always needs your clinician's sign-off.
+- **Your targets:** the first session of every program is a check-in, and your reps, holds and range are set from it. Redo it every couple of weeks to reset them.
+- **Easier:** after a sore or painful moment, Lele lowers the target range, or shortens holds, for that exercise. See "Lele's notes". Your physio can also set lower targets or leave exercises out altogether.
+- **Harder:** in Laile's calisthenics programs, each re-check raises your targets as you improve, and the push-up family has versions to move through (incline, knee, full).
+- **Physio programs:** moving to a harder stage always needs your physio's sign-off. Your physio can ask Lele to draft the change, then signs it.

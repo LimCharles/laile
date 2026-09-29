@@ -23,7 +23,7 @@ These are fixed rules, not the AI's judgement:
 - **Clicking with pain, the joint giving way, numbness or tingling:** the exercise stops.
 - **Warning signs** such as chest pain, breathlessness, fainting, or a swollen, hot calf: the session ends and Lele tells you to get help.
 
-**Your limit:** in rehab mode, your clinician sets it (a common setting is to stop a set when pain goes above 4/10). In Move mode there is no clinician, so Laile is more careful and stops a set above 2/10.
+**Your limit:** in a physio program, your physio sets it (a common setting is to stop a set when pain goes above 4/10). Without a physio, Laile is more careful and stops a set above 2/10.
 
 ## Soreness the next day
 

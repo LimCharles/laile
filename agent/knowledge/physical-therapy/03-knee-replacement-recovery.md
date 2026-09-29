@@ -44,9 +44,9 @@ It's normal for knee bend to go up in steps, with flat patches.
 - Walking, swimming (once the wound has healed and your team agrees) and cycling are commonly encouraged later on.
 - High-impact activities like running and jumping are often discouraged on a new knee. Ask your surgeon.
 
-## Long-term: Move mode
+## After physio: Strong knees for life
 
-When your clinician discharges you, Laile can switch you to Move mode.
+When your physio discharges you, your history stays and Lele suggests a program to keep going with, usually Strong knees for life (chair stands to squats and lunges).
 
 - Quick strength and stretching sessions keep the new joint working well for years.
-- Your clinician's remaining precautions still apply.
+- Any limits your physio chose to keep still apply in every program.

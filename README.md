@@ -1,31 +1,35 @@
 # Laile (莱乐)
 
-Camera-verified home physical therapy — so recovery doesn't depend on willpower.
+Camera-verified home physical therapy and calisthenics, with a coach that checks in on you.
 
 **Tencent Cloud AI CAN DO IT Hackathon Singapore 2026 — Healthcare Track (NTU LKC Medicine)**
 **Challenge Statement 2: AI Healthier Every Day — Intelligent Support for Long-Term Self-Care**
 
 ## The problem
 
-Home exercise adherence after orthopedic surgery (knee/hip replacement) is notoriously
-poor — patients skip sessions or do them with bad form, and self-reported logs can't tell
-the difference. Like most health apps, nothing happens the moment you stop using it, so
-there's no reason to keep going. That's the core reason retention fails across the category:
-Apple Health, mood trackers, etc. are passive logs with no external stakes.
+Home exercise is where physical therapy succeeds or fails, and adherence is notoriously poor:
+people skip sessions or do them with bad form, and self-reported logs can't tell the difference.
+Physios only see the patient at the next visit. And like most health apps, nothing happens the
+moment you stop opening it, so there's no reason to keep going.
 
 ## The approach
 
-Laile uses camera-based pose estimation to verify that a prescribed exercise was actually
-performed, and performed correctly — not just checked off. This does two things existing
-health apps can't:
+- **Programs are the unit.** A physio's program (joined with their code), a plan Lele builds from
+  your goals, or a calisthenics/mobility program from Laile's catalog. Every program starts with a
+  camera check-in that sets personal targets.
+- **The camera verifies.** Pose estimation counts reps, times holds and measures knee bend and arm
+  lift. It can't be faked, so it can go in the clinical record.
+- **Lele takes initiative.** A morning check-in while you're in physio, medicine reminders, a nudge on
+  quiet days, a question about what's getting in the way when you miss a few, and it remembers what
+  was sore and makes that exercise easier next time. You can chat or talk to it.
+- **The physio stays on top.** Lele drafts programs and the physio signs them; they can ask Lele to
+  change one, watch a session live, approve anything the patient wants to add, and see a daily list
+  of what Lele noticed. Only the physio ends physio, and discharge hands the person on to a
+  follow-on program with their limits still applied.
+- **Code decides, the model talks.** Safety, limits and program changes are deterministic rules;
+  the model (Tencent Cloud ADP) explains, encourages and remembers.
 
-1. **Can't be faked.** Rep counting and form scoring come from the camera, not a self-report.
-2. **Creates real stakes.** Adherence data is compiled into a report for the patient's
-   surgeon/physiotherapist ahead of each follow-up visit — the app becomes part of the
-   clinical record that gates recovery clearance, not an optional wellness extra.
-
-Target population: post-surgical orthopedic rehab patients (starting with knee/hip
-replacement home exercise programs).
+Conditions covered first: knee and hip replacement, knee pain, stiff or painful shoulder.
 
 ## What it should solve (per challenge brief)
 
@@ -63,11 +67,12 @@ Open http://127.0.0.1:8080/portal — the login page shows the demo clinician's 
 
 ### Demo accounts (`SEED_DEMO_DATA=true`; keep it on for the hackathon deployment)
 
-- **App → "Try a demo account"** (Knee rehab / Daily mover): a brand-new account with two weeks of
+- **App → "Try a demo account"** (Physio patient / Calisthenics): a brand-new account with two weeks of
   history on every tap, so each demo starts identically and simultaneous testers don't clash.
   Me → "Restart demo with fresh data" swaps in a new one. Guests are deleted after 12 hours.
-- **Fixed logins** `patient@laile.demo` / `mover@laile.demo` reset to the seeded story on every sign-in.
-- **`clinician@laile.demo`** (portal) sees the fixed patient plus every "Mdm Tan (demo guest HH:mm)".
+- **Fixed logins** `patient@laile.demo` / `mover@laile.demo` / `shoulder@laile.demo` reset to the seeded story on every sign-in.
+- **`clinician@laile.demo`** (portal) sees Mdm Tan (knee), Mr Ong (shoulder, with a program request
+  waiting for approval) and every "Mdm Tan (demo guest HH:mm)".
 - **Invite code `LAI-DEMO42`** works for anyone, any number of times (each gets their own record).
 
 iOS app — Debug builds talk to the local server at http://127.0.0.1:8080 (start it first); Release builds
@@ -90,6 +95,10 @@ cd Packages/LaileCore && swift test && cd ../../Server && swift test
 - **Between sessions:** Lele is an agent on **Tencent Cloud ADP** (Tencent Hy3 model).
   - Instructions: `agent/prompts/lele.md`
   - Knowledge base: `agent/knowledge/`, in two ADP categories: `physical-therapy/` and `medicines/`.
+
+**Lele's initiative** is rules in `LaileCore` (`LeleRound`, `LeleReminders`, `ClinicianBrief`): quiet
+hours 7 am–9 pm, at most three conversations started a day, no repeats. The model words replies;
+code decides when Lele speaks up and what can change.
 
 **Care notes** are Lele's memory, kept in our database:
 - A sore spot during an exercise eases that exercise next time, and Lele says so.

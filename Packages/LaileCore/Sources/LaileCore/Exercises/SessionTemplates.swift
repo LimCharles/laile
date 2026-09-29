@@ -124,7 +124,7 @@ public struct SessionTemplate: Codable, Sendable, Hashable, Identifiable {
                 Item("chest-opener", Dose(sets: 1, holdSeconds: 30, restSeconds: 5)),
             ],
             category: .calisthenics, level: 1,
-            about: "Three short sessions a week. The camera counts every rep and Laile moves you up a level when you're ready."
+            about: "Three short sessions a week, from counter push-ups to knee push-ups. The camera counts every rep, and each re-check raises your targets."
         ),
         SessionTemplate(
             id: "squat-strong", title: "Squat strong", subtitle: "Legs that carry you up any stairs", minutes: 10, mode: .move, isSnack: false,
