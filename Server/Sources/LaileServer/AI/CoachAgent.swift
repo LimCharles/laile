@@ -5,7 +5,7 @@ import Vapor
 /// One conversational turn with the exercise coach.
 ///
 /// Order matters: deterministic safety checks run *before* the LLM, and the LLM's symptom
-/// classification is handed to `SymptomRules` (code), which decides the action. For any
+/// classification is handed to `SymptomRules` (code), which picks the action. For any
 /// action other than "continue", the spoken reply is a fixed, reviewed line.
 struct CoachAgent {
     struct Turn {

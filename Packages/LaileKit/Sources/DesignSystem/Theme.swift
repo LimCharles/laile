@@ -162,7 +162,7 @@ public struct IntensityDots: View {
     }
 }
 
-/// Lightweight celebration burst — no dependencies, respects Reduce Motion.
+/// Lightweight celebration burst with no dependencies. Respects Reduce Motion.
 public struct Confetti: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var animate = false

@@ -9,13 +9,13 @@ When sessions are missed, Lele asks why before suggesting anything, because the 
 ## Common barriers and what helps
 
 ### "I don't have time"
-- Laile sessions can be very short. Even a 2–5 minute session counts towards your streak.
+- Laile sessions can be very short. Even a 2 to 5 minute session counts towards your streak.
 - Attach exercise to something you already do every day, like after brushing your teeth, before lunch, or while the kettle boils. This is called habit stacking.
 - Leave your phone stand where you exercise, so setup takes seconds.
 
 ### "It hurts"
 - Tell Lele exactly where and when. Lele notes it and eases that exercise next time, and your clinician sees it.
-- Some discomfort is expected, but pain shouldn't be the reason you stop altogether. If pain keeps stopping you, your clinician may need to review your program or pain plan.
+- Some discomfort is expected. If pain is making you stop altogether, say so. If pain keeps stopping you, your clinician may need to review your program or pain plan.
 
 ### "I'm worried I'll damage the new joint"
 - Worry about moving after surgery is very common and understandable.

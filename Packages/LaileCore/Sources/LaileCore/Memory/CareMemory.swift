@@ -2,7 +2,7 @@ import Foundation
 
 /// Something Lele remembers about a person: what was sore or felt wrong during an exercise,
 /// or a note from their clinician. The person sees it, their clinician sees it, and it eases
-/// that exercise next time. Plain code, not the model, decides every adjustment.
+/// that exercise next time. Every adjustment is made by plain code.
 public struct CareNote: Codable, Sendable, Hashable, Identifiable {
     public enum Kind: String, Codable, Sendable, CaseIterable, Hashable {
         /// Pain or soreness during a particular exercise.
@@ -59,7 +59,7 @@ public struct CareNote: Codable, Sendable, Hashable, Identifiable {
     public var exerciseId: String?
     public var bodyLocation: String?
     public var side: Side?
-    /// Worst rating (0–10) while the note has been open.
+    /// Worst rating (0 to 10) while the note has been open.
     public var severity: Int?
     /// Clinical one-liner, or the clinician's own words.
     public var text: String
@@ -129,9 +129,9 @@ public struct CareNote: Codable, Sendable, Hashable, Identifiable {
     public var contextLine: String {
         var parts = [exerciseName.map { "\($0): " } ?? "", kind == .clinicianNote ? "Clinician (\(author ?? "care team")): \(text)" : (kind == .barrier ? "Barrier: \(text)" : text)]
         if let adjustment, !adjustment.isNeutral, let spec = exerciseId.flatMap({ ExerciseLibrary.standard.spec($0) }) {
-            parts.append(" — eased (\(adjustment.summary(for: spec)))\(adjustment.keptByClinician ? ", kept by clinician" : "")")
+            parts.append("; eased (\(adjustment.summary(for: spec)))\(adjustment.keptByClinician ? ", kept by clinician" : "")")
         }
-        if status == .resolved { parts.append(" — resolved") }
+        if status == .resolved { parts.append("; resolved") }
         return parts.joined()
     }
 }
@@ -337,7 +337,7 @@ public enum CareMemory {
     public static func barrier(_ barrier: Barrier, at date: Date) -> CareNote {
         var note = CareNote(createdAt: date, kind: .barrier, source: .lele, text: barrier.label,
                             events: [.init(date: date, text: "Asked about missed sessions; said: \(barrier.label.lowercased()).")])
-        note.status = .resolved // a record, not something that changes the plan
+        note.status = .resolved // kept as a record; it leaves the plan as it is
         return note
     }
 

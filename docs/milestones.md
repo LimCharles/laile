@@ -6,7 +6,7 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
 
 ---
 
-## M0 — Foundations ✅ (27–28 Sep)
+## M0: Foundations ✅ (27 to 28 Sep)
 
 - ✅ Swift monorepo: `LaileCore` (shared domain logic), `Server` (Vapor), `Packages/LaileKit` + `iOS` (SwiftUI app)
 - ✅ Exercise library as data (16 exercises: 7 rehab, 9+ Move), session templates / "snacks"
@@ -14,14 +14,14 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
   form checks, rest/countdown phases, verified session summary
 - ✅ 57 core tests + 11 server tests passing
 
-## M1 — Session engine on iOS ✅
+## M1: Session engine on iOS ✅
 
 - ✅ Apple Vision body-pose on-device (video never leaves the phone); simulated pose provider for the Simulator
 - ✅ Full-screen session UI: skeleton overlay with measured joint + live angle, big rep counter, depth meter,
   hold ring, setup guidance, pause/skip/end
 - ✅ Voice cues with never-late counting; pre-generated-audio pipeline (see M3)
 - ✅ Talk-during-exercise: on-device speech recognition → symptom classification → deterministic rules
-  (continue / clarify / rate 0–10 / stop set / stop exercise / escalate); quick-reply chips as backup
+  (continue / clarify / rate 0 to 10 / stop set / stop exercise / escalate); quick-reply chips as backup
 - ✅ Pain before/after, results screen with verified reps and "noted for your records"
 - ✅ Sessions take turns like a conversation:
   - the coach finishes speaking before the next turn;
@@ -30,19 +30,19 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
   - captions follow the audio actually playing, and Skip, Pause and End cut off stale lines
 - ⬜ **Test on a real iPhone** with real bodies (see M5.7)
 
-## M2 — Rewards & habit loop ✅
+## M2: Rewards & habit loop ✅
 
 - ✅ Daily check-in calendar (7-day cycle, 10→75 XP), check-in streak bonuses
 - ✅ Move streak with "never miss twice" shields, XP + levels, first-move-of-day bonus, 11 badges
 - ✅ Personal bests & milestones from verified metrics
 - ⬜ Local notifications: check-in reminder, "streak at risk", medication reminders
 
-## M3 — Voice that doesn't suck 🟡
+## M3: Voice that doesn't suck 🟡
 
 - ✅ `CueCatalog`: every fixed line (~400: counts, exercise intros, setup guidance, safety lines, stream lines)
 - ✅ `swift run LaileServer generate-cues` renders them with **ElevenLabs** (Tencent TTS as fallback)
   into the app bundle → instant, offline, natural voice
-- ✅ `/v1/voice/speak` — server-side TTS for free-form LLM replies (keys never ship in the app)
+- ✅ `/v1/voice/speak`, server-side TTS for free-form LLM replies (keys never ship in the app)
 - ✅ TRTC Conversational AI session start with **ElevenLabs as the native TRTC TTS provider**
 - ✅ ElevenLabs key working; users choose between 4 built-in voices (Me → Coach voice) with previews
 - ✅ Voices download on demand (everyday lines on selection, each session's lines while getting ready);
@@ -51,7 +51,7 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
 - ⬜ Optional: `generate-cues --voice sarah` to bundle the default voice (needs ~14k credits)
 - ⬜ Add TRTC iOS SDK (`TXLiteAVSDK_TRTC`) → enable `TRTCVoiceLink` for full-duplex barge-in voice
 
-## M4 — Clinician side ✅
+## M4: Clinician side ✅
 
 - ✅ Vapor clinician portal (Leaf, server-rendered, prints cleanly): patient list, patient record with
   trend charts, baselines, PB dots, milestone lines, flags (plateau / regression / red flag / missed sessions)
@@ -60,9 +60,9 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
   clinician edits → **sign**; versioning + archive; rule-based template fallback when no LLM
 - ✅ Pre-visit report page
 - ✅ Invite codes + patient consent linking; medications (explain + remind, never dose advice)
-- ⬜ Hunyuan key + real draft test; tune prompt on 3–4 fictional patients
+- ⬜ Hunyuan key + real draft test; tune prompt on 3 to 4 fictional patients
 
-## M5 — Streams ✅ (v1)
+## M5: Streams ✅ (v1)
 
 - ✅ Timed follow-along streams on a shared clock (late joiners land in the right segment), lobby, live, ended
 - ✅ Each phone counts its own reps with the camera; live leaderboard via WebSocket
@@ -70,12 +70,12 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
 - ✅ Clinicians/coaches schedule streams in the portal
 - ⬜ Host video: TRTC live broadcast (or pre-recorded premiere video) in the host panel
 
-## M5.5 — Demo accounts ✅
+## M5.5: Demo accounts ✅
 
 - ✅ "Try a demo account" (Knee rehab / Daily mover): fresh seeded guest per tap, auto-cleanup after 12h
 - ✅ Fixed demo logins reset on sign-in; reusable demo invite code; demo creds on the portal login page
 
-## M5.6 — Lele: the agent and its memory 🟡
+## M5.6: Lele: the agent and its memory 🟡
 
 - ✅ Coach persona **Lele (乐乐)**, Laile's coach, in the app, voice lines and prompts
 - ✅ Care notes (`LaileCore/Memory/CareMemory.swift`):
@@ -97,7 +97,7 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
   - PATIENT CONTEXT and CARE NOTES are sent with each message;
   - `remember` JSON is parsed into care notes
 
-## M5.8 — Programs as the unit, Lele takes initiative ✅
+## M5.8: Programs as the unit, Lele takes initiative ✅
 
 - ✅ Tabs: Today, Programs, Lele, Progress (Me opens from Today)
 - ✅ Programs: physio code, Lele's plans from a goals conversation, calisthenics/mobility catalog, live classes
@@ -108,7 +108,7 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
 - ✅ Second condition: stiff or painful shoulder (arm lift measured)
 - ⬜ Re-upload `agent/knowledge/` (01, 02, 03, 05, 06, 09 changed; 11 and 12 new) and `agent/prompts/lele.md` to ADP
 
-## M5.7 — Real-phone test ⬜ (next; biggest remaining risk)
+## M5.7: Real-phone test ⬜ (next; biggest remaining risk)
 
 **Setup:**
 - ⬜ Run on your own iPhone from Xcode. A free Personal Team is enough; no TestFlight needed yet.
@@ -132,7 +132,7 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
   - "How did that feel?";
   - a sore spot eases the exercise the next day.
 
-## M6 — Ship it ⬜ (target 8 Oct)
+## M6: Ship it ⬜ (target 8 Oct)
 
 - ⬜ Deploy server to **Tencent Cloud Lighthouse** (Dockerfile included) + TencentDB for PostgreSQL; HTTPS domain
 - ⬜ TestFlight: set `DEVELOPMENT_TEAM`, archive, upload, internal testers (no review needed)
@@ -140,12 +140,12 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
 - ⬜ Portal "discharge → Move mode" action (rehab graduation)
 - ⬜ Miora: app icon, cover image (380×216), exercise demo clips
 
-## M7 — Submission package ⬜ (target 14 Oct)
+## M7: Submission package ⬜ (target 14 Oct)
 
-- ⬜ **CodeBuddy/WorkBuddy usage proof** — mandatory, project isn't scored without it (3+ screenshots)
+- ⬜ **CodeBuddy/WorkBuddy usage proof**: mandatory, project isn't scored without it (3+ screenshots)
 - ⬜ Architecture + trust-boundary diagram (see `docs/architecture.md`)
-- ⬜ Physio interviews (2–3) for pain-point sourcing
-- ⬜ 5–8 min demo video following the script in `docs/concept.md`
+- ⬜ Physio interviews (2 to 3) for pain-point sourcing
+- ⬜ 5 to 8 min demo video following the script in `docs/concept.md`
 - ⬜ Project title, blurb, description, cover image, live link
 
 ---

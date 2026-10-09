@@ -6,8 +6,8 @@ import Vapor
 /// How the coach speaks. Configured with environment variables; see `.env.example`.
 ///
 /// - `elevenlabs` (default): users pick one of the `CoachVoice` voices. Used for pre-generated cues,
-///   for `/v1/voice/speak`, and — natively — as the TTS inside TRTC Conversational AI.
-/// - `tencent`: fallback — Tencent Cloud TTS for cues; TRTC's built-in "flow" voices for live calls.
+///   for `/v1/voice/speak`, and natively as the TTS inside TRTC Conversational AI.
+/// - `tencent`: fallback. Tencent Cloud TTS for cues; TRTC's built-in "flow" voices for live calls.
 struct SpeechConfig: Sendable {
     enum Provider: String, Sendable { case elevenlabs, tencent }
 
@@ -94,7 +94,7 @@ struct ElevenLabsSynthesizer: SpeechSynthesizer {
         headers.add(name: "xi-api-key", value: apiKey)
         headers.add(name: .accept, value: "audio/mpeg")
         let url = URI(string: "https://api.elevenlabs.io/v1/text-to-speech/\(voice.elevenLabsVoiceId)?output_format=mp3_44100_128")
-        // A calm coach, not a drill sergeant: steadier delivery and a slightly unhurried pace.
+        // A calm coach: steadier delivery and a slightly unhurried pace.
         let body = Body(text: text, model_id: live ? liveModel : model, voice_settings: .init(stability: 0.65, similarity_boost: 0.8, speed: 0.95))
         let response = try await client.post(url, headers: headers) { req in try req.content.encode(body, using: JSONEncoder()) }
         guard response.status == .ok, let buffer = response.body else {
@@ -197,7 +197,7 @@ struct SpeechFeature: LaileFeature {
             }
             let body = try req.content.decode(API.SpeakRequest.self)
             let text = body.text.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !text.isEmpty, text.count <= 600 else { throw Abort(.badRequest, reason: "Text must be 1–600 characters.") }
+            guard !text.isEmpty, text.count <= 600 else { throw Abort(.badRequest, reason: "Text must be 1 to 600 characters.") }
             let audio = try await req.laile.speechCache.audio(for: text, voice: body.voice ?? .default, live: true, using: synth)
             var headers = HTTPHeaders()
             headers.contentType = HTTPMediaType(type: "audio", subType: "mpeg")
@@ -207,7 +207,7 @@ struct SpeechFeature: LaileFeature {
     }
 }
 
-/// `swift run LaileServer generate-cues --voice sarah` — renders every line in `CueCatalog` into
+/// `swift run LaileServer generate-cues --voice sarah` renders every line in `CueCatalog` into
 /// `<output>/<voice>/<audioKey>.mp3` plus a manifest, for bundling in the iOS app. Voices that
 /// aren't bundled are fetched on demand by the app instead. Existing files are skipped unless `--force`.
 struct GenerateCuesCommand: AsyncCommand {

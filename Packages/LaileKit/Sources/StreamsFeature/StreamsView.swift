@@ -20,7 +20,7 @@ public struct StreamsView: View {
                     Button {
                         open = DemoStreams.practice(startingAt: app.now.addingTimeInterval(8), gentle: isGentle)
                     } label: {
-                        Label("Practice class — starts now", systemImage: "play.circle.fill")
+                        Label("Practice class: starts now", systemImage: "play.circle.fill")
                     }
                     .buttonStyle(SecondaryButtonStyle())
                     section("Live now", streams(where: { if case .live = $0 { return true }; return false }))

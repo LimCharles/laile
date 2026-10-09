@@ -102,7 +102,7 @@ enum TRTCUserSig {
             .replacingOccurrences(of: "=", with: "_")
     }
 
-    /// A valid zlib stream using uncompressed ("stored") deflate blocks — any inflater accepts
+    /// A valid zlib stream using uncompressed ("stored") deflate blocks. Any inflater accepts
     /// it, and it needs no native zlib on Linux.
     static func zlibStored(_ data: Data) -> Data {
         var out = Data([0x78, 0x01])

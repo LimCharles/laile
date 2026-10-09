@@ -22,7 +22,7 @@
     <p><strong>Program:</strong> #(program)</p>
     <p><strong>Adherence:</strong> #(adherence) · #(sessionsCount) sessions, #(totalReps) camera-verified reps</p>
     <ul>#for(h in headline):<li>#(h)</li>#endfor</ul>
-    <p class="muted small">All numbers come straight from recorded sessions. Joint angles are camera estimates for trend-tracking, not a substitute for in-clinic goniometry.</p>
+    <p class="muted small">All numbers come straight from recorded sessions. Joint angles are camera estimates for tracking trends. Confirm key angles with a goniometer in clinic.</p>
   </div>
 
   #if(count(flags) > 0):
@@ -35,7 +35,7 @@
   <div class="grid grid-2">
     #for(c in charts):
     <div class="card">
-      <h3>#(c.title) — #(c.latest) <span class="muted small">#(c.change)</span></h3>
+      <h3>#(c.title): #(c.latest) <span class="muted small">#(c.change)</span></h3>
       #unsafeHTML(c.svg)
     </div>
     #endfor

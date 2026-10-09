@@ -3,7 +3,7 @@
 One language (Swift), three deliverables, one shared brain.
 
 ```
-Packages/LaileCore      Pure Swift domain logic — builds for iOS, macOS and Linux.
+Packages/LaileCore      Pure Swift domain logic, builds for iOS, macOS and Linux.
                         Exercise specs · session conductor · rep/hold counting · setup checks ·
                         symptom rules + red flags · contraindication checker · program drafting schema ·
                         rewards/streaks/badges · progress analysis · streams clock · API contracts · cue catalog

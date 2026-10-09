@@ -43,7 +43,11 @@ struct LeleAgent {
                 // ADP strips its citations itself and leaves the gap: "work ." → "work."
                 .replacingOccurrences(of: #"\s+([.,;:!?])"#, with: "$1", options: .regularExpression)
         }
-        return lines.joined(separator: "\n").replacingOccurrences(of: "**", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return lines.joined(separator: "\n").replacingOccurrences(of: "**", with: "")
+            // No dashes in Lele's voice: number ranges read "3 to 5", other dashes become commas.
+            .replacingOccurrences(of: #"(\d)\s?[–—]\s?(\d)"#, with: "$1 to $2", options: .regularExpression)
+            .replacingOccurrences(of: #"\s*[—–]\s*"#, with: ", ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     /// Splits off a `{"remember": …}` line (and any other trailing JSON the app handles itself).

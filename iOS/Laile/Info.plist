@@ -30,9 +30,9 @@
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>Laile uses the camera to count your reps and measure your joint angles. Video never leaves your phone.</string>
+	<string>Laile uses the camera to count your reps and measure your joint angles. Video stays on your phone.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Talk to your coach mid-exercise — say if something feels tight, sore or wrong.</string>
+	<string>Talk to your coach mid-exercise. Say if something feels tight, sore or wrong.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Laile turns what you say during exercise (like "sharp pain in my knee") into notes and safety checks.</string>
 	<key>UIApplicationSceneManifest</key>

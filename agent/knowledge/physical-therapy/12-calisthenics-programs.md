@@ -11,7 +11,7 @@ Calisthenics is strength training with your own bodyweight: squats, push-ups, lu
 - **Shoulder mobility:** wall slides, forward and side arm raises, shoulder blade squeezes and a chest opener, with arm lift measured. Good for desk hunches, and after shoulder physio. Level 1.
 - **Strong knees for life:** chair stands, bridges, squats, lunges and a hamstring stretch. What comes after knee physio; any limits your physio set still apply. Level 1.
 
-Quick sessions (not programs): Desk reset (2 minutes), Morning mobility (5 minutes) and Lunch-break blast (7 minutes, higher intensity).
+Quick sessions: Desk reset (2 minutes), Morning mobility (5 minutes) and Lunch-break blast (7 minutes, higher intensity).
 
 ## Lele's plans
 
@@ -40,7 +40,7 @@ Quick sessions (not programs): Desk reset (2 minutes), Morning mobility (5 minut
 - **Squat:** feet shoulder-width, sit back as if to a chair, knees in line with toes, chest up.
 - **Lunge:** step back far enough that both knees bend to about a right angle; front knee over the ankle.
 - **Plank and push-up:** a straight line, with no sagging or piking hips. Breathe.
-- **Bridge:** squeeze your buttocks to lift, rather than arching your lower back.
+- **Bridge:** squeeze your buttocks to lift and keep your lower back neutral.
 
 ## Normal and not normal
 

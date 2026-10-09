@@ -5,7 +5,7 @@ import SwiftUI
 import VoiceKit
 
 /// A voice check-in with Lele: you talk, Lele answers out loud in your chosen voice, and it takes
-/// turns like a call — the mic is off while Lele speaks and back on as soon as it finishes.
+/// turns like a call: the mic is off while Lele speaks and back on as soon as it finishes.
 public struct LeleCallView: View {
     enum Turn { case greeting, listening, thinking, speaking }
 

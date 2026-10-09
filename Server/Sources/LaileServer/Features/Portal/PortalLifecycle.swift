@@ -96,7 +96,7 @@ extension PortalFeature {
             if let followOn {
                 text += " To keep your progress going, \(name) suggests \(followOn.title): \(followOn.subtitle.lowercased())."
             }
-            if form.carry_precautions == "on" { text += " Your precautions still apply in every program, and I'll keep an eye on them." }
+            if form.carry_precautions == "on" { text += " Your precautions carry over to every program, and I'll keep an eye on them." }
             let message = LeleMessage(createdAt: now, kind: .discharge, text: text,
                                       actions: followOn.map { [LeleAction(id: "join", label: "Join \($0.title)", kind: .joinProgram, value: $0.id)] } ?? [])
             try await LeleMessageModel(userID: userID, message: message).create(on: req.db)

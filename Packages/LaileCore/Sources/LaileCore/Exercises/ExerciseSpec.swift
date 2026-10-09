@@ -172,7 +172,7 @@ public struct DoseLimits: Codable, Sendable, Hashable {
     }
 }
 
-/// What an exercise demands of the body — used by the contraindication checker.
+/// What an exercise demands of the body, used by the contraindication checker.
 public struct ExerciseLoads: Codable, Sendable, Hashable {
     public var weightBearing: Bool
     public var impact: ImpactLevel

@@ -16,7 +16,7 @@ After other approaches (for example the anterior approach), the precautions can 
 ## Everyday tips your team may give you
 
 - Use a firm, higher chair with armrests, and a raised toilet seat if needed.
-- Use a long-handled reacher and sock aid instead of bending down.
+- Use a long-handled reacher and sock aid to avoid bending down.
 - Keep a pillow between your knees when lying on your side, if advised.
 - Getting in and out of a car and bed has special techniques. Your physiotherapist will show you.
 

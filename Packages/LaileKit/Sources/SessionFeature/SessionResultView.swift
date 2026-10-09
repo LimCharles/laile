@@ -3,7 +3,7 @@ import DesignSystem
 import LaileCore
 import SwiftUI
 
-/// After a session: what was verified, what you earned, and — if something was wrong — what to do.
+/// After a session: what was verified, what you earned, and what to do if something was wrong.
 struct SessionResultView: View {
     let model: SessionViewModel
     let onDone: () -> Void

@@ -227,9 +227,9 @@ public final class SessionViewModel {
 
     static func toastText(for report: SymptomReport) -> String {
         switch report.action {
-        case .continueExercise?: return report.category == .normal ? "Good to go" : "Noted — carry on gently"
+        case .continueExercise?: return report.category == .normal ? "Good to go" : "Noted. Carry on gently"
         case .clarify?: return "Stretch or sharp pain?"
-        case .pauseAndRate?: return "Paused — rate your pain"
+        case .pauseAndRate?: return "Paused. Rate your pain"
         case .stopSet?: return "Set stopped and noted"
         case .stopExercise?: return "Exercise stopped and noted"
         case .endSession?: return "Session stopped for your safety"

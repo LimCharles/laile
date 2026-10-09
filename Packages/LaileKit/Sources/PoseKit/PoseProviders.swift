@@ -148,8 +148,8 @@ final class FrameAnalyzer: NSObject, AVCaptureVideoDataOutputSampleBufferDelegat
 
 // MARK: - Simulator
 
-/// Acts out the current exercise with a synthetic skeleton, so the whole pipeline — setup
-/// checks, rep counting, hold timers, cues — runs in the iOS Simulator and in demos.
+/// Acts out the current exercise with a synthetic skeleton, so the whole pipeline (setup
+/// checks, rep counting, hold timers, cues) runs in the iOS Simulator and in demos.
 @MainActor
 public final class SimulatedPoseProvider: PoseProvider {
     public var onFrame: ((PoseFrame) -> Void)?

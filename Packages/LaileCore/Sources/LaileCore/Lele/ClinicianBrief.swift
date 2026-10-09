@@ -101,7 +101,7 @@ public struct BriefInput: Sendable {
 }
 
 /// The clinician's daily list, as rules: what Lele saw since yesterday, most pressing first.
-/// Code decides what's on it; nothing here changes a program.
+/// Plain code picks what's on it, and nothing here changes a program.
 public enum ClinicianBrief {
     public static let missedDays = 3
 

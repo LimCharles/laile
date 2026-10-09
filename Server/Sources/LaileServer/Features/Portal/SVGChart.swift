@@ -1,7 +1,7 @@
 import Foundation
 import LaileCore
 
-/// Server-rendered line charts for the clinician portal — no JavaScript, prints cleanly.
+/// Server-rendered line charts for the clinician portal. No JavaScript, and they print cleanly.
 enum SVGChart {
     static func trend(_ trend: MetricTrend, width: Double = 560, height: Double = 170) -> String {
         let samples = trend.samples

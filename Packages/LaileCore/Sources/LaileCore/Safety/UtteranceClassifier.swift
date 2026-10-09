@@ -68,7 +68,7 @@ public enum UtteranceClassifier {
         let mentionsEffort = TextNormalizer.containsAny(text, effort)
 
         if mentionsPain {
-            // "sore thighs" / "aching muscles" during effort with no sharp words → effort, not pain.
+            // "sore thighs" / "aching muscles" during effort with no sharp words count as effort.
             let sharp = TextNormalizer.containsAny(text, ["sharp", "stabbing", "shooting", "agony", "hurts", "hurt", "pain", "painful", "hurting"])
             if !sharp && (mentionsEffort || mentionsStretch) { return report(mentionsStretch ? .expectedStretch : .effort) }
             return report(.pain)
@@ -80,7 +80,7 @@ public enum UtteranceClassifier {
         return report(.ambiguous)
     }
 
-    /// Pulls a 0–10 rating out of "about a six", "7 out of 10", "maybe 3".
+    /// Pulls a 0 to 10 rating out of "about a six", "7 out of 10", "maybe 3".
     public static func parseSeverity(_ utterance: String) -> Int? {
         let text = TextNormalizer.normalize(utterance)
         let words = text.split(separator: " ").map(String.init)
@@ -117,7 +117,7 @@ public enum MedicationBoundary {
         "should i take", "can i take", "is it okay to take", "is it ok to take", "how much should", "change my dose",
     ]
 
-    public static let referral = "That's a question for your doctor or pharmacist — I can't advise on doses. I'll add it to your questions for your next visit."
+    public static let referral = "That's one for your doctor or pharmacist. I'll add it to your questions for your next visit."
 
     public static func isDoseQuestion(_ text: String) -> Bool {
         TextNormalizer.containsAny(TextNormalizer.normalize(text), doseChangePhrases)

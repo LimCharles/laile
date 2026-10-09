@@ -5,7 +5,7 @@ This is general information about the usual recovery after a total knee replacem
 ## The two things that matter most early on
 
 1. **Straightening the knee fully.** A knee that stays slightly bent makes walking tiring and uneven. Quad sets and resting with the leg straight help. Laile measures this as the "knee straightening gap"; you want it close to 0°. Avoid resting with a pillow under the knee unless your team says so.
-2. **Bending the knee.** Everyday life needs a good bend: roughly 65–70° for walking; around 90° or more to get out of a chair comfortably; more for stairs and getting in and out of a car. Heel slides are the main bending exercise, and Laile measures your bend each time.
+2. **Bending the knee.** Everyday life needs a good bend: roughly 65 to 70° for walking; around 90° or more to get out of a chair comfortably; more for stairs and getting in and out of a car. Heel slides are the main bending exercise, and Laile measures your bend each time.
 
 ## A typical timeline
 

@@ -77,7 +77,7 @@ struct LLMReply: Sendable {
 protocol LLMProvider: Sendable {
     /// Shown in the portal so clinicians know what drafted a program.
     var name: String { get }
-    /// False for the offline mock — callers fall back to deterministic logic.
+    /// False for the offline mock; callers fall back to deterministic logic.
     var isLive: Bool { get }
     func complete(messages: [ChatMessage], tools: [ToolDefinition], temperature: Double) async throws -> LLMReply
 }

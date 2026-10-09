@@ -299,7 +299,7 @@ struct StreakCard: View {
         switch streak.status {
         case .activeToday: return "Done for today. Best: \(streak.best) days."
         case .pendingToday: return "Move today to make it \(streak.current + 1)."
-        case .shieldPending: return "You missed yesterday — a shield covers it if you move today."
+        case .shieldPending: return "You missed yesterday. A shield covers it if you move today."
         case .broken, .none: return "Any session today starts a new streak."
         }
     }
@@ -336,7 +336,7 @@ struct MedicationsCard: View {
                         .tint(Theme.accent)
                         if expanded == dose.id {
                             Text("\(dose.medication.purpose) \(dose.medication.howToTake)").font(.caption).foregroundStyle(Theme.muted)
-                            Text("Questions about doses? Ask your doctor or pharmacist — Laile never changes medication advice.")
+                            Text("Questions about doses go to your doctor or pharmacist.")
                                 .font(.caption2).foregroundStyle(Theme.muted)
                         }
                     }
@@ -401,7 +401,7 @@ struct NextStreamCard: View {
 
     private var status: String {
         switch StreamClock.phase(of: stream, at: now) {
-        case .live: return "● LIVE NOW — JOIN"
+        case .live: return "● LIVE NOW · JOIN"
         case .lobby(let s): return "LOBBY OPEN · STARTS IN \(Int(s / 60)):\(String(format: "%02d", Int(s) % 60))"
         case .upcoming(let s): return "NEXT CLASS IN \(Int(s / 60)) MIN"
         case .ended: return "ENDED"

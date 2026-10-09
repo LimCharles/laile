@@ -13,7 +13,7 @@ This guide covers the common shoulder problems Laile's physio programs help with
 
 - Many shoulder aches come from strain, overuse (lifting, reaching, long hours at a desk) or tight muscles around the shoulder blade.
 - Keeping the shoulder moving gently, and strengthening the muscles that steady the shoulder blade, is usually part of getting better.
-- See a doctor or physio if you can't lift your arm at all, the pain came on after a fall or injury, or it is getting worse rather than better.
+- See a doctor or physio if you can't lift your arm at all, the pain came on after a fall or injury, or it is getting worse.
 
 ## How Laile measures your shoulder
 
@@ -37,7 +37,7 @@ This guide covers the common shoulder problems Laile's physio programs help with
 
 ## Get help urgently
 
-- Chest pain, especially with breathlessness, sweating, or pain spreading to the arm or jaw. This can be a heart problem, not the shoulder. Call 995 in Singapore.
+- Chest pain, especially with breathlessness, sweating, or pain spreading to the arm or jaw. This can be a heart problem. Call 995 in Singapore.
 - A hot, red, swollen shoulder with fever.
 - A shoulder that looks out of place after a fall, or an arm you suddenly can't move.
 

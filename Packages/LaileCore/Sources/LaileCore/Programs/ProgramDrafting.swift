@@ -90,7 +90,7 @@ public struct ProgramDraftResponse: Codable, Sendable, Hashable {
         self.items = items
     }
 
-    /// Validate and convert to a draft program (never signed — a clinician must sign).
+    /// Validate and convert to a draft program. Only a clinician can sign it.
     public func toProgram(context: PatientContext, patientId: UUID?, draftedBy: String, library: ExerciseLibrary = .standard) -> Program {
         let raw = items.map { item in
             ProgramItem(
@@ -120,7 +120,7 @@ public enum TemplateDrafter {
         switch context.procedure {
         case .totalKneeReplacement:
             let phase = days <= 14 ? 1 : (days <= 42 ? 2 : 3)
-            title = "Knee replacement — phase \(phase)"
+            title = "Knee replacement, phase \(phase)"
             let flexTarget = phase == 1 ? 90.0 : (phase == 2 ? 110 : 120)
             summary = "Day \(days) after knee replacement. Focus: \(phase == 1 ? "circulation, getting the knee straight, and regaining bend towards 90°" : phase == 2 ? "knee bend towards 110° and building standing strength" : "full function, strength and balance")."
             items.append(.init(exerciseId: "ankle-pumps", sets: 1, holdSeconds: 45, timesPerDay: phase == 1 ? 3 : 1, rationale: "Keeps blood moving to lower clot risk while activity is reduced."))
@@ -135,7 +135,7 @@ public enum TemplateDrafter {
                 items.append(.init(exerciseId: "long-arc-quad", sets: 2, reps: 10, rationale: "Seated knee straightening against gravity."))
             }
         case .totalHipReplacement:
-            title = "Hip replacement — early phase"
+            title = "Hip replacement, early phase"
             summary = "Day \(days) after hip replacement. Respect hip precautions; focus on circulation, glute and quadriceps activation."
             items.append(.init(exerciseId: "ankle-pumps", sets: 1, holdSeconds: 45, timesPerDay: 3, rationale: "Circulation to lower clot risk."))
             items.append(.init(exerciseId: "quad-set", sets: 10, holdSeconds: 5, restSeconds: 5, timesPerDay: 2, rationale: "Quadriceps activation."))
@@ -158,7 +158,7 @@ public enum TemplateDrafter {
             items.append(.init(exerciseId: "hip-flexor-stretch", sets: 2, holdSeconds: 30, rationale: "Eases tight hip flexors from sitting."))
             items.append(.init(exerciseId: "hamstring-stretch", sets: 2, holdSeconds: 30, rationale: "Hamstring flexibility."))
         case .stiffShoulder:
-            title = "Shoulder mobility — getting the reach back"
+            title = "Shoulder mobility: getting the reach back"
             summary = "Gentle, frequent movement to regain range in a stiff shoulder, working inside comfort."
             items.append(.init(exerciseId: "pendulum", sets: 1, holdSeconds: 45, timesPerDay: 2, rationale: "Unloaded movement to ease stiffness and pain."))
             items.append(.init(exerciseId: "wall-slide", sets: 2, reps: 8, timesPerDay: 2, rationale: "Assisted elevation; the wall takes the arm's weight."))

@@ -14,7 +14,7 @@ public enum ProgramCategory: String, Codable, Sendable, CaseIterable, Hashable {
 }
 
 /// A ready-made routine from the Laile catalog. Non-snack ones are programs you join (your first
-/// session is a check-in that sets your targets); snacks are 2–10 minute one-offs for people with no time.
+/// session is a check-in that sets your targets); snacks are 2 to 10 minute one-offs for people with no time.
 public struct SessionTemplate: Codable, Sendable, Hashable, Identifiable {
     public struct Item: Codable, Sendable, Hashable {
         public var exerciseId: String
@@ -158,7 +158,7 @@ public struct SessionTemplate: Codable, Sendable, Hashable, Identifiable {
                 Item("hamstring-stretch", Dose(sets: 1, holdSeconds: 30, restSeconds: 10)),
             ],
             category: .recovery, level: 1,
-            about: "Builds on knee physio: chair stands to squats and lunges. Any limits your physio set still apply."
+            about: "Builds on knee physio: chair stands to squats and lunges. Any limits your physio set carry over."
         ),
         SessionTemplate(
             id: "shoulder-mobility", title: "Shoulder mobility", subtitle: "Reach, lift and undo the desk hunch", minutes: 8, mode: .move, isSnack: false,
@@ -182,7 +182,7 @@ public struct SessionTemplate: Codable, Sendable, Hashable, Identifiable {
             isCatalog: false
         ),
         SessionTemplate(
-            id: "knee-rehab-early", title: "Knee rehab — early", subtitle: "Weeks 1–2 after knee replacement", minutes: 12, mode: .rehab, isSnack: false,
+            id: "knee-rehab-early", title: "Knee rehab: early", subtitle: "Weeks 1 to 2 after knee replacement", minutes: 12, mode: .rehab, isSnack: false,
             items: [
                 Item("ankle-pumps", Dose(sets: 1, holdSeconds: 45, restSeconds: 10)),
                 Item("quad-set", Dose(sets: 10, holdSeconds: 5, restSeconds: 5)),

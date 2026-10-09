@@ -105,7 +105,7 @@ public struct LeleRoundInput: Sendable {
     }
 }
 
-/// Lele's initiative, as rules. Code decides *when* Lele speaks up and *what can change*;
+/// Lele's initiative, as rules. Code sets *when* Lele speaks up and *what can change*;
 /// wording can later be personalised by the model. Guardrails: quiet hours, at most three
 /// conversations started per day (reminders the person set up don't count), no repeats.
 public enum LeleRound {
@@ -261,7 +261,7 @@ extension TimeOfDay {
     }
 }
 
-/// How Lele addresses someone: "Mdm Tan" rather than "Mdm", "Sam" rather than "Sam Lee".
+/// How Lele addresses someone: "Mdm Tan" for "Mdm Tan Ah Lian", "Sam" for "Sam Lee".
 public enum CallName {
     static let titles: Set<String> = ["mdm", "mr", "mrs", "ms", "dr", "madam", "auntie", "uncle"]
 

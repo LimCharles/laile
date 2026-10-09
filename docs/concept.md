@@ -1,16 +1,16 @@
-# Laile (莱乐) — Product Concept
+# Laile (莱乐): Product Concept
 
-> **Stack update (28 Sep):** built as Swift end to end — SwiftUI iOS app (TestFlight) + Vapor server/clinician
+> **Stack update (28 Sep):** built as Swift end to end, SwiftUI iOS app (TestFlight) + Vapor server/clinician
 > portal, sharing one `LaileCore` package; Apple Vision replaces MediaPipe; ElevenLabs is the coach's voice
 > (natively supported by TRTC Conversational AI). See `docs/architecture.md`. The product sections below still apply.
 
 A voice-first, camera-verified movement coach with two front doors:
 
-- **Rehab mode** — clinician-prescribed home rehab (hackathon focus: knee/hip replacement).
-- **Move mode** — self-directed calisthenics for everyday users.
+- **Rehab mode**: clinician-prescribed home rehab (hackathon focus: knee/hip replacement).
+- **Move mode**: self-directed calisthenics for everyday users.
 
 Both share one engine: the camera measures, a deterministic conductor counts, and a
-conversational voice agent talks with you — including *while* you hold a pose.
+conversational voice agent talks with you, including *while* you hold a pose.
 
 On the other side sits the **clinician portal**: patient records, AI-drafted programs that a
 clinician reviews and signs, baselines, and progress/symptom reports.
@@ -19,7 +19,7 @@ clinician reviews and signs, baselines, and progress/symptom reports.
 
 ## 1. The story that ties both modes together
 
-> Rehab isn't the finish line — it's the on-ramp.
+> Rehab isn't the finish line, it's the on-ramp.
 
 A patient starts in Rehab mode after surgery. When their clinician marks them as discharged
 from rehab, the app "graduates" them into Move mode with a maintenance program built from the
@@ -32,7 +32,7 @@ strong. It's also the business model: clinics adopt Rehab mode (B2B), the everyd
 for Move mode (B2C), and each funnels into the other.
 
 **For the demo, lead with Rehab, then show graduation into Move.** Don't pitch it as "a
-fitness app that also does rehab" — judges from a medical school will score the clinical
+fitness app that also does rehab", judges from a medical school will score the clinical
 side.
 
 ---
@@ -45,7 +45,7 @@ side.
 | **Everyday user** (Move mode) | Same PWA | Takes a baseline test, follows a progression path, sets PRs |
 | **Clinician** (physio / surgeon / sports doctor) | Clinician portal (desktop web, same Next.js app) | Manages patients, generates + approves programs, reviews records |
 
-Optional fourth: **caregiver** (adult child / helper) — read-only weekly summary, patient
+Optional fourth: **caregiver** (adult child / helper), read-only weekly summary, patient
 opt-in.
 
 Account linking: clinician creates the patient record → issues an invite code/QR → patient
@@ -65,18 +65,18 @@ SETUP ─► DEMO ─► READY ─► ACTIVE (reps or hold, counting) ─► RES
   └──── camera lost ◄──── VOICE EVENT (user speaks at any time)
 ```
 
-1. **Setup** — the camera-setup assistant checks the required landmarks are visible, the
+1. **Setup**: the camera-setup assistant checks the required landmarks are visible, the
    body fills the frame, the view angle matches the exercise (side-on for knee angle,
    front-on for squats), and the lighting is adequate. It talks you into position:
    *"Move the phone a little further back… turn it so it sees your left side… perfect."*
-2. **Demo** — short Miora-generated clip of the exercise + one-sentence purpose
+2. **Demo**: short Miora-generated clip of the exercise + one-sentence purpose
    (*"This stretches the back of your new knee so it can bend enough for stairs."*).
-3. **Active** — the conductor counts reps from joint angles, or runs the hold timer. Voice
-   cues count *with* you: *"Hold… hold… five more… three, two, one — and relax."* Only
+3. **Active**: the conductor counts reps from joint angles, or runs the hold timer. Voice
+   cues count *with* you: *"Hold… hold… five more… three, two, one, and relax."* Only
    reps/holds that the camera actually verifies are counted; if it can't see the joint,
    it says so instead of guessing.
-4. **Rest** — the agent checks in conversationally between sets.
-5. **Wrap-up** — today's headline number (e.g. knee bend 84°, up 3° from last session),
+4. **Rest**: the agent checks in conversationally between sets.
+5. **Wrap-up**: today's headline number (e.g. knee bend 84°, up 3° from last session),
    post-session pain rating, what's next.
 
 ### 3.2 Talking during a hold (your key idea)
@@ -88,12 +88,12 @@ The mic stays open throughout. At any moment the user can say things like:
 | "Okay" / "this is fine" / counts along | **Normal / effort** | Keep counting. Maybe a short encouragement. |
 | "It's pulling behind my knee" / "tight" | **Expected stretch discomfort** | Keep going, reassure, log it lightly. |
 | "Ow" / "that hurts" (ambiguous) | **Needs clarification** | Timer pauses. *"Is it a stretching feeling or a sharp pain?"* |
-| "Sharp pain on the inside of my knee" | **Pain** | Stop the set, ask 0–10, log location/type/severity against this exercise + rep. If above the clinician's threshold → end exercise, flag to clinician. |
+| "Sharp pain on the inside of my knee" | **Pain** | Stop the set, ask 0 to 10, log location/type/severity against this exercise + rep. If above the clinician's threshold → end exercise, flag to clinician. |
 | "Something clicked" / "knee gave way" / "tingling in my foot" | **Wrong sensation** | Stop, log, flag for clinician review. |
 | "My calf is swollen and sore" / "chest hurts" / "can't breathe" | **Red flag** | Stop session. Deterministic escalation script: contact care team today / call 995. |
 
 Every symptom report is stored with: verbatim transcript, structured fields (body location,
-quality, severity 0–10, side), exercise, set, rep/hold second, joint angle at that moment,
+quality, severity 0 to 10, side), exercise, set, rep/hold second, joint angle at that moment,
 and the action taken. **That last detail is gold for a clinician**: "sharp pain at 95° of
 knee flexion on rep 7 of heel slides" is far more useful than "patient reports pain."
 
@@ -117,7 +117,7 @@ applies fixed rules to it. If the model is unsure, it must ask, not guess.
 
 ## 4. Baselines and improvement tracking
 
-**Baseline session** — the first session of any program (and every ~2 weeks after) is a
+**Baseline session**: the first session of any program (and every ~2 weeks after) is a
 test session:
 
 - *Rehab:* active knee flexion/extension range of motion (ROM), straight-leg raise hold,
@@ -125,12 +125,12 @@ test session:
 - *Move:* max push-ups (or the hardest variation achievable), plank hold, bodyweight squat
   depth + reps, glute bridge hold, deep-squat mobility.
 
-**Improvement marking** — each metric has a trend line and the app marks:
+**Improvement marking**: each metric has a trend line and the app marks:
 
 - **Personal bests** ("Longest plank yet: 1:12").
-- **Milestones** — clinician-defined in Rehab (e.g. knee flexion ≥ 90°), progression unlocks
+- **Milestones**: clinician-defined in Rehab (e.g. knee flexion ≥ 90°), progression unlocks
   in Move (wall push-up → incline → knee → full → diamond → archer).
-- **Plateaus / regressions** — no ROM gain over N sessions, or a drop → nudges the patient
+- **Plateaus / regressions**: no ROM gain over N sessions, or a drop → nudges the patient
   and **flags the clinician** (possible stiffness risk).
 
 Everything is phrased relative to the user's own baseline, never to other people.
@@ -152,7 +152,7 @@ Everything is phrased relative to the user's own baseline, never to other people
   visit.
 
 Data shapes loosely follow FHIR resources (Patient, Condition, MedicationStatement,
-Observation, CarePlan) so a real deployment can map to hospital systems later — a feasibility
+Observation, CarePlan) so a real deployment can map to hospital systems later, a feasibility
 point, not something to build now.
 
 ### 5.2 AI-drafted programs (human-in-the-loop)
@@ -193,7 +193,7 @@ Rehab mode only:
 - Session scheduling around the prescribed pain-relief timing, as set by the clinician.
 - Pain before and after each session, shown alongside medication timing in the report.
 - **Hard boundary:** no dose changes, no "should I take X" answers. The fallback is always
-  *"That's a question for your doctor or pharmacist — I'll add it to your list for your next
+  *"That's a question for your doctor or pharmacist, I'll add it to your list for your next
   visit."*
 
 ---
@@ -206,9 +206,9 @@ rather than separate speech-to-text and text-to-speech calls. It handles the par
 voice feel natural:
 
 - streaming speech recognition (ASR) with voice activity detection,
-- **interruption (barge-in)** — the user can talk over the agent,
+- **interruption (barge-in)**: the user can talk over the agent,
 - streaming TTS with low latency,
-- a **custom LLM endpoint** — it calls *our* backend for each turn, so our code sees every
+- a **custom LLM endpoint**: it calls *our* backend for each turn, so our code sees every
   utterance, runs the tool calls (`report_symptom`, `pause_set`), and applies the rules.
 
 Standalone **Tencent Cloud TTS** (which includes more natural large-model voices) is used
@@ -237,7 +237,7 @@ the user says.
 │                                  ▲                                │
 │ TRTC Web SDK (mic + speaker) ────┘ events                         │
 │                                                                   │
-│ RAW VIDEO NEVER LEAVES THE DEVICE — only angles + events uploaded │
+│ RAW VIDEO NEVER LEAVES THE DEVICE, only angles + events uploaded │
 └──────────┬───────────────────────────────┬────────────────────────┘
            │ audio stream                  │ HTTPS (sessions, events)
            ▼                               ▼
@@ -303,7 +303,7 @@ patient; Move-mode progressions are just ordered lists of specs.
 
 ## 10. Build priorities (deadline 16 Oct 2026)
 
-**P0 — the demo can't exist without these**
+**P0, the demo can't exist without these**
 - Exercise-spec engine + conductor with 3 rehab exercises (heel slide, quad-set hold,
   straight-leg raise) and knee ROM as the headline metric
 - Camera-setup assistant
@@ -314,13 +314,13 @@ patient; Move-mode progressions are just ordered lists of specs.
 - Clinician portal: patient record, AI-drafted program → contraindication check → sign
 - Pre-visit report
 
-**P1 — makes it a strong submission**
+**P1, makes it a strong submission**
 - Medication list, explanations, reminders
 - Move mode: readiness screen, baseline test, 1 progression path (push-up), plank hold
 - Rehab → Move graduation
 - Missed-session "what got in the way?" check-in
 
-**P2 — only if time allows**
+**P2, only if time allows**
 - Caregiver digest (WorkBuddy), Mandarin UI, more exercises, hip replacement protocol
 
 **Honest scope note:** the full concept is more than 19 days of work for a small team. If time
@@ -329,7 +329,7 @@ and keep all the depth in Rehab and the clinician portal. That's what the judges
 
 ---
 
-## 11. Demo script (5–8 min)
+## 11. Demo script (5 to 8 min)
 
 1. **Clinician** enters a fictional patient (Mdm Tan, 68, right total knee replacement,
    day 10), clicks *Draft program*, the AI proposes 4 exercises with reasons, one is blocked

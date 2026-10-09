@@ -7,7 +7,7 @@ These are the exercises Laile can track with the camera. Each entry says:
 - common mistakes;
 - how to make it easier or harder.
 
-Your physio's program, Lele's plan, or the Laile program you chose decides which ones you do, and how many.
+Your physio's program, Lele's plan, or the Laile program you chose sets which ones you do, and how many.
 
 ## Knee and hip exercises (after knee or hip replacement, knee pain or arthritis)
 
@@ -100,7 +100,7 @@ Your physio's program, Lele's plan, or the Laile program you chose decides which
 - **For:** the muscles that steady the shoulder, and undoing a desk slump.
 - **Setup:** sit tall in a chair with your arms relaxed.
 - **How:** squeeze your shoulder blades back and down, hold, then relax.
-- **Common mistake:** shrugging. Think "back pockets", not "ears".
+- **Common mistake:** shrugging. Think "shoulder blades into my back pockets".
 
 ## Move exercises (everyday strength and stretching)
 
@@ -145,7 +145,7 @@ Your physio's program, Lele's plan, or the Laile program you chose decides which
 ### High knees
 - **For:** fast cardio in a small space.
 - **How:** march or jog on the spot, bringing your knees up high.
-- **Easier:** march instead of jogging.
+- **Easier:** march on the spot.
 
 ### Deep squat hold
 - **For:** undoing hours of sitting; hip and ankle mobility.

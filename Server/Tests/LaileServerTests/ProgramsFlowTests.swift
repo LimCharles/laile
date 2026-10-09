@@ -187,6 +187,7 @@ final class ProgramsFlowTests: XCTestCase {
         XCTAssertEqual(LeleAgent.tidy(try ADPClient.parse(thinking)), "Heel slides help your knee bend.")
         let completed = thinking + "\n" + #"data: {"Type":"response.completed","Response":{"Messages":[{"Type":"thought","Contents":[{"Type":"text","Text":"reasoning"}]},{"Type":"reply","Contents":[{"Type":"text","Text":"Final answer."}]}]}}"#
         XCTAssertEqual(try ADPClient.parse(completed), "Final answer.")
+        XCTAssertEqual(LeleAgent.tidy("Hold 15–20 seconds — then rest."), "Hold 15 to 20 seconds, then rest.")
     }
 
     // MARK: Clinician portal

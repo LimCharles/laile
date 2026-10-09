@@ -4,7 +4,7 @@
   <div>
     <p class="muted small"><a href="/portal/patients/#(patientId)">← #(patientName)</a></p>
     <h1>#(title) <span class="muted small">v#(version)</span></h1>
-    <p class="muted">Drafted by #(draftedBy). #if(isDraft):<span class="pill pill-warn">Draft — not visible to the patient until you sign it</span>#else:<span class="pill pill-ok">#(status)</span> #(signedLine)#endif</p>
+    <p class="muted">Drafted by #(draftedBy). #if(isDraft):<span class="pill pill-warn">Draft: the patient sees it once you sign</span>#else:<span class="pill pill-ok">#(status)</span> #(signedLine)#endif</p>
   </div>
   #if(!isDraft):
   <form method="post" action="/portal/programs/#(id)/revise"><button class="btn" type="submit">Create revision</button></form>
@@ -12,7 +12,7 @@
 </div>
 
 #if(count(violations) > 0):
-<div class="error"><strong>Precaution conflicts — signing is blocked:</strong><ul>#for(v in violations):<li>#(v)</li>#endfor</ul></div>
+<div class="error"><strong>Precaution conflicts block signing:</strong><ul>#for(v in violations):<li>#(v)</li>#endfor</ul></div>
 #endif
 
 #if(count(blocked) > 0):
@@ -65,10 +65,10 @@
     <div class="grid grid-2">
       <div>
         <label class="small"><strong>Add an exercise</strong> <span class="hint">only exercises that pass this patient's precautions are listed</span></label>
-        <select name="add_exercise"><option value="">—</option>#for(o in addOptions):<option value="#(o.value)">#(o.label)</option>#endfor</select>
+        <select name="add_exercise"><option value="">Choose an exercise</option>#for(o in addOptions):<option value="#(o.value)">#(o.label)</option>#endfor</select>
       </div>
       <div>
-        <label class="small"><strong>Stop a set when pain is above (0–10)</strong></label>
+        <label class="small"><strong>Stop a set when pain is above (0 to 10)</strong></label>
         <input class="num" type="number" name="pain_stop" value="#(painStop)" min="0" max="9">
       </div>
     </div>

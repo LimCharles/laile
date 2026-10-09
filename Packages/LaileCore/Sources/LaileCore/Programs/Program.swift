@@ -143,7 +143,7 @@ public struct Program: Codable, Sendable, Hashable, Identifiable {
             if spec.tracksKneeFlexion, case .reps(let rule) = spec.kind {
                 // Clinical flexion (0° = straight) = 180 − interior angle. The rep-counting
                 // threshold may be lowered (clinician target or precaution cap) but never raised:
-                // a higher clinician target is a goal shown on progress, not a bar a rep must clear.
+                // a higher clinician target is a goal shown on progress; reps only need the capped target.
                 let defaultFlexion = 180 - rule.target
                 let flexion = [defaultFlexion, item.targetKneeFlexion, precautions.maxKneeFlexion].compactMap { $0 }.min() ?? defaultFlexion
                 if flexion < defaultFlexion - 0.5 { override = 180 - flexion }
@@ -169,7 +169,7 @@ public struct ProgramViolation: Codable, Sendable, Hashable, Identifiable {
     }
 }
 
-/// Hard safety rules. Anything that violates a precaution is blocked, not just warned about.
+/// Hard safety rules. Anything that violates a precaution is blocked outright.
 public enum ContraindicationChecker {
     public static func violations(spec: ExerciseSpec, item: ProgramItem? = nil, precautions: Precautions) -> [ProgramViolation] {
         var result: [ProgramViolation] = []

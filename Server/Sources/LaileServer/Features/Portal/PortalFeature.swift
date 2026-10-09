@@ -56,7 +56,7 @@ struct PortalFeature: LaileFeature {
         let form = try req.content.decode(LoginForm.self)
         guard let user = try await UserModel.query(on: req.db).filter(\.$email == form.email.lowercased()).first(),
               try user.verify(password: form.password), user.role == .clinician || user.role == .admin else {
-            return try await req.view.render("login", LoginContext.make(req, error: "Email or password is incorrect, or this isn't a clinician account.", email: form.email)).encodeResponse(for: req)
+            return try await req.view.render("login", LoginContext.make(req, error: "That email and password don't match a clinician account.", email: form.email)).encodeResponse(for: req)
         }
         if req.laile.config.seedDemoData, user.email == DemoSeed.clinicianEmail {
             try await DemoWorld(app: req.application).cleanupGuests()
@@ -108,11 +108,11 @@ struct PortalFeature: LaileFeature {
                 ?? snapshot.trend(.shoulderElevation)?.latest.map { "Arm " + MetricKind.shoulderElevation.format($0.value) }
             rows.append(PatientRow(
                 id: try profile.requireID().uuidString, name: profile.displayName, procedure: profile.procedure.label,
-                dayLabel: profile.context.daysSinceProcedure(now: Date()).map { "Day \($0)" } ?? "—",
+                dayLabel: profile.context.daysSinceProcedure(now: Date()).map { "Day \($0)" } ?? "",
                 linked: profile.$user.id != nil, inviteCode: profile.inviteCode,
                 lastSession: snapshot.sessions.first.map { Formatters.relative($0.endedAt) } ?? "No sessions yet",
                 adherence: snapshot.adherenceLabel,
-                kneeFlexion: keyMeasure ?? "—",
+                kneeFlexion: keyMeasure ?? "No data yet",
                 flagCount: snapshot.flags.count,
                 programStatus: snapshot.programs.first.map { "v\($0.version) \($0.status.rawValue)" } ?? "No program",
                 isLive: profile.$user.id.map(live.contains) ?? false, isDischarged: profile.dischargedAt != nil
@@ -243,7 +243,7 @@ struct PortalFeature: LaileFeature {
             clinicianName: try req.user.displayName,
             id: try profile.requireID().uuidString, name: profile.displayName, procedure: profile.procedure.label,
             dayLabel: profile.context.daysSinceProcedure(now: Date()).map { "Day \($0) after procedure" } ?? "",
-            age: profile.age.map { "\($0)" } ?? "—", inviteCode: profile.inviteCode, linked: profile.$user.id != nil,
+            age: profile.age.map { "\($0)" } ?? "Not given", inviteCode: profile.inviteCode, linked: profile.$user.id != nil,
             precautions: Formatters.precautions(profile.precautions),
             goals: profile.goals.joined(separator: " · "), comorbidities: profile.comorbidities.joined(separator: ", "),
             notes: profile.clinicalNotes, painStop: profile.painStopSetAbove,
@@ -266,7 +266,7 @@ struct PortalFeature: LaileFeature {
             return "\(sign)\(trend.kind.format(abs(delta))) vs baseline"
         } ?? ""
         return ChartVM(title: trend.kind.displayName, svg: SVGChart.trend(trend),
-                       latest: trend.latest.map { trend.kind.format($0.value) } ?? "—", change: change,
+                       latest: trend.latest.map { trend.kind.format($0.value) } ?? "No data yet", change: change,
                        next: trend.nextMilestone.map { "Next goal: \($0.title)" } ?? "")
     }
 
@@ -371,9 +371,9 @@ struct PortalFeature: LaileFeature {
             items: program.items.compactMap { item in
                 guard let spec = library.spec(item.exerciseId) else { return nil }
                 let l = spec.limits
-                let limits = ["sets \(l.sets.lowerBound)–\(l.sets.upperBound)",
-                              l.reps.map { "reps \($0.lowerBound)–\($0.upperBound)" },
-                              l.holdSeconds.map { "hold \($0.lowerBound)–\($0.upperBound)s" }].compactMap { $0 }.joined(separator: ", ")
+                let limits = ["sets \(l.sets.lowerBound) to \(l.sets.upperBound)",
+                              l.reps.map { "reps \($0.lowerBound) to \($0.upperBound)" },
+                              l.holdSeconds.map { "hold \($0.lowerBound) to \($0.upperBound)s" }].compactMap { $0 }.joined(separator: ", ")
                 return ItemVM(id: item.id.uuidString, name: spec.name, category: spec.category.rawValue, isHold: spec.kind.isHold,
                               sets: item.dose.sets, reps: item.dose.reps ?? 0, hold: item.dose.holdSeconds ?? 0, rest: item.dose.restSeconds,
                               times: item.timesPerDay, target: item.targetKneeFlexion.map { "\(Int($0))" } ?? "",
@@ -392,7 +392,7 @@ struct PortalFeature: LaileFeature {
     func saveProgram(req: Request) async throws -> Response {
         let (model, _) = try await ownedProgram(req)
         var program = model.program
-        guard program.status == .draft else { throw Abort(.badRequest, reason: "Signed programs can't be edited — create a revision.") }
+        guard program.status == .draft else { throw Abort(.badRequest, reason: "Signed programs are locked. Create a revision to change one.") }
         let form = try req.content.decode([String: String].self)
         func int(_ key: String) -> Int? { form[key].flatMap { Int($0.trimmingCharacters(in: .whitespaces)) } }
 
@@ -491,7 +491,7 @@ struct PortalFeature: LaileFeature {
             return StreamVM(title: s.title, host: s.hostName, when: Formatters.dateTime(s.scheduledStart), minutes: s.minutes,
                             intensity: s.intensity, tags: s.tags.joined(separator: ", "), status: status)
         }
-        let formats = SessionTemplate.builtIn.filter { $0.mode == .move }.map { Option(value: $0.id, label: "\($0.title) — \($0.minutes) min") }
+        let formats = SessionTemplate.builtIn.filter { $0.mode == .move }.map { Option(value: $0.id, label: "\($0.title), \($0.minutes) min") }
         return try await req.view.render("streams", StreamsVM(clinicianName: try req.user.displayName, streams: Array(list), formats: formats))
     }
 
@@ -559,7 +559,7 @@ struct PatientSnapshot {
         let programs = try await ProgramModel.all(for: profile.requireID(), on: db).map(\.program)
         guard let userID = profile.$user.id else {
             return PatientSnapshot(sessions: [], samples: [], trends: [], symptoms: [], programs: programs,
-                                   flags: ["Not linked yet — give the patient invite code \(profile.inviteCode)."], adherenceLabel: "—")
+                                   flags: ["Not linked yet. Give the patient invite code \(profile.inviteCode)."], adherenceLabel: "No sessions yet")
         }
         let sessions = try await SessionModel.query(on: db).filter(\.$user.$id == userID).sort(\.$startedAt, .descending).all().map(\.summary)
         let samples = try await MetricSampleModel.samples(for: userID, on: db)

@@ -19,7 +19,7 @@ Lele (乐乐) is Laile's coach and assistant. 乐 means joy; it is the "le" in L
 - During a session, Lele is the voice that counts with you, times your holds, and listens when you say how something feels.
 - Between sessions, Lele checks in: a morning "how are you feeling?" while you're in physio, reminders for your medicines, a nudge on quiet days, and a question about what's getting in the way if you miss a few.
 - You can chat with Lele in the Lele tab, or tap the phone icon to talk out loud.
-- Lele works for Laile and alongside your physio. Lele is not a doctor or physiotherapist. It does not diagnose, prescribe, or give advice about doses. Your physio decides your physio program.
+- Lele works for Laile, alongside your physio. Diagnosis, prescriptions and doses stay with your doctor, physio and pharmacist, and your physio sets your physio program.
 
 ## Getting started
 
@@ -29,11 +29,11 @@ Lele (乐乐) is Laile's coach and assistant. 乐 means joy; it is the "le" in L
 
 ## Your first session is a check-in
 
-The first session of any program is a check-in, not a test:
+The first session of any program is a check-in:
 
 - You do each move once, at a comfortable effort, and tap "That's enough" when it feels right.
 - The camera measures your reps, holds and how far your joints move.
-- Lele sets your targets from it: about 70% of your best reps or hold, so each session is a working set, not a max test.
+- Lele sets your targets from it: about 70% of your best reps or hold, so each session is a comfortable working set.
 - A rep counts at 90% of the range you reached, if that's less than the usual target.
 - In a physio program, targets are only ever made easier than your physio's dose, never harder.
 - Re-check every couple of weeks from the Progress tab, and Lele resets your targets.
@@ -53,11 +53,11 @@ The first session of any program is a check-in, not a test:
 - **Knee bend (flexion):** how far your knee bends, in degrees. 0° is straight.
 - **Knee straightening gap:** how far short of fully straight your knee stays. Smaller is better.
 - **Arm lift:** how high your arm goes when you raise it forward, in degrees. 180° is straight up.
-- **Reps and hold times:** counted by the camera, not typed in.
+- **Reps and hold times:** counted by the camera.
 - **Form:** for example, whether your knee stays straight during a straight-leg raise, or your hips stay in line during a plank.
 
 **Privacy:**
-- Video never leaves your phone; only the measurements are saved.
+- Video stays on your phone. Laile saves the measurements.
 - What you say to Lele may be sent to Laile's servers so Lele can reply.
 
 ## Lele's notes (care notes)
@@ -97,9 +97,9 @@ Lele keeps notes so each session builds on the last:
 - **Streaks:** moving on consecutive days builds a streak. Shields protect it. The rule is "never miss twice": one missed day is fine, two in a row breaks it.
 - **Levels, badges and milestones:** for example, reaching 90° of knee bend, lifting your arm to 120°, or your first full push-up.
 
-## What Lele will not do
+## Who handles what
 
-- It won't diagnose, or say what is wrong with you.
-- It won't tell you to start, stop or change a medicine, or advise on doses or timing. Ask your doctor or pharmacist.
-- It won't change your physio's program. Your physio can ask Lele to draft changes, and they sign them.
-- It won't replace urgent care. For warning signs, Lele will tell you to stop and get help.
+- **What's wrong with you:** your doctor or physio.
+- **Starting, stopping or changing a medicine, doses and timing:** your doctor or pharmacist.
+- **Changes to your physio program:** your physio. They can ask Lele to draft a change, and they sign it.
+- **Warning signs:** urgent care. Lele tells you to stop and get help.

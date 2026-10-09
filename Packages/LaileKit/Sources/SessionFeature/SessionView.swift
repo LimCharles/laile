@@ -110,7 +110,7 @@ struct RunningSessionView: View {
             if model.listening {
                 Image(systemName: "waveform").font(.headline).padding(12).background(.ultraThinMaterial, in: Circle())
                     .symbolEffect(.variableColor.iterative, options: .repeating)
-                    .accessibilityLabel("Listening — tell me how it feels")
+                    .accessibilityLabel("Listening. Tell me how it feels")
             }
         }
         .foregroundStyle(.white)
@@ -200,7 +200,7 @@ struct SetupHUD: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Label("Camera setup", systemImage: "camera.viewfinder").font(.headline)
-            Text(issues.first?.guidance.text ?? "Hold still — checking I can see you…").font(.title3.weight(.semibold))
+            Text(issues.first?.guidance.text ?? "Hold still while I check I can see you…").font(.title3.weight(.semibold))
             if let exercise {
                 Text(exercise.spec.posture.cameraTip).font(.subheadline).foregroundStyle(.white.opacity(0.75))
             }
@@ -302,7 +302,7 @@ struct PainGrid: View {
     }
 }
 
-/// 0–10 pain rating with plain-language anchors.
+/// 0 to 10 pain rating with plain-language anchors.
 struct PainScaleView: View {
     let title: String
     let question: String

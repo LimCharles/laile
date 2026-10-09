@@ -1,6 +1,6 @@
 # Red flags: when to stop and get help
 
-Lele cannot examine you. These signs need a person to check you, not an app.
+These signs need a doctor or nurse to check you in person.
 
 ## Call an ambulance now (Singapore: 995)
 
@@ -27,7 +27,7 @@ Lele cannot examine you. These signs need a person to check you, not an app.
 ## What Laile does
 
 - If you mention any of these during a session, Laile ends the session and tells you what to do. The report is saved for your clinician.
-- Laile checks for these words with fixed rules, so a warning sign is never left to the AI's judgement.
+- Laile checks for these words with fixed rules in the app.
 - In a physio program, same-day concerns go to your care team. Otherwise, Laile tells you to see a doctor.
 
 ## If you are unsure

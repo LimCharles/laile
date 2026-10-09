@@ -1,7 +1,7 @@
 import Foundation
 
-/// The vetted exercise catalog. Programs — whether written by a clinician, drafted by the AI,
-/// or built from a template — may only reference exercises that exist here.
+/// The vetted exercise catalog. Programs written by a clinician, drafted by the AI or built
+/// from a template may only reference exercises that exist here.
 public struct ExerciseLibrary: Sendable {
     public let all: [ExerciseSpec]
     private let byId: [String: ExerciseSpec]
@@ -109,7 +109,7 @@ enum BuiltInExercises {
             limits: DoseLimits(sets: 1...4, reps: 5...20),
             loads: ExerciseLoads(weightBearing: true, impact: .low, peakKneeFlexion: 95, peakHipFlexion: 95),
             cues: ExerciseCues(
-                purpose: "Standing up from a chair is the everyday strength move — it's what keeps you independent.",
+                purpose: "Standing up from a chair is the everyday strength move. It keeps you independent.",
                 setup: "Sit near the front of a sturdy chair, side-on to the phone, feet flat.",
                 go: "Lean forward, stand all the way up, then sit back down slowly."
             ),
@@ -218,7 +218,7 @@ enum BuiltInExercises {
             limits: DoseLimits(sets: 1...5, reps: 5...40),
             loads: ExerciseLoads(weightBearing: true, impact: .low, peakKneeFlexion: 100, peakHipFlexion: 100),
             cues: ExerciseCues(
-                purpose: "Squats train the biggest muscles you have — the fastest way to get strong legs.",
+                purpose: "Squats train the biggest muscles you have, so they're the fastest way to strong legs.",
                 setup: "Stand side-on to the phone, feet shoulder-width apart.",
                 go: "Sit your hips back and down until your thighs are about level, then drive up."
             ),
@@ -261,7 +261,7 @@ enum BuiltInExercises {
             id: "push-up", name: "Push-up", modes: [.move], category: .strength,
             posture: .plank, cameraView: .side,
             kind: .reps(RepRule(angle: .elbow, start: 150, target: 95)),
-            formChecks: [FormCheck(id: "body-line", angle: .bodyLine, condition: .atLeast(155), cue: "Keep your hips in line — no sagging.")],
+            formChecks: [FormCheck(id: "body-line", angle: .bodyLine, condition: .atLeast(155), cue: "Keep your hips in line with your shoulders.")],
             defaultDose: Dose(sets: 3, reps: 8, restSeconds: 60),
             limits: DoseLimits(sets: 1...5, reps: 3...50),
             loads: ExerciseLoads(weightBearing: true, impact: .none, peakKneeFlexion: 0, peakHipFlexion: 0, loadsWrists: true),

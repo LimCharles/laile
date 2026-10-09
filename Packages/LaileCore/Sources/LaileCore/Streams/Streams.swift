@@ -135,8 +135,8 @@ public enum DemoStreams {
     static let hosts = ["Coach Mei", "Coach Arjun", "Coach Farah", "Coach Daniel"]
 
     static let formats: [(title: String, summary: String, intensity: Int, tags: [String], segments: [StreamSegment])] = [
-        ("Lunch-break blast", "Seven fast minutes — no equipment, no excuses.", 3, ["cardio", "strength"], [
-            StreamSegment(exerciseId: "jumping-jacks", durationSeconds: 45, coachLine: "Warm up — arms all the way up!"),
+        ("Lunch-break blast", "Seven fast minutes with no equipment.", 3, ["cardio", "strength"], [
+            StreamSegment(exerciseId: "jumping-jacks", durationSeconds: 45, coachLine: "Warm up. Arms all the way up!"),
             .rest(15),
             StreamSegment(exerciseId: "squat", durationSeconds: 45, coachLine: "Sit back, chest up."),
             .rest(15),
@@ -146,7 +146,7 @@ public enum DemoStreams {
             .rest(15),
             StreamSegment(exerciseId: "plank", durationSeconds: 40, coachLine: "Squeeze everything."),
             .rest(20),
-            StreamSegment(exerciseId: "high-knees", durationSeconds: 45, coachLine: "Last one — sprint it out!"),
+            StreamSegment(exerciseId: "high-knees", durationSeconds: 45, coachLine: "Last one. Sprint it out!"),
         ]),
         ("Desk reset", "Five gentle minutes to undo a morning of sitting.", 1, ["stretch", "mobility", "gentle"], [
             StreamSegment(exerciseId: "neck-shoulder-rolls", durationSeconds: 45),
@@ -183,7 +183,7 @@ public enum DemoStreams {
         }
     }
 
-    /// A stream that starts almost immediately — for trying streams without waiting for the
+    /// A stream that starts almost immediately, for trying streams without waiting for the
     /// schedule (demos, first-time users). Gentle format for rehab users.
     public static func practice(startingAt start: Date, gentle: Bool) -> StreamEvent {
         let format = gentle ? formats[2] : formats[0]

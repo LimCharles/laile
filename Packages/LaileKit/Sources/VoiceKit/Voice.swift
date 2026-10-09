@@ -17,8 +17,8 @@ public enum VoiceAudioSession {
 }
 
 /// Speaks coaching cues, best voice first:
-/// 1. The chosen coach voice's audio from `VoiceStore` — bundled or already fetched — instant.
-/// 2. `remoteVoice` — the server renders the line in that voice (ElevenLabs), then it's cached.
+/// 1. The chosen coach voice's audio from `VoiceStore` (bundled or already fetched): instant.
+/// 2. `remoteVoice`: the server renders the line in that voice (ElevenLabs), then it's cached.
 /// 3. The best on-device voice installed (premium/enhanced if available).
 ///
 /// Counting cues (low priority) are never queued: a count that would play late is dropped,

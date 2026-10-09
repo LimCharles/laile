@@ -59,7 +59,7 @@ public struct Enrollment: Codable, Sendable, Hashable, Identifiable {
 
     /// The check-in session: each exercise once, done to a comfortable effort, so the camera can
     /// see where you are. Reps and holds are open-ended (you stop when it's enough); ranges are
-    /// never pushed — pain above your limit still stops the set.
+    /// never pushed, and pain above your limit still stops the set.
     public func calibrationPlan(precautions: Precautions = .none) -> [PlannedExercise] {
         let base = ContraindicationChecker.filter(program.plan(), precautions: precautions.merged(with: program.precautions)).kept
         return base.map { planned in
@@ -115,8 +115,8 @@ public struct Calibration: Codable, Sendable, Hashable {
     public func exercise(_ id: String) -> ExerciseCalibration? { exercises.first { $0.exerciseId == id } }
 
     /// Tunes one planned exercise to what the person showed they can comfortably do.
-    /// Reps and holds are set to about 70% of their best (a working set, not a max test; holds
-    /// over ten seconds round to five, so it's "30s" rather than "31s");
+    /// Reps and holds are set to about 70% of their best, a comfortable working set (holds over
+    /// ten seconds round to the nearest five, e.g. 31s becomes 30s);
     /// supervised programs are only ever made easier than the clinician's dose, never harder.
     /// A rep counts at 90% of the range they reached, if that's short of the usual target.
     public func apply(to planned: PlannedExercise, supervised: Bool) -> PlannedExercise {
@@ -162,7 +162,7 @@ public struct ExerciseCalibration: Codable, Sendable, Hashable {
         self.stoppedForSymptom = stoppedForSymptom
     }
 
-    /// "Heel slides: 10 reps, knee bent to 85°" — for Lele and the clinician.
+    /// "Heel slides: 10 reps, knee bent to 85°", for Lele and the clinician.
     public var summary: String {
         let spec = ExerciseLibrary.standard.spec(exerciseId)
         var parts: [String] = []

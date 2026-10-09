@@ -121,8 +121,8 @@ public struct Milestone: Codable, Sendable, Hashable, Identifiable {
 
     public static let rehabDefaults: [Milestone] = [
         Milestone(id: "knee-70", kind: .kneeFlexion, threshold: 70, title: "Knee bends to 70°"),
-        Milestone(id: "knee-90", kind: .kneeFlexion, threshold: 90, title: "Knee bends to 90° — chairs get easier"),
-        Milestone(id: "knee-110", kind: .kneeFlexion, threshold: 110, title: "Knee bends to 110° — stairs territory"),
+        Milestone(id: "knee-90", kind: .kneeFlexion, threshold: 90, title: "Knee bends to 90°: chairs get easier"),
+        Milestone(id: "knee-110", kind: .kneeFlexion, threshold: 110, title: "Knee bends to 110°: stairs territory"),
         Milestone(id: "knee-120", kind: .kneeFlexion, threshold: 120, title: "Knee bends to 120°"),
         Milestone(id: "ext-10", kind: .kneeExtensionDeficit, threshold: 10, title: "Knee straightens to within 10°"),
         Milestone(id: "ext-5", kind: .kneeExtensionDeficit, threshold: 5, title: "Knee almost fully straight"),
@@ -139,8 +139,8 @@ public struct Milestone: Codable, Sendable, Hashable, Identifiable {
         Milestone(id: "squat-40", kind: .squatReps, threshold: 40, title: "40 squats in a set"),
         Milestone(id: "wallsit-60", kind: .wallSitSeconds, threshold: 60, title: "One-minute wall sit"),
         Milestone(id: "arm-90", kind: .shoulderElevation, threshold: 90, title: "Arm lifts to shoulder height"),
-        Milestone(id: "arm-120", kind: .shoulderElevation, threshold: 120, title: "Arm lifts to 120° — hair-brushing height"),
-        Milestone(id: "arm-150", kind: .shoulderElevation, threshold: 150, title: "Arm lifts to 150° — top-shelf reach"),
+        Milestone(id: "arm-120", kind: .shoulderElevation, threshold: 120, title: "Arm lifts to 120°: hair-brushing height"),
+        Milestone(id: "arm-150", kind: .shoulderElevation, threshold: 150, title: "Arm lifts to 150°: top-shelf reach"),
     ]
 
     public static func defaults(for mode: AppMode) -> [Milestone] {

@@ -92,7 +92,7 @@ struct CatalogDetailSheet: View {
                 Label("\(supervisor) said not yet\(request?.note.map { ": \u{201C}\($0)\u{201D}" } ?? ".")", systemImage: "hand.raised")
                     .font(.footnote).foregroundStyle(Theme.warn)
             }
-            Label("You're in \(supervisor)'s program, so they check anything you add. Lele can ask them for you.", systemImage: "stethoscope")
+            Label("You're in \(supervisor)'s program. Lele will send them your request and tell you their answer.", systemImage: "stethoscope")
                 .font(.footnote).foregroundStyle(Theme.text)
             Button {
                 Task {
@@ -183,7 +183,7 @@ struct EnrollmentDetailSheet: View {
 
     @ViewBuilder private var ownership: some View {
         if enrollment.isSupervised {
-            Label("Only \(enrollment.supervisorName ?? "your clinician") can end this program. When you're ready they'll discharge you and Lele will suggest what to do next.",
+            Label("\(enrollment.supervisorName ?? "Your physio") ends this program when you're ready, and Lele will suggest what to do next.",
                   systemImage: "lock.fill")
                 .font(.footnote).foregroundStyle(Theme.muted)
         } else {

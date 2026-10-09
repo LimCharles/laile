@@ -1,20 +1,20 @@
 # Pain, soreness and swelling during exercise
 
-## Hurt is not always harm
+## Some discomfort is normal
 
 - Some discomfort is normal when you're recovering or getting stronger.
 - Muscles burning, a pulling stretch, or tiredness usually mean the exercise is working.
 - Sharp pain, pain that keeps building, or a joint that feels wrong is different. Stop and say so.
 
-## The 0–10 pain scale
+## The 0 to 10 pain scale
 
 - 0 is no pain, and 10 is the worst pain you can imagine.
 - Laile asks for a number before and after a session, and whenever you mention pain mid-exercise.
 - Rating honestly helps your clinician; there are no wrong answers.
 
-## How Laile decides what to do when you mention pain
+## What happens when you mention pain
 
-These are fixed rules, not the AI's judgement:
+Fixed rules in the app handle this:
 
 - **"Fine", effort or burning:** carry on.
 - **A pulling stretch:** carry on, unless you rate it above your limit.
@@ -29,7 +29,7 @@ These are fixed rules, not the AI's judgement:
 
 - **After a session:** soreness that settles by the next morning usually means the amount was about right.
 - **Worse the next morning:** soreness or swelling that is worse than before the session usually means it was a bit too much. Tell Lele at your morning check-in; your session can be eased that day, and your clinician will know.
-- **New exercise:** muscles that ache for 1–3 days after new or harder exercise (delayed onset muscle soreness) is normal, and fades on its own. It feels like a general muscle ache, not joint pain.
+- **New exercise:** muscles that ache for 1 to 3 days after new or harder exercise (delayed onset muscle soreness) is normal, and fades on its own. It feels like a general ache in the muscles you worked.
 
 ## When an exercise was sore last time
 
@@ -40,12 +40,12 @@ These are fixed rules, not the AI's judgement:
 ## Swelling
 
 - **After surgery:** swelling and warmth around a new joint are common for weeks to months, and often rise after a busy day.
-- **Things care teams commonly suggest:** raising the leg above the level of the heart for a while; an ice pack wrapped in a cloth, usually for up to 15–20 minutes (never directly on the skin); compression stockings, if prescribed.
+- **Things care teams commonly suggest:** raising the leg above the level of the heart for a while; an ice pack wrapped in a cloth, usually for up to 15 to 20 minutes (never directly on the skin); compression stockings, if prescribed.
 - **Get it checked:** swelling in the calf, especially if it's warm, red or painful, needs checking the same day. See the red flags guide.
 
 ## Flare-ups
 
 A flare-up is a spell when pain is worse than usual.
-- It helps to ease back, not stop completely: fewer reps, a smaller range, gentle movement.
+- Ease back with fewer reps, a smaller range and gentle movement. Keep moving a little each day.
 - Tell Lele, so the next sessions are adjusted.
 - Contact your clinician if it hasn't settled within a few days, or if you are worried.

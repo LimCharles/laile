@@ -1,6 +1,6 @@
 # Medicines commonly used after joint surgery
 
-This guide explains what these medicines are for and what to look out for. It is not advice on whether to take them, how much, or when.
+This guide explains what these medicines are for and what to look out for. Whether to take them, how much and when is for your doctor and pharmacist.
 
 - **Always follow the label and the instructions from your doctor or pharmacist.**
 - **Questions about doses, timing, missed doses, or stopping a medicine: ask your doctor or pharmacist.**
@@ -42,7 +42,7 @@ After a hip or knee replacement, the risk of a clot in the leg (deep vein thromb
 - **Common effects:** bruising more easily; bleeding gums or nosebleeds.
 - **Get help:** blood in urine, black stools, vomiting blood, a severe headache, or bleeding that won't stop.
 - **Good to know:** Don't stop early, or take extra, unless your doctor says so. If you miss a dose, ask your pharmacist what to do. Tell any dentist or doctor that you're on a blood thinner.
-- **Exercise helps too:** ankle pumps and walking keep blood moving. They work alongside the medicine; they don't replace it.
+- **Exercise helps too:** ankle pumps and walking keep blood moving. They work alongside the medicine.
 
 ## Other medicines you may be given
 
@@ -52,7 +52,7 @@ After a hip or knee replacement, the risk of a clot in the leg (deep vein thromb
 
 ## Pain relief and exercise
 
-- Being comfortable enough to exercise matters for recovery. Some care teams plan pain relief around exercise sessions. Whether that applies to you, and when to take anything, is a question for your doctor, pharmacist or physiotherapist, not Lele.
+- Being comfortable enough to exercise matters for recovery. Some care teams plan pain relief around exercise sessions. Whether that applies to you, and when to take anything, is a question for your doctor, pharmacist or physiotherapist.
 - If pain is stopping you exercising, tell your clinician; your pain plan may need a review.
 
 ## Questions to ask your doctor or pharmacist

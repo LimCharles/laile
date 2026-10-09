@@ -25,8 +25,8 @@
   <div id="live-body" class="live-body" hidden>
     <div class="live-main"><strong id="live-exercise"></strong> <span class="muted" id="live-progress"></span></div>
     <div class="live-stats">
-      <div><p class="muted small">Reps / hold</p><p class="stat" id="live-count">–</p></div>
-      <div><p class="muted small">Measured</p><p class="stat" id="live-angle">–</p></div>
+      <div><p class="muted small">Reps / hold</p><p class="stat" id="live-count">0</p></div>
+      <div><p class="muted small">Measured</p><p class="stat" id="live-angle">Waiting</p></div>
       <div><p class="muted small">Reports this session</p><p class="stat" id="live-reports">0</p></div>
     </div>
     <p class="small" id="live-heard"></p>
@@ -48,7 +48,7 @@
       document.getElementById('live-exercise').textContent = u.exerciseName;
       document.getElementById('live-progress').textContent = 'exercise ' + (u.exerciseIndex + 1) + ' of ' + u.exerciseCount + ' · set ' + (u.setIndex + 1) + ' of ' + u.totalSets + ' · ' + u.phase;
       document.getElementById('live-count').textContent = u.targetHoldSeconds ? (u.holdSeconds + ' / ' + u.targetHoldSeconds + 's') : (u.reps + (u.targetReps ? ' / ' + u.targetReps : ''));
-      document.getElementById('live-angle').textContent = u.angleLabel || '–';
+      document.getElementById('live-angle').textContent = u.angleLabel || 'Waiting';
       document.getElementById('live-reports').textContent = u.symptomsLogged;
       document.getElementById('live-heard').textContent = u.lastHeard ? '“' + u.lastHeard + '”' : '';
     } catch (e) {}
@@ -59,7 +59,7 @@
 #endif
 
 #if(!linked):
-<div class="notice">Not linked yet. Give the patient invite code <span class="code">#(inviteCode)</span> — they enter it in the Laile app under Me → Link my clinician.</div>
+<div class="notice">Not linked yet. Give the patient invite code <span class="code">#(inviteCode)</span>. They enter it in the Laile app under Programs → I have a code.</div>
 #endif
 
 #if(count(flags) > 0):
@@ -114,7 +114,7 @@
   <div>
     <div class="card">
       <h2>Programs</h2>
-      #if(count(programs) == 0):<p class="muted">No program yet — draft one with AI, then review and sign it.</p>#endif
+      #if(count(programs) == 0):<p class="muted">No program yet. Draft one with Lele, then review and sign it.</p>#endif
       <table>
         #for(p in programs):
         <tr>
@@ -133,8 +133,8 @@
     </div>
     <div class="card">
       <h2>Medications</h2>
-      <p class="muted small">Shown to the patient as entered. The app explains and reminds; it never advises on doses.</p>
-      #for(m in medications):<p><strong>#(m.name)</strong> — #(m.dose) at #(m.times)<br><span class="muted small">#(m.purpose)</span></p>#endfor
+      <p class="muted small">Shown to the patient as entered. The app explains and reminds. Dose questions go to their doctor or pharmacist.</p>
+      #for(m in medications):<p><strong>#(m.name)</strong>: #(m.dose) at #(m.times)<br><span class="muted small">#(m.purpose)</span></p>#endfor
     </div>
   </div>
 </div>
@@ -142,7 +142,7 @@
 <div class="grid grid-2">
   <div class="card">
     <h2>First-session check-in</h2>
-    <p class="muted small">The patient's first session measured where they are; Lele set their working targets from it, never above what you prescribed.</p>
+    <p class="muted small">The patient's first session measured where they are; Lele set their working targets from it, at or below what you prescribed.</p>
     #if(count(lifecycle.calibration) == 0):<p class="muted">Not done yet. Lele will prompt them.</p>#else:
     <ul>#for(c in lifecycle.calibration):<li>#(c)</li>#endfor</ul>
     <p class="muted small">Measured #(lifecycle.calibratedOn)</p>#endif

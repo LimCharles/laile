@@ -38,7 +38,7 @@
       <input id="maxKneeFlexion" name="maxKneeFlexion" type="number" min="0" max="150">
       <label for="maxHipFlexion">Hip flexion limit (°) <span class="hint">e.g. 90 for posterior hip precautions</span></label>
       <input id="maxHipFlexion" name="maxHipFlexion" type="number" min="0" max="150">
-      <label for="painStopSetAbove">Stop a set when pain is above (0–10)</label>
+      <label for="painStopSetAbove">Stop a set when pain is above (0 to 10)</label>
       <input id="painStopSetAbove" name="painStopSetAbove" type="number" min="0" max="9" value="4">
     </div>
   </div>

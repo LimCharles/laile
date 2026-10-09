@@ -4,7 +4,7 @@ public enum PauseReason: Sendable, Equatable {
     case user
     /// Asked "stretching or sharp?" and waiting for the answer.
     case clarifying
-    /// Asked for a 0–10 pain rating and waiting for the answer.
+    /// Asked for a 0 to 10 pain rating and waiting for the answer.
     case awaitingPainRating
 }
 
@@ -71,7 +71,7 @@ public struct ConductorSnapshot: Sendable, Equatable {
 }
 
 /// The deterministic heart of a session: turns pose frames and elapsed time into counted
-/// reps, hold timers, spoken cues and a verified summary. No LLM decides anything here.
+/// reps, hold timers, spoken cues and a verified summary. Everything here is plain code.
 ///
 /// Drive it with `process(_:)` for every pose frame and `tick(at:)` on a timer (for
 /// countdowns and rests when no frames arrive). Both return events for the UI and voice.
@@ -269,7 +269,7 @@ public struct SessionConductor: Sendable {
     }
 
     /// Apply something the user said (already classified by the LLM or the on-device
-    /// classifier). Context is attached here; the rule engine decides the action.
+    /// classifier). Context is attached here; the rule engine picks the action.
     /// Pass `speakResponse: false` when the cloud coach is already speaking its own reply.
     public mutating func report(_ incoming: SymptomReport, at t: TimeInterval, speakResponse: Bool? = nil) -> [ConductorEvent] {
         now = max(now, t)
@@ -281,7 +281,7 @@ public struct SessionConductor: Sendable {
         if let timer = holdTimer, timer.heldSeconds > 0 { report.holdSecond = report.holdSecond ?? timer.wholeSeconds }
         report.angle = report.angle ?? lastAngle
 
-        // An answer to our follow-up ("stretch or sharp?", "0–10?") completes the previous
+        // An answer to our follow-up ("stretch or sharp?", "0 to 10?") completes the previous
         // report rather than creating a second one, so the clinician sees one event.
         if isAwaitingPainRating || isClarifying, let previous = symptoms.last {
             symptoms.removeLast()

@@ -1,7 +1,7 @@
 import Foundation
 
 /// How a spoken remark mid-exercise is classified. The LLM (or the offline classifier)
-/// proposes a category; `SymptomRules` — plain code — decides what happens.
+/// proposes a category, and `SymptomRules` (plain code) sets what happens next.
 public enum SymptomCategory: String, Codable, Sendable, CaseIterable, Hashable {
     /// "Fine", "okay", counting along.
     case normal
@@ -47,7 +47,7 @@ public struct SymptomReport: Codable, Sendable, Hashable, Identifiable {
     public var side: Side?
     /// sharp, dull, pulling, clicking, giving way, numbness, tingling, swelling…
     public var quality: String?
-    /// 0–10 when known.
+    /// 0 to 10 when known.
     public var severity: Int?
     public var source: SymptomSource
 
@@ -83,7 +83,7 @@ public struct SymptomReport: Codable, Sendable, Hashable, Identifiable {
         self.redFlagReason = redFlagReason
     }
 
-    /// e.g. "Sharp pain, inside of right knee, 6/10 — heel slides, set 2, rep 7 at 95° flexion"
+    /// e.g. "Sharp pain, inside of right knee, 6/10; heel slides, set 2, rep 7 at 95° flexion"
     public var clinicalSummary: String {
         var parts: [String] = []
         var what = [quality, category == .pain ? "pain" : nil].compactMap { $0 }.joined(separator: " ")
@@ -112,14 +112,14 @@ public struct SymptomReport: Codable, Sendable, Hashable, Identifiable {
             }
         }
         let head = parts.joined(separator: ", ")
-        return context.isEmpty ? head : head + " — " + context.joined(separator: ", ")
+        return context.isEmpty ? head : head + "; " + context.joined(separator: ", ")
     }
 }
 
 /// Per-person limits, set by the clinician in Rehab mode.
 public struct SymptomPolicy: Codable, Sendable, Hashable {
-    /// Pain above this (0–10) ends the set. Physio "pain-monitoring" style programs commonly
-    /// accept discomfort up to about 4–5/10 that settles by the next day; the clinician sets it.
+    /// Pain above this (0 to 10) ends the set. Physio "pain-monitoring" style programs commonly
+    /// accept discomfort up to about 4 or 5 out of 10 that settles by the next day; the clinician sets it.
     public var painStopSetAbove: Int
     /// Pain at or above this ends the exercise.
     public var painStopExerciseAt: Int
@@ -153,8 +153,8 @@ public enum SymptomAction: Codable, Sendable, Hashable {
         case .pauseAndRate: return "Paused to rate pain"
         case .stopSet: return "Set stopped"
         case .stopExercise: return "Exercise stopped"
-        case .endSession(.emergency): return "Session ended — emergency advice given"
-        case .endSession(.contactCareTeamToday): return "Session ended — told to contact care team"
+        case .endSession(.emergency): return "Session ended with emergency advice"
+        case .endSession(.contactCareTeamToday): return "Session ended; told to contact care team"
         }
     }
 }

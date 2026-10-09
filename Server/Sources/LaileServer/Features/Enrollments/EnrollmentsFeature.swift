@@ -227,7 +227,7 @@ struct EnrollmentsFeature: LaileFeature {
             guard let id = req.parameters.get("id", as: UUID.self), let model = try await EnrollmentModel.find(id, on: req.db),
                   model.$user.id == (try req.user.requireID()) else { throw Abort(.notFound) }
             guard model.kind != Enrollment.Kind.clinical.rawValue else {
-                throw Abort(.forbidden, reason: "Only your clinician can end this program. Let them know how you're getting on.")
+                throw Abort(.forbidden, reason: "Your physio ends this program when you're ready. Let them know how you're getting on.")
             }
             try await store.complete(model, note: nil, followOn: nil)
             return try await store.resolve(model)
@@ -248,7 +248,7 @@ struct EnrollmentsFeature: LaileFeature {
     /// (the app offers to ask them via Lele instead).
     func requireNotSupervised(_ req: Request) async throws {
         if let profile = try await LeleService(app: req.application, db: req.db, logger: req.logger).activePatientProfile(for: req.user.requireID()) {
-            throw Abort(.forbidden, reason: "You're in \(CallName.plain(profile.clinician.displayName))'s program, so they check anything you add. Ask Lele to pass it on.")
+            throw Abort(.forbidden, reason: "You're in \(CallName.plain(profile.clinician.displayName))'s program. Tap Ask on the program and Lele will send them your request.")
         }
     }
 

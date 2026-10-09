@@ -45,7 +45,7 @@ public struct MeView: View {
 
                 if let supervised = app.activeEnrollments.first(where: \.isSupervised) {
                     Section("Your care team") {
-                        LabeledContent("Physio", value: supervised.supervisorName ?? app.user?.clinicianName ?? "—")
+                        LabeledContent("Physio", value: supervised.supervisorName ?? app.user?.clinicianName ?? "Your physio")
                         LabeledContent("Program", value: supervised.title)
                         Text("They see your sessions, measurements, what you tell Lele about pain, and your sessions live while you're doing them.")
                             .font(.footnote).foregroundStyle(Theme.muted)
@@ -87,13 +87,13 @@ public struct MeView: View {
                 }
 
                 Section("Account") {
-                    LabeledContent("Email", value: app.user?.email ?? "—")
+                    LabeledContent("Email", value: app.user?.email ?? "Not set")
                     Button("Sign out", role: .destructive) { app.signOut() }
                 }
 
                 Section("Privacy & safety") {
-                    Label("Video never leaves your phone. Only joint angles and counts are saved.", systemImage: "lock.shield")
-                    Label("Lele coaches movement. It doesn't diagnose, and it never gives medication or dosing advice.", systemImage: "cross.case")
+                    Label("Video stays on your phone. Laile saves joint angles and counts.", systemImage: "lock.shield")
+                    Label("Lele coaches movement. Diagnosis and medication advice stay with your doctor and pharmacist.", systemImage: "cross.case")
                     Label("Chest pain, trouble breathing or a swollen, hot calf? Stop and call 995.", systemImage: "exclamationmark.triangle")
                         .foregroundStyle(Theme.danger)
                 }
@@ -317,7 +317,7 @@ public struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 16) {
             Spacer()
             Text("Camera, voice and reminders").font(.laileTitle)
-            Label("The camera counts your reps and measures how far your joints move. Video never leaves your phone.", systemImage: "camera.fill")
+            Label("The camera counts your reps and measures how far your joints move. Video stays on your phone.", systemImage: "camera.fill")
             Label("The microphone lets you talk to Lele and tell it how things feel mid-exercise: \"it's pulling\", \"sharp pain\".", systemImage: "mic.fill")
             Label("Speech recognition turns what you say into notes and safety checks.", systemImage: "waveform")
             Label("Notifications let Lele remind you about sessions and medicines. Quiet between 9 pm and 7 am.", systemImage: "bell.fill")

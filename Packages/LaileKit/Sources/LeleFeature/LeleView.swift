@@ -72,7 +72,7 @@ struct LeleView: View {
         VStack(spacing: 10) {
             LeleAvatar(size: 56)
             Text("Lele, your coach from Laile").font(.laileHeadline).foregroundStyle(Theme.text)
-            Text("I check in on you, remember what felt sore, explain your exercises and medicines, and tell your clinician what matters.")
+            Text("I check in on you, remember what felt sore, explain your exercises and medicines, and keep your physio in the loop.")
                 .font(.footnote).foregroundStyle(Theme.muted).multilineTextAlignment(.center)
             if !app.isSupervised {
                 Button { showGoals = true } label: { Label("Build me a new plan", systemImage: "sparkles") }

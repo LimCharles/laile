@@ -76,7 +76,7 @@ struct RequestStore {
         }
         try await ProgramRequestModel(userID: userID, profileID: profile.requireID(), template: template, at: now).create(on: db)
         return LeleMessage(createdAt: now, kind: .chat,
-                           text: "I've asked \(physio) whether you can add \(template.title) alongside your program. I'll tell you as soon as they answer. Until then, your program with them is the one to do.")
+                           text: "I've asked \(physio) whether you can add \(template.title) alongside your program. I'll tell you as soon as they answer.")
     }
 }
 
@@ -138,13 +138,13 @@ struct RequestsFeature: LaileFeature {
             let enrollment = try await store.joinCatalog(template, userID: userID, joinedAt: now)
             var text = "Good news: \(physio) says yes to \(template.title)."
             if let note { text += " Their note: \"\(note)\"" }
-            text += " Your limits from them still apply in it. The first session is a quick check-in."
+            text += " Your limits from them carry over to it. The first session is a quick check-in."
             message = LeleMessage(createdAt: now, kind: .clinician, text: text,
                                   actions: [LeleAction(id: "start", label: "Start check-in", kind: .startSession, value: try enrollment.requireID().uuidString)])
         } else {
             var text = "\(physio) would rather you hold off on \(model.title) for now."
             if let note { text += " Their note: \"\(note)\"" }
-            text += " Your program with them is the best place for your energy at the moment."
+            text += " Keep going with your program with them for now."
             message = LeleMessage(createdAt: now, kind: .clinician, text: text)
         }
         try await LeleService(app: req.application, db: req.db, logger: req.logger).save(message, userID: userID)

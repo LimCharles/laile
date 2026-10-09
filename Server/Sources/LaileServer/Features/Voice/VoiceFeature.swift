@@ -91,7 +91,7 @@ struct VoiceFeature: LaileFeature {
 
     func startSession(req: Request) async throws -> API.VoiceSessionResponse {
         guard let trtc = req.laile.config.trtc, let credentials = req.laile.config.tencent else {
-            throw Abort(.serviceUnavailable, reason: "Cloud voice isn't configured on this server; the app will use on-device voice.")
+            throw Abort(.serviceUnavailable, reason: "Cloud voice is off on this server, so the app uses on-device voice.")
         }
         let user = try req.user
         let body = try req.content.decode(API.VoiceSessionRequest.self)
@@ -108,7 +108,7 @@ struct VoiceFeature: LaileFeature {
         let conversation = TRTCConversationClient(cloud: TencentCloudClient(credentials: credentials, client: req.client), trtc: trtc,
                                                   ttsConfigJSON: ttsJSON)
         let taskId = try await conversation.start(roomId: roomId, userId: userId, agentUserId: agentId, sessionKey: key,
-                                                  welcome: "Hi \(user.displayName)! I'm listening — tell me how things feel as we go.")
+                                                  welcome: "Hi \(user.displayName)! I'm listening. Tell me how things feel as we go.")
         await req.laile.voiceSessions.setTask(key, taskId)
         return API.VoiceSessionResponse(sessionKey: key, sdkAppId: trtc.sdkAppId, roomId: roomId, userId: userId,
                                         userSig: TRTCUserSig.generate(userId: userId, sdkAppId: trtc.sdkAppId, secretKey: trtc.sdkSecretKey),

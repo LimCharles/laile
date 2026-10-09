@@ -5,12 +5,13 @@ import Vapor
 /// Fictional demo data for judging and demo day. Enabled by `SEED_DEMO_DATA` (default on outside
 /// production; set it to `true` on the hackathon deployment).
 ///
-/// - Fixed accounts (password `DemoSeed.password`) — signing in to the patient or mover account
+/// - Fixed accounts (password `DemoSeed.password`). Signing in to the patient or mover account
 ///   resets it to the seeded story, so every demo run starts the same:
-///     clinician@laile.demo — clinician portal
-///     patient@laile.demo   — knee-replacement patient, day 16, 14 days of history
-///     mover@laile.demo     — everyday Move-mode user, 6 days of history
-/// - Guest demos (`POST /v1/demo/sessions`, the app's "Try the demo" buttons) — a fresh account per
+///     clinician@laile.demo: clinician portal
+///     patient@laile.demo:   knee-replacement patient, day 16, 14 days of history
+///     mover@laile.demo:     calisthenics user, 6 days of history
+///     shoulder@laile.demo:  stiff-shoulder patient, day 30
+/// - Guest demos (`POST /v1/demo/sessions`, the app's "Try the demo" buttons): a fresh account per
 ///   tap with the same story, so several people can demo at once without resetting each other.
 ///   Guests are deleted after `DemoWorld.guestLifetime`.
 /// - The invite code `DemoSeed.inviteCode` can be used by anyone, any number of times: each use
@@ -196,7 +197,7 @@ struct DemoWorld {
     static func medications(prescribedBy: String, timeZone: TimeZone, now: Date) -> [Medication] {
         [
             Medication(name: "Paracetamol", doseText: "2 tablets", purpose: "Pain relief.",
-                       howToTake: "As prescribed. Your physio may suggest timing a dose before exercise — check with them.",
+                       howToTake: "As prescribed. Your physio may suggest timing a dose before exercise, so check with them.",
                        times: [TimeOfDay(8), TimeOfDay(14), TimeOfDay(20)], prescribedBy: prescribedBy),
             Medication(name: "Rivaroxaban", doseText: "1 tablet", purpose: "A blood thinner that lowers the risk of clots after surgery.",
                        howToTake: "Once a day at the same time. Don't stop without talking to your doctor.",
@@ -284,7 +285,7 @@ struct DemoWorld {
             var symptoms: [SymptomReport] = []
             if i == 11 {
                 symptoms.append(SymptomReport(timestamp: start.addingTimeInterval(420), category: .pain,
-                                              utterance: "Ow — sharp, on the inside of my knee. About a six.",
+                                              utterance: "Ow, sharp, on the inside of my knee. About a six.",
                                               bodyLocation: "inside of knee", side: .right, quality: "sharp", severity: 6,
                                               source: .voiceLLM, exerciseId: "heel-slide", setIndex: 1, repIndex: 8, angle: 95,
                                               action: .stopSet))
