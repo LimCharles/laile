@@ -1,0 +1,233 @@
+\documentclass[11pt,a4paper]{article}
+\input{../tex/laile-style}
+\usepackage[a4paper,margin=2.1cm,top=2cm,bottom=2.2cm]{geometry}
+\usepackage[hidelinks]{hyperref}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{caption}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.4pt}
+
+\setlength{\parindent}{0pt}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\setlength{\parskip}{6pt}
+\linespread{1.08}
+\setlist{nosep, leftmargin=1.2em, topsep=2pt}
+\captionsetup{font={small,color=muted}, labelfont=bf, skip=4pt}
+\titleformat{\section}{\Large\bfseries\color{accent}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\color{ink}}{}{0pt}{}
+\titlespacing*{\section}{0pt}{14pt}{4pt}
+\titlespacing*{\subsection}{0pt}{10pt}{2pt}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\fancyfoot[L]{\footnotesize\color{muted}\laile\ \ project description}
+\fancyfoot[R]{\footnotesize\color{muted}\thepage}
+\color{ink}
+
+% Things only the team can supply. They print in red so they can't be missed.
+\newcommand{\fillin}[1]{\colorbox{dangersoft}{\color{danger}\textbf{TO ADD:} #1}}
+\newcommand{\fillinblock}[1]{\noindent\colorbox{dangersoft}{\parbox{\dimexpr\linewidth-2\fboxsep}{\color{danger}\textbf{TO ADD:} #1}}}
+\newcommand{\adpurl}{\fillin{ADP Experience URL (ADP, Publish, Service status)}}
+
+% Phone screenshots, side by side.
+\newcommand{\shot}[2]{\begin{minipage}[t]{0.235\linewidth}\centering
+  \includegraphics[width=\linewidth]{../screenshots/#1}\\[2pt]{\scriptsize\color{muted}#2}\end{minipage}}
+
+\begin{document}
+
+% ------------------------------------------------------------------- title
+\begin{minipage}[c]{0.2\linewidth}
+  {\fontsize{40}{40}\selectfont\wordmark}
+\end{minipage}%
+\begin{minipage}[c]{0.8\linewidth}
+  {\fontsize{26}{28}\selectfont\bfseries Laile}\\[4pt]
+  {\large Home physio that counts every rep and checks in.}
+\end{minipage}
+
+\vspace{8pt}
+{\small\color{muted}
+Tencent Cloud AI CAN DO IT Hackathon Singapore 2026 \ \textbullet\ \ Healthcare track (NTU LKC Medicine)\\
+Challenge Statement 2: AI Healthier Every Day, intelligent support for long-term self-care\\
+Charles Andrew Lim (solo) \ \textbullet\ \ Source: \href{https://github.com/LimCharles/laile}{github.com/LimCharles/laile}\\
+Try Lele on Tencent Cloud ADP: \adpurl}
+
+\vspace{6pt}
+{\color{accent}\rule{\linewidth}{1.2pt}}
+
+\section{In one paragraph}
+Most of physical therapy happens at home, between visits, where nobody can see it. \laile\ is an iPhone app and a clinician portal built around one idea: every program is measured by the phone's camera, and a coach called \lele\ keeps the person going between visits. A physio gives the patient a code; Lele drafts the program and the physio signs it. The first session is a check-in that sets personal targets from what the person can comfortably do. During sessions the camera counts reps and measures joint angles while Lele talks the person through each move and listens for pain. Between sessions Lele checks in, reminds, notices when things stall, and remembers what was sore. The physio sees all of it, live, with a daily list of what needs attention. When physio ends, the person moves on to a calisthenics program with their limits carried over, so the habit outlasts the treatment.
+
+\section{The problem}
+Home exercise is where rehabilitation succeeds or fails, and it is hard to sustain.
+\begin{itemize}
+  \item \textbf{People stop.} Estimates of non-adherence to home exercise in rehabilitation run as high as 50\% \cite{argent2018}.
+  \item \textbf{The reasons are known and human.} A systematic review of 20 studies in musculoskeletal outpatient physiotherapy found strong evidence linking poor adherence to low activity before treatment, low self-efficacy, low mood, anxiety, helplessness, poor social support, more perceived barriers to exercise and pain during exercise \cite{jack2010}.
+  \item \textbf{What helps is also known.} Reviewed trials point to activity monitoring with feedback, written instructions, goal setting and booster sessions as promising \cite{peek2016}. A reminder and a checkbox reach none of the barriers above.
+  \item \textbf{The physio is blind between visits.} Self-reported logs cannot show whether an exercise was done, done well, or stopped because it hurt. Problems surface weeks later at the next appointment.
+  \item \textbf{The need is growing in Singapore.} In 2026, 21.4\% of Singapore citizens were aged 65 or older, above the United Nations threshold for a super-aged society \cite{nptd2026}. Joint replacements, stiff shoulders, falls prevention and staying strong enough to live independently all depend on exercise done at home.
+\end{itemize}
+The challenge statement asks for support that is empowering, personalised, longitudinal, safe, practical, strictly bounded and honest about uncertainty. Laile is designed against that list (section~\ref{sec:fit}).
+
+\section{Who it is for}
+\begin{tabularx}{\linewidth}{@{}L{3.4cm}Y@{}}
+\toprule
+\textbf{Mdm Tan, 68} & Two weeks after a knee replacement. Wants to climb the stairs to the temple. Her physio, Dr Nair, gave her a code. She does her program with Lele, tells it when something pinches, and takes her medicines when Lele reminds her.\\
+\textbf{Mr Ong, 54} & Stiff right shoulder, diabetes. His arm lift is measured every session (95\textdegree\ to 128\textdegree\ over a month in the demo). He asked Dr Nair, through Lele, whether he could add a core program.\\
+\textbf{Alex} & Desk job, no physio. Told Lele he wants a first pull-up and his back gets stiff from sitting. Lele built him a 20-minute plan and left out push-ups because his wrist clicks.\\
+\textbf{Dr Nair, physio} & Sees a daily list of what Lele noticed, watches sessions live, signs every program, approves extra programs and discharges patients to a follow-on program.\\
+\bottomrule
+\end{tabularx}
+
+\section{What Laile does}
+
+\subsection{Programs are the unit}
+Everything a person does is a program: a physio's program joined with a code, a plan Lele builds from a short conversation about goals, or a calisthenics or mobility program from Laile's catalog. Only the physio can change or end a physio program. While a physio supervises someone, anything else they want to add goes to the physio as a request (Lele passes it on and tells them the answer).
+
+\begin{center}
+\shot{02-today.png}{Today: Lele's check-in and the signed program}\hfill
+\shot{05-programs.png}{Programs: Lele's plan, catalog, physio code}\hfill
+\shot{12-goals-conversation.png}{Goals in the person's own words}\hfill
+\shot{13-plan-built.png}{Lele's plan, built from those goals}
+\end{center}
+
+\subsection{The first session is a check-in}
+A program starts with a check-in. The person does each move once at a comfortable effort and taps ``That's enough''. The camera measures reps, holds and range, and Laile sets working targets at about 70\% of their best. A rep then counts at 90\% of the range they reached. In a physio program, targets are only ever made easier than the physio's dose. People redo the check-in every couple of weeks from Progress.
+
+\subsection{Sessions: the camera counts, Lele coaches}
+Apple Vision tracks the body on the phone. A deterministic session conductor counts reps that reach the target angle, times holds only while the person is in position, checks form, and checks the camera can see the joints it needs. Lele's voice takes turns like a conversation: it explains the move, says ``In your own time'', counts, and asks ``How did that feel?'' between sets. The person can speak at any moment (``it's pulling'', ``sharp pain'') or tap a reply. Fixed rules decide what happens: carry on, stop the set, stop the exercise, or end the session and get help. Precautions follow the person into every program, so a knee or wrist limit protects them in a squat class too.
+
+\begin{center}
+\shot{08-session.png}{Session: camera-counted heel slides}\hfill
+\shot{09-targets-set.png}{Check-in result: targets set}\hfill
+\shot{14-precautions-follow.png}{Precautions follow the person}\hfill
+\shot{10-me-privacy.png}{Plain safety and privacy}
+\end{center}
+
+\subsection{Lele takes initiative, and you can talk back}
+Lele runs a round several times a day. It asks a morning check-in while someone is in physio (``How's your knee compared with yesterday?''), reminds them about medicines at the times their doctor set, nudges once on a quiet day, asks what is getting in the way after a few missed days, notices plateaus, and helps them prepare questions before a visit. Every question comes with suggested replies, and people can also type or say their answer in their own words; Lele matches it to the option it means and keeps their words. Telling Lele ``it's quite swollen this morning'' makes that day's session gentler and tells the physio. Guardrails keep it from nagging: quiet hours from 9\,pm to 7\,am, at most three conversations started a day, and no repeats. The same reminders are scheduled as phone notifications so they arrive with the app closed.
+
+\subsection{Lele remembers}
+When something is sore during an exercise, Lele writes a care note with the exercise, the spot, how bad it was and the person's own words. Next time, that exercise is a little easier (a smaller bend counts as a full rep, or a shorter hold), and Lele says so. After two comfortable sessions it eases back a step at a time. The person and the physio see the same notes and history, and the physio can keep an exercise eased or add notes for Lele to follow.
+
+\begin{center}
+\shot{03-lele-inbox.png}{Lele's reminders and questions}\hfill
+\shot{04-lele-chat.png}{Lele on ADP, using real numbers}\hfill
+\shot{06-ask-physio.png}{Adding a program asks the physio}\hfill
+\shot{07-today-program-meds.png}{Program and today's medicines}
+\end{center}
+
+\subsection{Medicines, explained and bounded}
+Laile reminds people about doses their doctor scheduled and explains what each medicine is for and what to report, from a curated knowledge base. It never advises on starting, stopping, timing or dosing. Dose questions get a fixed referral to the doctor or pharmacist before any model sees them, and an unknown medicine gets ``I'm not able to identify that medication, please check with your pharmacist.''
+
+\subsection{The physio stays on top}
+The portal opens with \emph{Today from Lele}: red flags first, then people who felt worse this morning, pain reports to review, program requests (approve or say not yet), drafts to sign, missed days, barriers and upcoming visits. During a session the physio sees it live: exercise, reps and the measured angle every two seconds. Charts show each key measure against the person's baseline and milestones. The physio can ask Lele in plain words to change a program (``make it gentler, she had a flare''); Lele drafts a new version and nothing reaches the patient until the physio signs. Discharge hands the person to a follow-on program with any limits the physio chose to keep.
+
+\begin{figure}[htbp]
+\centering
+\fbox{\includegraphics[width=0.97\linewidth,height=0.4\textheight,keepaspectratio]{../screenshots/20-portal-dashboard-crop.png}}
+\caption{Today from Lele in the clinician portal: most pressing first, with approvals inline.}
+\end{figure}
+\begin{figure}[htbp]
+\centering
+\fbox{\includegraphics[width=0.97\linewidth,height=0.42\textheight,keepaspectratio]{../screenshots/21-portal-patient-crop.png}}
+\caption{A patient's page: the session as it happens, what needs attention, and progress against baseline.}
+\end{figure}
+
+\section{How the AI is used}
+\begin{tabularx}{\linewidth}{@{}L{3.6cm}L{4.6cm}Y@{}}
+\toprule
+\textbf{Job} & \textbf{Done by} & \textbf{Kept safe by}\\
+\midrule
+Conversation, explanations, progress reviews & Lele agent on \textbf{Tencent Cloud ADP} (Hy3 model, knowledge base of 12 documents in two categories, persona prompt) & Server sends real context (program, measurements, care notes); red flags and dose questions answered by fixed rules first; fallback reply when the knowledge base has no answer\\
+Remembering what hurt & Lele (care notes; model can propose a note as structured JSON) & Notes are validated and stored by code; easing is computed by \texttt{CareMemory}, never by the model\\
+Program drafts & Hunyuan when configured, otherwise a rule-based drafter & Only exercises in the vetted library, dose limits enforced, contraindication checker removes anything a precaution rules out, physio signs\\
+Understanding replies & \texttt{ReplyReader} and \texttt{GoalsReader} (keyword rules) & Shows ``Lele heard: \ldots''; asks again when unclear\\
+Seeing movement & Apple Vision pose estimation on the phone & Video stays on the device; no count when the camera can't see the joint\\
+Lele's voice & ElevenLabs, cached per line & On-device voice fallback; counts never wait on the network\\
+\bottomrule
+\end{tabularx}
+
+\section{Architecture and trust boundary}
+\begin{center}
+\resizebox{\linewidth}{!}{\input{../diagram/architecture-body}}
+\end{center}
+
+\textbf{Design rules.}
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{The model talks; code decides.} Counting, timing, pain thresholds, escalation, easing and every number a clinician sees come from deterministic, tested code.
+  \item \textbf{The AI never prescribes.} Only physio-signed programs reach a supervised patient. Drafts use the vetted library within dose limits, and anything that breaks a precaution is removed before a person sees it.
+  \item \textbf{Honest about uncertainty.} No camera view, no count (``I can't see you clearly, so I'm not counting that''). An ambiguous remark gets ``stretch or sharp pain?''. An unclear typed answer gets asked again.
+  \item \textbf{Memory is a record.} Care notes live in Laile's database with a history line for every change, visible to the person and the physio.
+  \item \textbf{One codebase.} The phone and the server run the same Swift domain package (\texttt{LaileCore}), so safety rules work offline and the server re-checks with the same engine.
+\end{enumerate}
+
+\textbf{Key trade-offs.}
+
+\begin{tabularx}{\linewidth}{@{}L{4.2cm}Y@{}}
+\toprule
+\textbf{Choice} & \textbf{Why, and what it costs}\\
+\midrule
+Native iOS (SwiftUI) and a Swift server & Native camera and Vision performance and one language end to end. The cost: no Android app yet; the clinician side is web.\\
+Apple Vision on device & No video upload, no model download, works offline. Joints are 2D, so angles are camera estimates for tracking trends (stated on every report).\\
+Fixed rules for safety, model for conversation & Predictable, testable safety. Unusual phrasings fall back to a clarifying question.\\
+ADP knowledge base for explanations & Curated, reviewable content and Tencent's guardrails. ADP's answer template can be verbose, so the server trims headings and citations.\\
+Server-rendered portal & Fast to build, prints cleanly as a pre-visit report, no second front-end stack.\\
+\bottomrule
+\end{tabularx}
+
+\section{Fit with the challenge}\label{sec:fit}
+\begin{tabularx}{\linewidth}{@{}L{3.6cm}Y@{}}
+\toprule
+\textbf{The brief asks for} & \textbf{In Laile}\\
+\midrule
+Medication understanding & ``What's this for?'' on every dose; Lele explains from the medicines knowledge base\\
+Medication management & Reminders at the doctor's times (in the app and as notifications); one tap or a typed reply marks a dose taken\\
+Adherence support & Camera-verified sessions, check-in targets, streaks that forgive one missed day, Lele's barrier questions and nudges\\
+Health tracking & Knee bend, straightening gap, arm lift, reps, holds and pain over time, against baseline and milestones\\
+Preventive health & Precautions follow the person everywhere; plateau and missed-day flags; follow-on programs after discharge; red-flag rules\\
+Healthcare preparation & Visit prep questions from sessions and notes; pre-visit report for the physio\\
+Empowering, personalised, longitudinal & Goals in their own words, targets from their own check-in, care notes that build over weeks\\
+Safe, strictly bounded, honest & Fixed referral for dose questions, red flags handled by rules, ``I'm not able to identify that medication, please check with your pharmacist''\\
+\bottomrule
+\end{tabularx}
+
+\section{Responsible AI}
+\begin{itemize}
+  \item \textbf{Privacy.} Video stays on the phone; Laile stores joint angles, counts and what the person reports. Linking to a physio needs the patient's code and consent, and shares data with that physio only.
+  \item \textbf{Clinical safety.} Red-flag phrases (chest pain, a swollen hot calf, fainting and others) end the session with clear advice to call 995 or contact the care team, whatever any model says. Pain above the physio's limit stops the set.
+  \item \textbf{Human in the loop.} Physios sign programs, approve additions and decide discharge. Lele's daily list helps them prioritise and changes nothing on its own.
+  \item \textbf{No nagging.} Quiet hours, a daily limit on conversations Lele starts, and no repeated messages.
+  \item \textbf{Known limits.} The knowledge base is general education and needs review by a physiotherapist and a pharmacist before real patients use it. Camera angles are estimates. Laile has not been clinically validated.
+\end{itemize}
+
+\section{Business value}
+\begin{itemize}
+  \item \textbf{Clinics pay for visibility.} Physiotherapy clinics and hospital rehabilitation teams get verified adherence, live sessions and a prioritised daily list without extra visits. Proposed model: a monthly fee per active patient (to be validated with clinics).
+  \item \textbf{People stay after discharge.} Discharge hands patients to a calisthenics or mobility program with their limits carried over. That keeps the habit going and turns a clinical episode into a long-term relationship, with a consumer subscription for people without a physio.
+  \item \textbf{Each side feeds the other.} Everyday users with aches are pointed to a physio; physio patients become everyday users afterwards.
+  \item \textbf{Low running cost.} Pose estimation runs on the phone, model calls are only for conversation, and voice lines are cached and paid for once.
+  \item \textbf{Fit for Singapore.} An ageing population and a national push towards preventive care favour tools that keep older adults strong at home.
+\end{itemize}
+
+\section{Status and next steps}
+\textbf{Working today.} The iOS app (Today, Programs, Lele, Progress), sessions with the camera pipeline (exercised in the iOS Simulator with a simulated skeleton), the server and clinician portal, Lele published on Tencent Cloud ADP and called by the server, demo accounts with realistic history, and 121 automated tests across the shared domain package and the server.
+
+\textbf{Next.} Deploy the server to Tencent Cloud Lighthouse with TencentDB for PostgreSQL; test on a real iPhone (camera placement, lighting, rep thresholds, voice across a room); ship through TestFlight; have a physiotherapist and a pharmacist review the knowledge base; pilot with one clinic.
+
+\section{How it was built}
+\laile\ is a Swift monorepo: \texttt{LaileCore} (pure Swift domain logic shared by phone and server), \texttt{LaileKit} (SwiftUI feature modules), the iOS app, and a Vapor server with the clinician portal. Lele's prompt and knowledge base live in \texttt{agent/} and are imported into ADP.
+
+\fillinblock{How CodeBuddy or WorkBuddy was used, with 3+ conversation screenshots (required for scoring).}
+
+\begin{thebibliography}{9}\small
+\bibitem{argent2018} Argent R, Daly A, Caulfield B. Patient involvement with home-based exercise programs: can connected health interventions influence adherence? \emph{JMIR mHealth and uHealth}. 2018;6(3):e47. \url{https://mhealth.jmir.org/2018/3/e47/}
+\bibitem{jack2010} Jack K, McLean SM, Moffett JK, Gardiner E. Barriers to treatment adherence in physiotherapy outpatient clinics: a systematic review. \emph{Manual Therapy}. 2010;15(3):220-228. \url{https://shura.shu.ac.uk/5146/}
+\bibitem{peek2016} Peek K, Sanson-Fisher R, Mackenzie L, Carey M. Interventions to aid patient adherence to physiotherapist prescribed self-management strategies: a systematic review. \emph{Physiotherapy}. 2016;102(2):127-135. \url{https://doi.org/10.1016/j.physio.2015.10.003}
+\bibitem{nptd2026} National Population and Talent Division, Strategy Group, Prime Minister's Office. \emph{Population in Brief 2026}. Singapore; September 2026.
+\end{thebibliography}
+
+\end{document}

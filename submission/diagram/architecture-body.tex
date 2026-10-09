@@ -1,0 +1,62 @@
+% Laile architecture and trust boundary. Included by architecture.tex, the write-up and the deck.
+\begin{tikzpicture}[
+    font=\small,
+    every node/.style={text=ink, execute at begin node={\hyphenpenalty=10000\exhyphenpenalty=10000}},
+    box/.style={draw=#1, fill=white, rounded corners=4pt, line width=0.7pt, align=left, inner sep=6pt},
+    box/.default=accent,
+    item/.style={align=left, text width=#1, inner sep=1.5pt},
+    item/.default=5.6cm,
+    title/.style={font=\small\bfseries, align=left},
+    flow/.style={-{Stealth[length=7pt]}, line width=0.9pt, draw=ink},
+    lab/.style={font=\scriptsize, text=muted, fill=white, inner sep=2pt, align=center},
+  ]
+
+  % --- Phone -------------------------------------------------------------
+  \node[title, text=accent] (phoneT) at (0,0) {Patient's phone (iOS app)};
+  \node[item, below=4pt of phoneT.south west, anchor=north west] (p1) {Camera $\rightarrow$ Apple Vision pose $\rightarrow$ joint angles};
+  \node[item, below=2pt of p1.south west, anchor=north west] (p2) {\textbf{SessionConductor}: reps, holds, form, setup checks, turn-taking voice};
+  \node[item, below=2pt of p2.south west, anchor=north west] (p3) {\textbf{SymptomRules} and red flags: carry on, stop the set, stop, get help};
+  \node[item, below=2pt of p3.south west, anchor=north west] (p4) {\textbf{CareMemory}: eases a sore exercise next time};
+  \node[item, below=2pt of p4.south west, anchor=north west] (p5) {Lele chat, voice check-in, reminders};
+  \node[item, below=4pt of p5.south west, anchor=north west, text=danger, font=\scriptsize\bfseries] (p6) {Video stays on the phone};
+  \begin{scope}[on background layer]
+    \node[box=danger, dashed, fit=(phoneT)(p1)(p2)(p3)(p4)(p5)(p6), fill=dangersoft!35] (phone) {};
+  \end{scope}
+
+  % --- Laile API -----------------------------------------------------------
+  \node[title, text=accent] (apiT) at (10.0,0) {Laile API (Swift, Vapor) on Tencent Cloud};
+  \node[box, fill=accentsoft, below=5pt of apiT.south west, anchor=north west, text width=6.4cm] (gate)
+    {\textbf{Safety gate} (fixed rules, runs before any model): red flags, medicine dose questions, physio's precautions};
+  \node[box, below=5pt of gate, text width=6.4cm] (prog)
+    {\textbf{Programs}: physio code, Lele's plans, catalog. First session is a check-in that sets targets. ContraindicationChecker removes anything a precaution rules out.};
+  \node[box, below=5pt of prog, text width=6.4cm] (round)
+    {\textbf{Lele's round}: morning check-in, missed days, barriers, plateaus, visit prep, medicine reminders. Quiet hours, three a day at most. ReplyReader maps typed answers to options.};
+  \node[box, below=5pt of round, text width=6.4cm] (data)
+    {\textbf{Records}: sessions, measurements, care notes, requests (TencentDB for PostgreSQL)};
+  \begin{scope}[on background layer]
+    \node[box, fit=(apiT)(gate)(prog)(round)(data), fill=surface] (api) {};
+  \end{scope}
+
+  % --- AI services ---------------------------------------------------------
+  \node[title, text=reward] (aiT) at (19.3,0) {Models (they talk, code decides)};
+  \node[box=reward, below=5pt of aiT.south west, anchor=north west, text width=5.4cm] (adp)
+    {\textbf{Tencent Cloud ADP: Lele agent}\\ Hy3 model, knowledge base in two categories (physical therapy, medicines), Lele's prompt and fallback reply};
+  \node[box=reward, below=6pt of adp, text width=5.4cm] (hy)
+    {\textbf{Program drafts}\\ Hunyuan when configured, otherwise a rule-based drafter. Both use only the vetted exercise library.};
+  \node[box=reward, below=6pt of hy, text width=5.4cm] (voice)
+    {\textbf{Lele's voice}\\ ElevenLabs, cached per line; on-device voice as fallback};
+  \begin{scope}[on background layer]
+    \node[box=reward, fit=(aiT)(adp)(hy)(voice), fill=rewardsoft!60] (ai) {};
+  \end{scope}
+
+  % --- Portal --------------------------------------------------------------
+  \node[box, below=1.1cm of api, text width=13.8cm, xshift=0cm] (portal)
+    {\textbf{Clinician portal (web)}: Today from Lele (most pressing first), live session view, approve or decline added programs, ask Lele to change a program, sign every program, discharge to a follow-on program, pre-visit report};
+
+  % --- Flows (horizontal, at fixed heights) ------------------------------------
+  \draw[flow] (phone.east |- 0,-1.9) -- node[lab, above, pos=0.5] {counts, angles,\\symptom reports, chat} (api.west |- 0,-1.9);
+  \draw[flow] (api.west |- 0,-3.3) -- node[lab, below, pos=0.5] {signed programs,\\targets, messages} (phone.east |- 0,-3.3);
+  \draw[flow] (api.east |- 0,-1.5) -- node[lab, above, pos=0.5] {question\\+ context} (ai.west |- 0,-1.5);
+  \draw[flow] (ai.west |- 0,-2.6) -- node[lab, below, pos=0.5] {reply, checked\\before saving} (api.east |- 0,-2.6);
+  \draw[flow, {Stealth[length=7pt]}-{Stealth[length=7pt]}] (api.south) -- node[lab, right] {live view, daily list, approvals, signatures} (portal.north -| api.south);
+\end{tikzpicture}

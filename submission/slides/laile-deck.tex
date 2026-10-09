@@ -1,0 +1,246 @@
+\documentclass[aspectratio=169,9pt]{beamer}
+\input{../tex/laile-style}
+\usepackage{booktabs}
+\usepackage{tabularx}
+
+% ---- Look ---------------------------------------------------------------
+\setbeamertemplate{navigation symbols}{}
+\setbeamercolor{background canvas}{bg=paper}
+\setbeamercolor{normal text}{fg=ink}
+\setbeamercolor{frametitle}{fg=ink}
+\setbeamercolor{structure}{fg=accent}
+\setbeamercolor{itemize item}{fg=accent}
+\setbeamerfont{frametitle}{size=\LARGE,series=\bfseries}
+\setbeamertemplate{frametitle}{\vspace{10pt}\insertframetitle\par\vspace{2pt}{\color{accent}\rule{1.2cm}{2pt}}}
+\setbeamertemplate{itemize items}{\raisebox{1pt}{\color{accent}\rule{5pt}{5pt}}}
+\setbeamertemplate{footline}{\hfill{\scriptsize\color{muted}\laile\quad\insertframenumber\hspace{14pt}}\vspace{8pt}}
+\setlength{\parskip}{4pt}
+
+\newcommand{\phone}[2][0.17]{\begin{minipage}[t]{#1\linewidth}\centering
+  \includegraphics[width=\linewidth]{../screenshots/#2}\end{minipage}}
+\newcommand{\capt}[1]{{\scriptsize\color{muted}#1}}
+\newcommand{\bignum}[1]{{\fontsize{30}{32}\selectfont\bfseries\color{accent}#1}}
+\newcommand{\pill}[1]{\tikz[baseline=(p.base)]\node[fill=accentsoft,text=accent,rounded corners=6pt,inner sep=3pt,font=\scriptsize\bfseries](p){#1};}
+
+\begin{document}
+
+% ---- 1. Title -----------------------------------------------------------
+{\setbeamertemplate{footline}{}
+\begin{frame}
+\begin{columns}[c]
+\begin{column}{0.56\textwidth}
+  {\fontsize{54}{54}\selectfont\wordmark}\\[6pt]
+  {\fontsize{34}{36}\selectfont\bfseries Laile}\\[10pt]
+  {\Large Home physio that counts every rep and checks in.}\\[18pt]
+  {\small\color{muted}Tencent Cloud AI CAN DO IT Hackathon Singapore 2026\\
+  Healthcare track \textbullet\ Challenge Statement 2\\[4pt]
+  Charles Andrew Lim}
+\end{column}
+\begin{column}{0.4\textwidth}\centering
+  \phone[0.42]{02-today.png}\hspace{4pt}\phone[0.42]{04-lele-chat.png}
+\end{column}
+\end{columns}
+\end{frame}}
+
+% ---- 2. Problem ---------------------------------------------------------
+\begin{frame}{Physio happens at home, where nobody sees it}
+\begin{columns}[t]
+\begin{column}{0.32\textwidth}
+  \bignum{50\%}\\[2pt]
+  of people in rehab may not do their home exercise [1]\\[10pt]
+  \bignum{21.4\%}\\[2pt]
+  of Singapore citizens are 65 or older (2026), a super-aged society [3]
+\end{column}
+\begin{column}{0.64\textwidth}
+  \textbf{Why people stop} (systematic review of 20 studies [2]):
+  low confidence, low mood, worry, pain during exercise, no support, too many barriers.\\[6pt]
+  \textbf{What a physio sees between visits:} nothing. A checkbox can't tell a done exercise from a skipped one, or one stopped because it hurt.\\[6pt]
+  \textbf{What the brief asks for:} support that is empowering, personalised, longitudinal, safe, strictly bounded and honest about uncertainty.
+\end{column}
+\end{columns}
+\end{frame}
+
+% ---- 3. Idea ------------------------------------------------------------
+\begin{frame}{Laile in one breath}
+\begin{columns}[c]
+\begin{column}{0.6\textwidth}
+\begin{itemize}
+  \item \textbf{Programs are the unit.} A physio's program (joined with their code), a plan Lele builds from your goals, or a calisthenics program.
+  \item \textbf{The camera counts.} Reps, holds, knee bend and arm lift, measured on the phone. Video stays there.
+  \item \textbf{Lele checks in.} A coach that talks you through sessions, asks how you are each morning, reminds, notices, remembers what hurt.
+  \item \textbf{The physio stays on top.} Live sessions, a daily list, approvals, signatures, discharge.
+  \item \textbf{Code decides, the model talks.} Safety and every number come from tested rules.
+\end{itemize}
+\end{column}
+\begin{column}{0.36\textwidth}\centering
+  \phone[0.42]{08-session.png}\hspace{4pt}\phone[0.42]{03-lele-inbox.png}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ---- 4. Start ----------------------------------------------------------
+\begin{frame}{Start: tell Lele your goals, or bring a physio's code}
+\centering
+\phone{12-goals-conversation.png}\hfill
+\phone{13-plan-built.png}\hfill
+\phone{09-targets-set.png}\hfill
+\phone{14-precautions-follow.png}\\[4pt]
+\begin{minipage}[t]{0.205\linewidth}\centering\capt{Goals in your own words; options are suggestions}\end{minipage}\hfill
+\begin{minipage}[t]{0.205\linewidth}\centering\capt{Lele's plan leaves out what your wrists can't take}\end{minipage}\hfill
+\begin{minipage}[t]{0.205\linewidth}\centering\capt{First session is a check-in that sets targets}\end{minipage}\hfill
+\begin{minipage}[t]{0.205\linewidth}\centering\capt{Limits follow you into every program}\end{minipage}
+\end{frame}
+
+% ---- 5. Sessions ---------------------------------------------------------
+\begin{frame}{Sessions: the camera counts, Lele coaches}
+\begin{columns}[c]
+\begin{column}{0.3\textwidth}\centering
+  \phone[0.62]{08-session.png}
+\end{column}
+\begin{column}{0.66\textwidth}
+\begin{itemize}
+  \item Apple Vision tracks joints on the phone; a rep counts only at the target angle, a hold only while in position.
+  \item Lele takes turns like a conversation: explains, says \emph{``In your own time''}, counts, asks \emph{``How did that feel?''} between sets.
+  \item Say ``it's pulling'' or ``sharp pain'' any time. Fixed rules decide: carry on, stop the set, stop, or get help.
+  \item Something sore? Lele notes it and makes that exercise easier next time, then eases back after two comfortable sessions.
+  \item Can't see you? No count: \emph{``I can't see you clearly, so I'm not counting that.''}
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ---- 6. Lele -------------------------------------------------------------
+\begin{frame}{Lele takes initiative, and you can talk back}
+\begin{columns}[c]
+\begin{column}{0.58\textwidth}
+\begin{itemize}
+  \item \textbf{Morning check-in} in physio. ``Quite swollen this morning'' makes today's session gentler and tells the physio.
+  \item \textbf{Medicine reminders} at the doctor's times, as notifications too; ``What's this for?'' on every dose.
+  \item \textbf{Missed days:} one nudge, then ``what's getting in the way?''
+  \item \textbf{Plateaus and visit prep} from real measurements.
+  \item \textbf{Chat or call} Lele, built on Tencent Cloud ADP with a curated knowledge base.
+  \item \textbf{Never nags:} quiet 9\,pm to 7\,am, three conversations a day at most.
+\end{itemize}
+\end{column}
+\begin{column}{0.38\textwidth}\centering
+  \phone[0.42]{03-lele-inbox.png}\hspace{4pt}\phone[0.42]{04-lele-chat.png}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ---- 7. Physio -----------------------------------------------------------
+\begin{frame}{The physio stays on top}
+\begin{columns}[c]
+\begin{column}{0.62\textwidth}
+  \fbox{\includegraphics[width=\linewidth]{../screenshots/20-portal-dashboard-crop.png}}
+\end{column}
+\begin{column}{0.35\textwidth}
+\begin{itemize}
+  \item \textbf{Today from Lele}, most pressing first: red flags, worse this morning, pain reports, requests, missed days.
+  \item \textbf{Live view} of a session: exercise, reps, measured angle.
+  \item \textbf{Approve} extra programs; \textbf{ask Lele} to change one in plain words; \textbf{sign} every version.
+  \item \textbf{Discharge} hands the patient to a follow-on program, limits kept.
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ---- 8. Architecture ----------------------------------------------------
+\begin{frame}{Architecture and trust boundary}
+\centering
+\resizebox{0.98\linewidth}{!}{\input{../diagram/architecture-body}}
+\end{frame}
+
+% ---- 9. AI and safety ---------------------------------------------------
+\begin{frame}{How the AI is used, and kept safe}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{4.4cm}>{\raggedright\arraybackslash}X@{}}
+\toprule
+\textbf{Job} & \textbf{Done by} & \textbf{Kept safe by}\\
+\midrule
+Conversation and explanations & Lele on \textbf{Tencent Cloud ADP} (Hy3, 12-document knowledge base) & Real context sent with each message; red flags and dose questions answered by rules first\\
+Remembering what hurt & Care notes & Easing computed by code; physio sees every note\\
+Program drafts & Hunyuan or rule-based drafter & Vetted library only, precautions enforced, physio signs\\
+Understanding replies & Keyword rules & ``Lele heard: \ldots''; asks again if unclear\\
+Seeing movement & Apple Vision on device & Video stays on the phone\\
+\bottomrule
+\end{tabularx}\\[8pt]
+\begin{itemize}
+  \item Dose questions: fixed referral to the doctor or pharmacist. Unknown medicine: \emph{``I'm not able to identify that medication, please check with your pharmacist.''}
+  \item 121 automated tests cover counting, safety rules, care notes, Lele's round and the server flows.
+\end{itemize}
+\end{frame}
+
+% ---- 10. Fit ------------------------------------------------------------
+\begin{frame}{Fit with Challenge 2}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.2cm}X@{}}
+\toprule
+Medication understanding & ``What's this for?'' on every dose, from the medicines knowledge base\\
+Medication management & Reminders at the doctor's times; one tap or a typed reply marks a dose taken\\
+Adherence support & Camera-verified sessions, check-in targets, forgiving streaks, barrier questions\\
+Health tracking & Knee bend, straightening gap, arm lift, reps, holds and pain against baseline\\
+Preventive health & Precautions follow you; plateau and missed-day flags; follow-on programs\\
+Healthcare preparation & Visit prep questions; pre-visit report for the physio\\
+Safe, bounded, honest & Rule-based red flags and referrals; no count without a clear view\\
+\bottomrule
+\end{tabularx}
+\end{frame}
+
+% ---- 11. Business --------------------------------------------------------
+\begin{frame}{Why it can last}
+\begin{columns}[t]
+\begin{column}{0.48\textwidth}
+  \textbf{\color{accent}Clinics}\\
+  Verified adherence, live sessions and a prioritised daily list without extra visits. Proposed: a monthly fee per active patient.\\[10pt]
+  \textbf{\color{accent}People}\\
+  Discharge leads to a calisthenics or mobility program with limits carried over. Consumer subscription for people without a physio.
+\end{column}
+\begin{column}{0.48\textwidth}
+  \textbf{\color{accent}A loop}\\
+  Everyday users with aches are pointed to a physio; physio patients become everyday users afterwards.\\[10pt]
+  \textbf{\color{accent}Cheap to run}\\
+  Pose estimation on the phone; model calls only for conversation; voice lines cached and paid for once.
+\end{column}
+\end{columns}
+\end{frame}
+
+% ---- 12. Status ---------------------------------------------------------
+\begin{frame}{Where it stands}
+\begin{columns}[t]
+\begin{column}{0.48\textwidth}
+  \textbf{\color{accent}Working now}
+  \begin{itemize}
+    \item iOS app: Today, Programs, Lele, Progress
+    \item Camera pipeline (Simulator, simulated skeleton)
+    \item Server and clinician portal
+    \item Lele published on Tencent Cloud ADP
+    \item Demo accounts with realistic history
+    \item 121 automated tests
+  \end{itemize}
+\end{column}
+\begin{column}{0.48\textwidth}
+  \textbf{\color{accent}Next}
+  \begin{itemize}
+    \item Tencent Cloud Lighthouse and TencentDB
+    \item Real-iPhone testing; TestFlight
+    \item Knowledge base review by a physiotherapist and a pharmacist
+    \item Pilot with one clinic
+  \end{itemize}
+\end{column}
+\end{columns}
+\vfill
+{\small\color{muted}Source: github.com/LimCharles/laile}
+\end{frame}
+
+% ---- 13. References ------------------------------------------------------
+\begin{frame}{References}
+\scriptsize
+\begin{itemize}
+  \item[{[1]}] Argent R, Daly A, Caulfield B. Patient involvement with home-based exercise programs: can connected health interventions influence adherence? \emph{JMIR mHealth uHealth} 2018;6(3):e47.
+  \item[{[2]}] Jack K, McLean SM, Moffett JK, Gardiner E. Barriers to treatment adherence in physiotherapy outpatient clinics: a systematic review. \emph{Manual Therapy} 2010;15(3):220-228.
+  \item[{[3]}] National Population and Talent Division. \emph{Population in Brief 2026}. Singapore, September 2026.
+\end{itemize}
+\end{frame}
+
+\end{document}

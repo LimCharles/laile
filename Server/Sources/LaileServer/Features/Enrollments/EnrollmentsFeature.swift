@@ -275,8 +275,12 @@ struct EnrollmentsFeature: LaileFeature {
                                     text: "Thanks, \(first)! I've put together \u{201C}\(enrollment.title)\u{201D} for you:\n\(list)\nYour first session is a quick check-in so I can set targets from what you can comfortably do.",
                                     actions: [LeleAction(id: "start", label: "Start check-in", kind: .startSession, value: enrollment.id.uuidString)]))
         if profile.shouldSeeClinician {
+            // Name what they told us, so the suggestion fits ("your wrists", "an injury").
+            let areas = profile.sensitiveAreas.map { $0.label.lowercased() }
+            let what = profile.goals.contains(.recoverInjury) ? "an injury"
+                : areas.count > 1 ? "your " + areas.dropLast().joined(separator: ", ") + " and " + areas.last! : "your " + (areas.first ?? "aches")
             messages.append(LeleMessage(createdAt: now.addingTimeInterval(1), kind: .welcome,
-                                        text: "Because you mentioned pain or an injury, I've kept things gentle. A physiotherapist can check it properly and give you a program I'll coach you through. If you already have a code from one, add it in Programs."))
+                                        text: "Because you mentioned \(what), I've kept things gentle. If it bothers you, a physiotherapist can check it properly and give you a program I'll coach you through. If you already have a code from one, add it in Programs."))
         }
         for message in messages { try await LeleMessageModel(userID: userID, message: message).create(on: req.db) }
         return API.PlanResponse(enrollment: enrollment, messages: messages)

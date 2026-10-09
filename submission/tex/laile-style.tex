@@ -1,0 +1,38 @@
+% Shared look for Laile's submission documents. Build with Tectonic (see submission/build.sh).
+\usepackage{fontspec}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{positioning,fit,backgrounds,arrows.meta,calc,shapes.misc}
+
+% macOS system fonts: Avenir Next for text, Hiragino Sans GB for 莱乐.
+\setmainfont{Avenir Next.ttc}[
+  Path=/System/Library/Fonts/,
+  UprightFeatures={FontIndex=7},
+  BoldFont={Avenir Next.ttc}, BoldFeatures={FontIndex=2},
+  ItalicFont={Avenir Next.ttc}, ItalicFeatures={FontIndex=4},
+  BoldItalicFont={Avenir Next.ttc}, BoldItalicFeatures={FontIndex=3}]
+\setsansfont{Avenir Next.ttc}[
+  Path=/System/Library/Fonts/,
+  UprightFeatures={FontIndex=7},
+  BoldFont={Avenir Next.ttc}, BoldFeatures={FontIndex=2},
+  ItalicFont={Avenir Next.ttc}, ItalicFeatures={FontIndex=4},
+  BoldItalicFont={Avenir Next.ttc}, BoldItalicFeatures={FontIndex=3}]
+\newfontfamily\heavyfont{Avenir Next.ttc}[Path=/System/Library/Fonts/, UprightFeatures={FontIndex=8}]
+\newfontfamily\cjk{Hiragino Sans GB.ttc}[Path=/System/Library/Fonts/, UprightFeatures={FontIndex=2}]
+
+% The app's palette (DesignSystem/Theme.swift).
+\definecolor{accent}{HTML}{0F8A6A}
+\definecolor{accentsoft}{HTML}{DFF3EC}
+\definecolor{reward}{HTML}{E8930C}
+\definecolor{rewardsoft}{HTML}{FFF1DC}
+\definecolor{danger}{HTML}{C62828}
+\definecolor{dangersoft}{HTML}{FDE7E5}
+\definecolor{ink}{HTML}{17211C}
+\definecolor{muted}{HTML}{5D6B63}
+\definecolor{surface}{HTML}{EEF2EF}
+\definecolor{paper}{HTML}{F6F7F5}
+
+\newcommand{\laile}{Laile ({\cjk 莱乐})}
+\newcommand{\lele}{Lele ({\cjk 乐乐})}
+\newcommand{\wordmark}{{\cjk\color{accent}莱乐}}
