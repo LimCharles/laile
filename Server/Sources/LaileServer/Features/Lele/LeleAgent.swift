@@ -38,7 +38,11 @@ struct LeleAgent {
             while l.hasPrefix("#") { l.removeFirst() }
             return l.trimmingCharacters(in: .whitespaces)
         }
-        lines = lines.map { $0.replacingOccurrences(of: #"\s?\[\d+(,\s?\d+)*\]"#, with: "", options: .regularExpression) }
+        lines = lines.map {
+            $0.replacingOccurrences(of: #"\s?\[\d+(,\s?\d+)*\](\(@ref\))?"#, with: "", options: .regularExpression)
+                // ADP strips its citations itself and leaves the gap: "work ." → "work."
+                .replacingOccurrences(of: #"\s+([.,;:!?])"#, with: "$1", options: .regularExpression)
+        }
         return lines.joined(separator: "\n").replacingOccurrences(of: "**", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
@@ -100,27 +104,59 @@ struct ADPClient {
         return try Self.parse(String(buffer: buffer))
     }
 
-    /// Collects the reply text from the SSE stream. Deltas are appended; if a delta repeats the
-    /// text so far (non-incremental mode), it replaces it.
+    /// Collects the reply from the SSE stream. ADP streams several messages per response: a
+    /// "thought" (the thinking model's reasoning) and the "reply". Only reply text is kept.
+    /// `text.delta` appends, `text.replace` swaps a message's text, and `response.completed`
+    /// carries every message in full, which wins when present.
     static func parse(_ stream: String) throws -> String {
-        var text = ""
+        var kinds: [String: String] = [:]
+        var texts: [String: String] = [:]
+        var order: [String] = []
+        var completed: String?
         var event = ""
+        func note(_ id: String) { if !order.contains(id) { order.append(id) } }
         for raw in stream.components(separatedBy: "\n") {
             let line = raw.trimmingCharacters(in: .whitespaces)
             if line.hasPrefix("event:") {
                 event = line.dropFirst(6).trimmingCharacters(in: .whitespaces)
-            } else if line.hasPrefix("data:") {
-                let data = Data(line.dropFirst(5).trimmingCharacters(in: .whitespaces).utf8)
-                guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { continue }
-                let type = (json["Type"] as? String) ?? event
-                if type == "text.delta", let delta = json["Text"] as? String {
-                    text = delta.hasPrefix(text) && !text.isEmpty ? delta : text + delta
-                } else if type == "error" || json["Error"] != nil {
-                    let message = ((json["Error"] as? [String: Any])?["Message"] as? String) ?? "unknown error"
-                    throw Abort(.badGateway, reason: "ADP: \(message)")
+                continue
+            }
+            guard line.hasPrefix("data:"),
+                  let json = try? JSONSerialization.jsonObject(with: Data(line.dropFirst(5).trimmingCharacters(in: .whitespaces).utf8)) as? [String: Any]
+            else { continue }
+            switch (json["Type"] as? String) ?? event {
+            case "message.added":
+                if let message = json["Message"] as? [String: Any], let id = message["MessageId"] as? String {
+                    kinds[id] = message["Type"] as? String
+                    note(id)
+                }
+            case "text.delta":
+                guard let delta = json["Text"] as? String else { continue }
+                let id = json["MessageId"] as? String ?? ""
+                let sofar = texts[id] ?? ""
+                texts[id] = delta.hasPrefix(sofar) && !sofar.isEmpty ? delta : sofar + delta
+                note(id)
+            case "text.replace":
+                guard let replacement = json["Text"] as? String else { continue }
+                let id = json["MessageId"] as? String ?? ""
+                texts[id] = replacement
+                note(id)
+            case "response.completed":
+                let messages = (json["Response"] as? [String: Any])?["Messages"] as? [[String: Any]] ?? []
+                let replies = messages.filter { ($0["Type"] as? String) != "thought" }.map { message in
+                    ((message["Contents"] as? [[String: Any]]) ?? []).filter { ($0["Type"] as? String) == "text" }
+                        .compactMap { $0["Text"] as? String }.joined()
+                }.filter { !$0.isEmpty }
+                if !replies.isEmpty { completed = replies.joined(separator: "\n") }
+            case "error":
+                let message = ((json["Error"] as? [String: Any])?["Message"] as? String) ?? "unknown error"
+                throw Abort(.badGateway, reason: "ADP: \(message)")
+            default:
+                if let error = json["Error"] as? [String: Any] {
+                    throw Abort(.badGateway, reason: "ADP: \(error["Message"] as? String ?? "unknown error")")
                 }
             }
         }
-        return text
+        return completed ?? order.filter { kinds[$0] != "thought" }.compactMap { texts[$0] }.joined(separator: "\n")
     }
 }

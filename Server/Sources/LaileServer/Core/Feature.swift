@@ -75,7 +75,8 @@ struct LaileConfig: Sendable {
             seedDemoData: value("SEED_DEMO_DATA").map { $0 == "true" } ?? (env != .production),
             emergencyNumber: value("EMERGENCY_NUMBER") ?? "995",
             speech: SpeechConfig.fromEnvironment(),
-            adpAppKey: value("ADP_APP_KEY")
+            // Tests stay offline and deterministic even when .env has a real key.
+            adpAppKey: env == .testing ? nil : value("ADP_APP_KEY")
         )
     }
 }

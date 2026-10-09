@@ -174,6 +174,19 @@ final class ProgramsFlowTests: XCTestCase {
         """
         XCTAssertEqual(try ADPClient.parse(stream), "Heel slides help your knee bend.")
         XCTAssertThrowsError(try ADPClient.parse("event: error\ndata: {\"Type\":\"error\",\"Error\":{\"Message\":\"bad key\"}}"))
+
+        // A thinking model streams its reasoning as a "thought" message; only the reply is kept.
+        let thinking = [
+            #"data: {"Type":"message.added","Message":{"Type":"thought","MessageId":"t1"}}"#,
+            #"data: {"Type":"text.delta","MessageId":"t1","Text":"The user is asking about knees."}"#,
+            #"data: {"Type":"message.added","Message":{"Type":"reply","MessageId":"r1"}}"#,
+            #"data: {"Type":"text.delta","MessageId":"r1","Text":"Heel slides "}"#,
+            #"data: {"Type":"text.delta","MessageId":"r1","Text":"help your knee bend ."}"#,
+        ].joined(separator: "\n")
+        XCTAssertEqual(try ADPClient.parse(thinking), "Heel slides help your knee bend .")
+        XCTAssertEqual(LeleAgent.tidy(try ADPClient.parse(thinking)), "Heel slides help your knee bend.")
+        let completed = thinking + "\n" + #"data: {"Type":"response.completed","Response":{"Messages":[{"Type":"thought","Contents":[{"Type":"text","Text":"reasoning"}]},{"Type":"reply","Contents":[{"Type":"text","Text":"Final answer."}]}]}}"#
+        XCTAssertEqual(try ADPClient.parse(completed), "Final answer.")
     }
 
     // MARK: Clinician portal
