@@ -112,8 +112,11 @@ struct LeleService {
         var question = model.message
         guard question.answeredAt == nil else { return API.LeleTurnResponse(messages: []) }
         let now = Date()
+        let typed = text?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        // Buttons are suggestions: a typed answer is matched to the option it means.
         let action = actionId.flatMap { id in question.actions.first { $0.id == id } }
-        let answer = action?.label ?? text ?? ""
+            ?? typed.flatMap { ReplyReader.action(in: question, for: $0) }
+        let answer = typed ?? action?.label ?? ""
         question.answer = answer
         question.answeredAt = now
         try await save(question, userID: userID)

@@ -159,6 +159,9 @@ public final class SessionViewModel {
         if let angle = s.angle, let spec = currentExercise?.spec {
             if spec.tracksKneeFlexion { angleLabel = "Knee bent to \(Int((180 - angle).rounded()))°" }
             else if spec.kind.trackedAngle == .armRaise { angleLabel = "Arm lifted to \(Int(angle.rounded()))°" }
+            else if let joint = spec.kind.trackedAngle?.vertex.spokenName {
+                angleLabel = joint.prefix(1).uppercased() + joint.dropFirst() + " at \(Int(angle.rounded()))°"
+            }
         }
         let update = API.LiveSessionUpdate(
             sessionTitle: launch.title, exerciseName: s.exerciseName, exerciseIndex: s.exerciseIndex, exerciseCount: s.exerciseCount,

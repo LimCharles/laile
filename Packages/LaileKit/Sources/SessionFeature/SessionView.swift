@@ -100,7 +100,7 @@ struct RunningSessionView: View {
             }
             .accessibilityLabel("End session")
             VStack(alignment: .leading, spacing: 2) {
-                Text(model.snapshot.exerciseName).font(.title3.weight(.bold))
+                Text(model.snapshot.exerciseName).font(.title3.weight(.bold)).lineLimit(1).minimumScaleFactor(0.7)
                 Text("Exercise \(min(model.snapshot.exerciseIndex + 1, max(model.snapshot.exerciseCount, 1))) of \(model.snapshot.exerciseCount) · Set \(model.snapshot.setIndex + 1) of \(max(model.snapshot.totalSets, 1))")
                     .font(.caption).foregroundStyle(.white.opacity(0.75))
             }

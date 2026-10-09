@@ -30,7 +30,7 @@
 
 <form method="post" action="/portal/programs/#(id)/ask-lele" class="card no-print ask-lele">
   <h2>✦ Ask Lele to change this program</h2>
-  <p class="muted small">Say it in plain words, e.g. “make it gentler, she had a flare”, “focus on hip strength”, “add wall slides”, “drop the lunges”. Lele edits a draft; nothing reaches the patient until you sign.</p>
+  <p class="muted small">Say it in plain words, e.g. “make it gentler, she had a flare”, “focus on hip strength”, “add wall slides”, “drop the lunges”. Lele edits a draft, and the patient gets it once you sign.</p>
   <div class="row"><input type="text" name="instruction" placeholder="What should change?" maxlength="300" style="flex:1" required><button class="btn btn-primary" type="submit">Ask Lele</button></div>
 </form>
 

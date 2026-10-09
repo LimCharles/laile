@@ -11,7 +11,7 @@
 <div class="card brief">
   <div class="brief-head">
     <h2>Today from Lele</h2>
-    <p class="muted small">What Lele noticed since yesterday, most pressing first. Nothing here changes a program until you do.</p>
+    <p class="muted small">What Lele noticed since yesterday, most pressing first.</p>
   </div>
   #if(count(brief) == 0):
     <p class="muted">All quiet. Nothing needs you today.</p>

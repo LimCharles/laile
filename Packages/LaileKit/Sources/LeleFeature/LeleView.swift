@@ -96,7 +96,7 @@ struct LeleView: View {
                 }
             }
             HStack(spacing: 10) {
-                TextField("Message Lele", text: $draft, axis: .vertical)
+                TextField(app.openQuestion == nil ? "Message Lele" : "Reply to Lele, or tap an answer", text: $draft, axis: .vertical)
                     .lineLimit(1...4)
                     .focused($focused)
                     .padding(.horizontal, 14).padding(.vertical, 10)

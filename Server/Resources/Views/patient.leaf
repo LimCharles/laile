@@ -86,7 +86,7 @@
       <span><strong>#(c.latest)</strong> <span class="muted small">#(c.change)</span></span>
     </div>
     #unsafeHTML(c.svg)
-    <p class="muted small">#(c.next) · Filled dots are personal bests; dashed line is the baseline.</p>
+    <p class="muted small">#if(c.next != ""):#(c.next). #endif Filled dots are personal bests; the dashed line is the baseline.</p>
   </div>
   #endfor
 </div>

@@ -9,6 +9,9 @@ import SwiftUI
 public struct GoalsConversationView: View {
     enum Step: Int, CaseIterable { case goals, minutes, experience, areas, safety, notes, building, done }
 
+    /// A line said between a question and its answer: an answer Lele couldn't read, and its follow-up.
+    struct Aside: Hashable { var mine: Bool; var text: String }
+
     @Bindable var app: AppModel
     let onFinish: (Enrollment?) -> Void
     @State private var step: Step = .goals
@@ -17,6 +20,13 @@ public struct GoalsConversationView: View {
     @State private var safetyConcern: Bool?
     @State private var result: API.PlanResponse?
     @State private var error: String?
+    /// What they typed for each answered question (shown instead of the chip summary).
+    @State private var typed: [Step: String] = [:]
+    @State private var asides: [Step: [Aside]] = [:]
+    /// Their own words, kept for the plan builder.
+    @State private var said: [String] = []
+    @State private var input = ""
+    @FocusState private var focused: Bool
 
     public init(app: AppModel, onFinish: @escaping (Enrollment?) -> Void) {
         self.app = app
@@ -25,6 +35,7 @@ public struct GoalsConversationView: View {
     }
 
     private var firstName: String { app.callName ?? "there" }
+    private var isAsking: Bool { step.rawValue <= Step.notes.rawValue }
 
     public var body: some View {
         NavigationStack {
@@ -34,11 +45,14 @@ public struct GoalsConversationView: View {
                         ForEach(Step.allCases.filter { $0.rawValue <= step.rawValue }, id: \.self) { s in
                             VStack(alignment: .leading, spacing: 10) { turn(s) }.id(s)
                         }
+                        Color.clear.frame(height: 1).id("end")
                     }
                     .padding(16)
                 }
-                .onChange(of: step) { _, s in withAnimation { proxy.scrollTo(s, anchor: .top) } }
+                .onChange(of: step) { _, _ in withAnimation { proxy.scrollTo("end", anchor: .bottom) } }
+                .onChange(of: asides) { _, _ in withAnimation { proxy.scrollTo("end", anchor: .bottom) } }
             }
+            .safeAreaInset(edge: .bottom) { if isAsking { inputBar } }
             .screenBackground()
             .navigationTitle("Your plan with Lele")
             .navigationBarTitleDisplayMode(.inline)
@@ -55,29 +69,33 @@ public struct GoalsConversationView: View {
     @ViewBuilder private func turn(_ s: Step) -> some View {
         switch s {
         case .goals:
-            lele("Hi \(firstName)! I'm Lele, your coach here at Laile. What would you like to get out of moving with me? Pick as many as you like.")
+            lele("Hi \(firstName)! I'm Lele, your coach here at Laile. What would you like to get out of moving with me? Tell me in your own words, or pick any of these.")
+            followUps(s)
             if step == .goals {
                 chips(HealthProfile.Goal.allCases, selected: Set(profile.goals), label: \.label) { toggle(&profile.goals, $0) }
                 next(enabled: !profile.goals.isEmpty) { step = .minutes }
             } else {
-                mine(profile.goals.map(\.label).joined(separator: ", "))
+                answer(s, profile.goals.map(\.label).joined(separator: ", "))
             }
         case .minutes:
             lele("How much time can you give most days? Little and often beats one long session.")
+            followUps(s)
             if step == .minutes {
                 chips([5, 10, 15, 20, 30], selected: [profile.minutesPerDay], label: { "\($0) min" }) { profile.minutesPerDay = $0; step = .experience }
             } else {
-                mine("\(profile.minutesPerDay) minutes")
+                answer(s, "\(profile.minutesPerDay) minutes")
             }
         case .experience:
             lele("And how much do you move at the moment?")
+            followUps(s)
             if step == .experience {
                 chips(HealthProfile.Experience.allCases, selected: [profile.experience], label: \.label) { profile.experience = $0; step = .areas }
             } else {
-                mine(profile.experience.label)
+                answer(s, profile.experience.label)
             }
         case .areas:
             lele("Is there anywhere that hurts, or that someone has told you to be careful with? I'll keep your plan away from anything that could aggravate it.")
+            followUps(s)
             if step == .areas {
                 chips(HealthProfile.BodyArea.allCases, selected: Set(profile.sensitiveAreas), label: \.label) { toggle(&profile.sensitiveAreas, $0) }
                 HStack {
@@ -85,31 +103,31 @@ public struct GoalsConversationView: View {
                     if !profile.sensitiveAreas.isEmpty { Button("Next") { step = .safety }.buttonStyle(PrimaryButtonStyle()) }
                 }
             } else {
-                mine(profile.sensitiveAreas.isEmpty ? "Nothing, I'm fine" : profile.sensitiveAreas.map(\.label).joined(separator: ", "))
+                answer(s, profile.sensitiveAreas.isEmpty ? "Nothing, I'm fine" : profile.sensitiveAreas.map(\.label).joined(separator: ", "))
             }
         case .safety:
             lele("One safety question. Has a doctor told you to only exercise with medical advice, or do you get chest pain, faintness or dizziness when you're active?")
+            followUps(s)
             if step == .safety {
                 HStack {
                     Button("No") { safetyConcern = false; step = .notes }.buttonStyle(SecondaryButtonStyle())
                     Button("Yes") { safetyConcern = true; step = .notes }.buttonStyle(SecondaryButtonStyle())
                 }
             } else if let safetyConcern {
-                mine(safetyConcern ? "Yes" : "No")
+                answer(s, safetyConcern ? "Yes" : "No")
                 if safetyConcern {
                     lele("Thanks for telling me. I'll keep things gentle and low-impact, and please check with your doctor before anything harder.")
                 }
             }
         case .notes:
-            lele("Anything else I should know? An old injury, a goal like \"play with my grandkids\", or something you'd rather avoid. You can skip this.")
+            lele("Anything else I should know? An old injury, a goal like \"play with my grandkids\", or something you'd rather avoid.")
+            followUps(s)
             if step == .notes {
-                TextField("In your own words", text: $notes, axis: .vertical)
-                    .lineLimit(2...5)
-                    .padding(12)
-                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
-                Button { Task { await build() } } label: { Label("Build my plan", systemImage: "sparkles") }
-                    .buttonStyle(PrimaryButtonStyle())
-            } else if !notes.trimmingCharacters(in: .whitespaces).isEmpty {
+                Button { Task { await build() } } label: {
+                    Label(input.trimmingCharacters(in: .whitespaces).isEmpty ? "Nothing else, build my plan" : "Build my plan", systemImage: "sparkles")
+                }
+                .buttonStyle(PrimaryButtonStyle())
+            } else if !notes.isEmpty {
                 mine(notes)
             }
         case .building:
@@ -126,6 +144,106 @@ public struct GoalsConversationView: View {
             }
         case .done:
             if let result { planResult(result) }
+        }
+    }
+
+    /// Their answer: their own words if they typed it, with what Lele took from it underneath.
+    @ViewBuilder private func answer(_ s: Step, _ summary: String) -> some View {
+        if let words = typed[s] {
+            mine(words)
+            Text("Lele heard: \(summary)")
+                .font(.caption).foregroundStyle(Theme.muted)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+        } else {
+            mine(summary)
+        }
+    }
+
+    @ViewBuilder private func followUps(_ s: Step) -> some View {
+        ForEach(Array((asides[s] ?? []).enumerated()), id: \.offset) { _, aside in
+            if aside.mine { mine(aside.text) } else { lele(aside.text) }
+        }
+    }
+
+    private var inputBar: some View {
+        HStack(spacing: 10) {
+            TextField(step == .notes ? "In your own words" : "Type your answer, or tap one above", text: $input, axis: .vertical)
+                .lineLimit(1...4)
+                .focused($focused)
+                .submitLabel(.send)
+                .onSubmit(submit)
+                .padding(.horizontal, 14).padding(.vertical, 10)
+                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 20))
+                .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.surface2, lineWidth: 1))
+            Button(action: submit) {
+                Image(systemName: "arrow.up").font(.title3.weight(.bold)).foregroundStyle(.white)
+                    .frame(width: 40, height: 40)
+                    .background(input.trimmingCharacters(in: .whitespaces).isEmpty ? Theme.muted : Theme.accent, in: Circle())
+            }
+            .disabled(input.trimmingCharacters(in: .whitespaces).isEmpty)
+            .accessibilityLabel("Send")
+        }
+        .padding(.horizontal, 16).padding(.vertical, 10)
+        .background(.bar)
+    }
+
+    /// Reads a typed answer for the current question. Whatever they say is kept for the plan builder;
+    /// if Lele can't tell which option they mean, it asks again.
+    private func submit() {
+        let text = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        input = ""
+        func took(_ next: Step, keep: Bool = false) {
+            typed[step] = text
+            if keep { said.append(text) }
+            step = next
+        }
+        func unclear(_ reply: String, keep: Bool = false) {
+            if keep { said.append(text) }
+            asides[step, default: []] += [Aside(mine: true, text: text), Aside(mine: false, text: reply)]
+        }
+        switch step {
+        case .goals:
+            let found = GoalsReader.goals(in: text)
+            if found.isEmpty {
+                unclear("Thanks, I'll keep that in mind. Which of these is closest? Tap any, or tell me another way.", keep: true)
+            } else {
+                profile.goals = found
+                took(.minutes, keep: true)
+            }
+        case .minutes:
+            if let minutes = GoalsReader.minutes(in: text) {
+                profile.minutesPerDay = minutes
+                took(.experience)
+            } else {
+                unclear("Roughly how many minutes? Even 5 is plenty to start.")
+            }
+        case .experience:
+            if let experience = GoalsReader.experience(in: text) {
+                profile.experience = experience
+                took(.areas, keep: true)
+            } else {
+                unclear("Got it. Would you say you're new to exercise, move now and then, or train regularly?", keep: true)
+            }
+        case .areas:
+            if let areas = GoalsReader.areas(in: text) {
+                profile.sensitiveAreas = areas
+                took(.safety, keep: !areas.isEmpty)
+            } else {
+                unclear("I'll note that. Is it one of these areas, or nothing at all?", keep: true)
+            }
+        case .safety:
+            if let concern = GoalsReader.safetyConcern(in: text) {
+                safetyConcern = concern
+                took(.notes, keep: concern)
+            } else {
+                unclear("Just to be safe, is that a yes or a no?")
+            }
+        case .notes:
+            notes = text
+            Task { await build() }
+        case .building, .done:
+            break
         }
     }
 
@@ -167,10 +285,14 @@ public struct GoalsConversationView: View {
     }
 
     private func build() async {
+        if notes.isEmpty, !input.trimmingCharacters(in: .whitespaces).isEmpty {
+            notes = input.trimmingCharacters(in: .whitespacesAndNewlines)
+            input = ""
+        }
         error = nil
         step = .building
         var profile = self.profile
-        profile.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        profile.notes = (said + [notes]).map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }.joined(separator: ". ")
         profile.updatedAt = Date()
         if safetyConcern == true { app.settings.gentleOnly = true }
         do {

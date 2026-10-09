@@ -180,7 +180,10 @@ struct LeleCard: View {
                     ActionChips(actions: message.actions) { action in Task { await app.perform(action, on: message) } }
                 }
                 HStack(spacing: 16) {
-                    Button { app.selectedTab = "lele" } label: { Label("Chat", systemImage: "text.bubble") }
+                    Button {
+                        app.leleDraft = ""
+                        app.selectedTab = "lele"
+                    } label: { Label(message.isOpenQuestion ? "Reply" : "Chat", systemImage: "text.bubble") }
                     Button { app.showLeleCall = true } label: { Label("Talk", systemImage: "phone.fill") }
                 }
                 .font(.subheadline.weight(.semibold))

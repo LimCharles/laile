@@ -177,7 +177,7 @@ public final class AppModel {
     public var isSupervised: Bool { activeEnrollments.contains(where: \.isSupervised) }
     /// The supervising clinician's name, if there is one.
     public var supervisorName: String? {
-        activeEnrollments.first(where: \.isSupervised).map { $0.supervisorName ?? "your physio" }
+        activeEnrollments.first(where: \.isSupervised).map { $0.supervisorName.map(CallName.plain) ?? "your physio" }
     }
     /// Limits for every session: the person's own, their clinician's, and gentle mode.
     public var precautions: Precautions {
@@ -260,13 +260,32 @@ public final class AppModel {
     public func chat(_ text: String) async {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
+        let question = openQuestion
+        // Show their words straight away; the server's copy replaces this one.
+        let pending = LeleMessage(createdAt: Date(), kind: .chat, author: .person, text: trimmed)
+        leleMessages.append(pending)
         do {
-            let turn = try await backend.leleChat(trimmed)
+            // If Lele's last message is a question, what they type is their answer to it.
+            let turn = if let question {
+                try await backend.leleReply(to: question.id, actionId: nil, text: trimmed)
+            } else {
+                try await backend.leleChat(trimmed)
+            }
+            leleMessages.removeAll { $0.id == pending.id }
             merge(turn.messages)
             if !turn.careNotes.isEmpty { await refreshNotes() }
         } catch {
             lastError = error.localizedDescription
+            leleMessages.append(LeleMessage(createdAt: Date(), kind: .chat,
+                                            text: "I couldn't reply just now. Check your connection and try again in a moment."))
         }
+    }
+
+    /// Lele's question still waiting for an answer, if it's the latest thing in the conversation.
+    public var openQuestion: LeleMessage? {
+        guard let last = leleMessages.last(where: { $0.author != .person }), last.isOpenQuestion,
+              !leleMessages.contains(where: { $0.author == .person && $0.createdAt > last.createdAt }) else { return nil }
+        return last
     }
 
     /// Something Lele offered: answer its question, start a session, join a program, open chat, or call.

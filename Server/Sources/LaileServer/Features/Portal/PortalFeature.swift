@@ -261,9 +261,9 @@ struct PortalFeature: LaileFeature {
     }
 
     static func chart(_ trend: MetricTrend) -> ChartVM {
+        // Improvement is signed so that positive is always better (less pain, a smaller gap), so say it in words.
         let change = trend.improvementFromBaseline.map { delta -> String in
-            let sign = delta >= 0 ? "+" : "−"
-            return "\(sign)\(trend.kind.format(abs(delta))) vs baseline"
+            delta == 0 ? "same as baseline" : "\(trend.kind.format(abs(delta))) \(delta > 0 ? "better" : "worse") than baseline"
         } ?? ""
         return ChartVM(title: trend.kind.displayName, svg: SVGChart.trend(trend),
                        latest: trend.latest.map { trend.kind.format($0.value) } ?? "No data yet", change: change,

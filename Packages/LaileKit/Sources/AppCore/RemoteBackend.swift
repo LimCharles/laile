@@ -89,14 +89,15 @@ public final class RemoteBackend: LaileBackend {
     }
     public func leave(enrollmentId: UUID) async throws -> Enrollment { try await send("POST", "v1/enrollments/\(enrollmentId.uuidString)/leave") }
     public func plan(_ profile: HealthProfile) async throws -> API.PlanResponse {
-        try await send("POST", "v1/plan", body: API.PlanRequest(profile: profile))
+        try await send("POST", "v1/plan", body: API.PlanRequest(profile: profile), timeout: Self.agentTimeout)
     }
     public func leleMessages() async throws -> [LeleMessage] { try await send("GET", "v1/lele/messages") }
     public func leleReply(to messageId: UUID, actionId: String?, text: String?) async throws -> API.LeleTurnResponse {
-        try await send("POST", "v1/lele/messages/\(messageId.uuidString)/reply", body: API.LeleReplyRequest(actionId: actionId, text: text))
+        try await send("POST", "v1/lele/messages/\(messageId.uuidString)/reply", body: API.LeleReplyRequest(actionId: actionId, text: text),
+                       timeout: Self.agentTimeout)
     }
     public func leleChat(_ text: String) async throws -> API.LeleTurnResponse {
-        try await send("POST", "v1/lele/chat", body: API.LeleChatRequest(text: text))
+        try await send("POST", "v1/lele/chat", body: API.LeleChatRequest(text: text), timeout: Self.agentTimeout)
     }
 
     public nonisolated func postLive(_ update: API.LiveSessionUpdate) async {
@@ -149,10 +150,14 @@ public final class RemoteBackend: LaileBackend {
         try await send(method, path, body: Optional<EmptyBody>.none, authorized: authorized)
     }
 
-    private func send<Body: Encodable, Response: Decodable>(_ method: String, _ path: String, body: Body?, authorized: Bool = true) async throws -> Response {
+    /// Lele's agent (ADP) can take 20 seconds or more to think, so its calls wait longer.
+    static let agentTimeout: TimeInterval = 90
+
+    private func send<Body: Encodable, Response: Decodable>(_ method: String, _ path: String, body: Body?, authorized: Bool = true,
+                                                           timeout: TimeInterval = 20) async throws -> Response {
         var request = URLRequest(url: baseURL.appendingPathComponent(path))
         request.httpMethod = method
-        request.timeoutInterval = 20
+        request.timeoutInterval = timeout
         if let body {
             request.httpBody = try LaileJSON.encoder().encode(body)
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")

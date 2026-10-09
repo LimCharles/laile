@@ -132,6 +132,27 @@ final class ProgramsFlowTests: XCTestCase {
         }
     }
 
+    func testTypedAnswerToTheMorningCheckInWorksLikeTheButton() async throws {
+        let auth = try await demo(.patient)
+        let userFound = try await UserModel.find(auth.user.id, on: app.db)
+        let user = try XCTUnwrap(userFound)
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(identifier: "Asia/Singapore")!
+        let morning = c.date(bySettingHour: 8, minute: 30, second: 0, of: Date())!
+        let service = LeleService(app: app, db: app.db, logger: app.logger)
+        _ = try await service.round(for: user, now: morning)
+        let checkInFound = try await service.recent(for: auth.user.id).first { $0.kind == .morningCheckIn && $0.answeredAt == nil }
+        let checkIn = try XCTUnwrap(checkInFound)
+
+        var turn: API.LeleTurnResponse?
+        try await app.test(.POST, "v1/lele/messages/\(checkIn.id)/reply", headers: bearer(auth.token), beforeRequest: { req in
+            try req.content.encode(API.LeleReplyRequest(text: "it's quite swollen this morning"))
+        }, afterResponse: { res in turn = try res.content.decode(API.LeleTurnResponse.self) })
+        XCTAssertEqual(turn?.careNotes.first?.kind, .flare)
+        XCTAssertEqual(turn?.messages.first?.answer, "it's quite swollen this morning")
+        XCTAssertTrue(turn?.messages.last?.text.contains("gentler") ?? false)
+    }
+
     func testChatSafetyAndOfflineAnswers() async throws {
         let auth = try await demo(.patient)
         func chat(_ text: String) async throws -> String {

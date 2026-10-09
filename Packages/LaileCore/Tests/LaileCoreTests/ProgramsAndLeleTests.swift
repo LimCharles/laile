@@ -254,3 +254,45 @@ import Testing
         #expect(LeleReminders.plan(.init(now: at(9), timeZone: tz, enrollments: [])).isEmpty)
     }
 }
+
+@Suite struct ReplyReaderTests {
+    func question(_ kind: LeleMessage.Kind, _ ids: [String]) -> LeleMessage {
+        LeleMessage(createdAt: Date(), kind: kind, text: "?", actions: ids.map { LeleAction(id: $0, label: $0.capitalized, kind: .reply) })
+    }
+
+    @Test func morningCheckInReadsPlainWords() {
+        let q = question(.morningCheckIn, ["better", "same", "worse", "talk"])
+        #expect(ReplyReader.action(in: q, for: "Knee's a bit swollen today")?.id == "worse")
+        #expect(ReplyReader.action(in: q, for: "not sore at all, feeling good")?.id == "better")
+        #expect(ReplyReader.action(in: q, for: "not great tbh")?.id == "worse")
+        #expect(ReplyReader.action(in: q, for: "about the same I think")?.id == "same")
+        #expect(ReplyReader.action(in: q, for: "what's for lunch") == nil)
+    }
+
+    @Test func barriersAndReminders() {
+        let barrier = question(.barrier, ["time", "pain", "worried", "forgot", "energy", "fine"])
+        #expect(ReplyReader.action(in: barrier, for: "Work has been crazy")?.id == "time")
+        #expect(ReplyReader.action(in: barrier, for: "I'm scared I'll make it worse")?.id == "worried")
+        #expect(ReplyReader.action(in: barrier, for: "fine, just super busy")?.id == "time")
+        let reminder = question(.reminder, ["taken"])
+        #expect(ReplyReader.action(in: reminder, for: "took it after breakfast")?.id == "taken")
+    }
+
+    @Test func goalsConversationAnswers() {
+        #expect(GoalsReader.goals(in: "I want to do my first pull-up and stop my back aching") == [.getStronger, .easeAches])
+        #expect(GoalsReader.goals(in: "recovering from knee surgery").contains(.recoverInjury))
+        #expect(GoalsReader.minutes(in: "maybe 12 mins") == 10)
+        #expect(GoalsReader.minutes(in: "half an hour") == 30)
+        #expect(GoalsReader.minutes(in: "twenty") == 20)
+        #expect(GoalsReader.experience(in: "I go to the gym sometimes") == .some)
+        #expect(GoalsReader.experience(in: "never really exercised") == .new)
+        #expect(GoalsReader.experience(in: "I run most days") == .regular)
+        #expect(GoalsReader.areas(in: "my left knee and sometimes my lower back") == [.knees, .back])
+        #expect(GoalsReader.areas(in: "nope, all good") == [])
+        #expect(GoalsReader.areas(in: "hmm") == nil)
+        #expect(GoalsReader.safetyConcern(in: "no, no chest pain") == false)
+        #expect(GoalsReader.safetyConcern(in: "not really, but I get dizzy on stairs") == true)
+        #expect(GoalsReader.safetyConcern(in: "my doctor told me to take it easy") == true)
+        #expect(GoalsReader.safetyConcern(in: "yep") == true)
+    }
+}
