@@ -7,7 +7,7 @@ These are the exercises Laile can track with the camera. Each entry says:
 - common mistakes;
 - how to make it easier or harder.
 
-Your clinician (rehab) or your chosen session (Move) decides which ones you do, and how many.
+Your physio's program, Lele's plan, or the Laile program you chose decides which ones you do, and how many.
 
 ## Knee and hip exercises (after knee or hip replacement, knee pain or arthritis)
 

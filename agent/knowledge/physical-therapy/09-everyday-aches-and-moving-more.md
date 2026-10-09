@@ -20,7 +20,7 @@ Laile's quick sessions and Lele's plans are for people who sit a lot and have li
 - **Push-ups:** incline (hands on a counter) → knee push-ups → full push-ups.
 - **Legs:** sit-to-stand → bodyweight squat → slower or deeper squats, and lunges.
 - **Core:** plank from the knees → plank → longer holds.
-- **How Laile moves you up:** when you can do the target reps with good form.
+- **When to move up:** when you can do the target reps with good form. A re-check then sets your new targets.
 - **If a move hurts:** tell Lele. It notes it and eases that exercise next time.
 
 ## Low back pain
