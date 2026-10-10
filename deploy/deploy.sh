@@ -22,8 +22,8 @@ echo "Building and starting on the instance (first build takes a while) ..."
 $SSH "$USER_AT" "sh -s" <<REMOTE
 set -eu
 if ! command -v docker >/dev/null; then curl -fsSL https://get.docker.com | sudo sh; fi
-# Swift needs memory to build; add swap on small instances.
-if [ "\$(swapon --show | wc -l)" -eq 0 ]; then
+# Swift needs memory to build; small instances get a 4 GB swap file on top of any existing swap.
+if [ ! -f /swapfile ] && [ "\$(free -m | awk '/^Swap/ {print \$2}')" -lt 4000 ]; then
   sudo fallocate -l 4G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
   echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab >/dev/null
 fi

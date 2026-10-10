@@ -237,7 +237,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = Laile/Info.plist;
-				LAILE_API_BASE_URL = "https://api.laile.app";
+				LAILE_API_BASE_URL = "https://43-156-108-79.sslip.io";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
