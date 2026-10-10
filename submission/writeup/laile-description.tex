@@ -53,7 +53,8 @@
 Tencent Cloud AI CAN DO IT Hackathon Singapore 2026 \ \textbullet\ \ Healthcare track (NTU LKC Medicine)\\
 Challenge Statement 2: AI Healthier Every Day, intelligent support for long-term self-care\\
 Charles Andrew Lim (solo) \ \textbullet\ \ Source: \href{https://github.com/LimCharles/laile}{github.com/LimCharles/laile}\\
-Try Lele on Tencent Cloud ADP: \adpurl}
+Try Lele on Tencent Cloud ADP: \adpurl\\
+Live portal (Tencent Cloud Lighthouse): \href{https://43-156-108-79.sslip.io/portal}{43-156-108-79.sslip.io/portal}, login \texttt{clinician@laile.demo} / \texttt{laile-demo-2026}}
 
 \vspace{6pt}
 {\color{accent}\rule{\linewidth}{1.2pt}}
@@ -214,9 +215,9 @@ Safe, strictly bounded, honest & Fixed referral for dose questions, red flags ha
 \end{itemize}
 
 \section{Status and next steps}
-\textbf{Working today.} The iOS app (Today, Programs, Lele, Progress), sessions with the camera pipeline (exercised in the iOS Simulator with a simulated skeleton), the server and clinician portal, Lele published on Tencent Cloud ADP and called by the server, demo accounts with realistic history, and 121 automated tests across the shared domain package and the server.
+\textbf{Working today.} The iOS app (Today, Programs, Lele, Progress), sessions with the camera pipeline (exercised in the iOS Simulator with a simulated skeleton), the server and clinician portal running on Tencent Cloud Lighthouse, Lele published on Tencent Cloud ADP and called by the server, the iPhone app uploaded to TestFlight, demo accounts with realistic history, and 121 automated tests across the shared domain package and the server.
 
-\textbf{Next.} Deploy the server to Tencent Cloud Lighthouse with TencentDB for PostgreSQL; test on a real iPhone (camera placement, lighting, rep thresholds, voice across a room); ship through TestFlight; have a physiotherapist and a pharmacist review the knowledge base; pilot with one clinic.
+\textbf{Next.} Move records to TencentDB for PostgreSQL; test on a real iPhone (camera placement, lighting, rep thresholds, voice across a room); open TestFlight to outside testers; have a physiotherapist and a pharmacist review the knowledge base; pilot with one clinic.
 
 \section{How it was built}
 \laile\ is a Swift monorepo: \texttt{LaileCore} (pure Swift domain logic shared by phone and server), \texttt{LaileKit} (SwiftUI feature modules), the iOS app, and a Vapor server with the clinician portal. Lele's prompt and knowledge base live in \texttt{agent/} and are imported into ADP.
