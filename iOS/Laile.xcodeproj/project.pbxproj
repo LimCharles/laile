@@ -9,12 +9,14 @@
 /* Begin PBXBuildFile section */
 		3C742097F7058C46A19D0ED1 /* LaileKit in Frameworks */ = {isa = PBXBuildFile; productRef = 953A8CE27CFE703BE1C09179 /* LaileKit */; };
 		7857E3C71C78A1DF52CD5451 /* Cues in Resources */ = {isa = PBXBuildFile; fileRef = AEE6245CF17C85B675405FA7 /* Cues */; };
+		7B12AFF78925A3621D8C95D2 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 260F62172B4B2CB038C247D6 /* PrivacyInfo.xcprivacy */; };
 		A84BF08F457DE10E3F318F6A /* LaileApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A4932F69C33D6D9A625578C /* LaileApp.swift */; };
 		AE91B9966FF3C48E958F690C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4F60FA41D57B5AE06B1D79B2 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		1A4932F69C33D6D9A625578C /* LaileApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaileApp.swift; sourceTree = "<group>"; };
+		260F62172B4B2CB038C247D6 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		2E4E13AA52F2BB3EEB70152F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4F60FA41D57B5AE06B1D79B2 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AEE6245CF17C85B675405FA7 /* Cues */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Cues; path = Laile/Resources/Cues; sourceTree = SOURCE_ROOT; };
@@ -65,6 +67,7 @@
 				4F60FA41D57B5AE06B1D79B2 /* Assets.xcassets */,
 				2E4E13AA52F2BB3EEB70152F /* Info.plist */,
 				1A4932F69C33D6D9A625578C /* LaileApp.swift */,
+				260F62172B4B2CB038C247D6 /* PrivacyInfo.xcprivacy */,
 				BD9B24BC1A50FA26846717A7 /* Resources */,
 			);
 			path = Laile;
@@ -145,6 +148,7 @@
 			files = (
 				AE91B9966FF3C48E958F690C /* Assets.xcassets in Resources */,
 				7857E3C71C78A1DF52CD5451 /* Cues in Resources */,
+				7B12AFF78925A3621D8C95D2 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
