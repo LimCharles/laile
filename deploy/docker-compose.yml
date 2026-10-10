@@ -1,0 +1,34 @@
+# Laile on one Tencent Cloud Lighthouse instance: the API and portal, behind Caddy for HTTPS.
+# Data (SQLite and the voice cache) lives in the laile-data volume. To use TencentDB for
+# PostgreSQL instead, set DATABASE_URL in server.env.
+services:
+  laile:
+    build:
+      context: ..
+      dockerfile: Server/Dockerfile
+    image: laile-server
+    restart: unless-stopped
+    env_file: server.env
+    environment:
+      SEED_DEMO_DATA: "true"
+    volumes:
+      - laile-data:/app/data
+    expose:
+      - "8080"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on: [laile]
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      LAILE_DOMAIN: ${LAILE_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+
+volumes:
+  laile-data:
+  caddy-data:

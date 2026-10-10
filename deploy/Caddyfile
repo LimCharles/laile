@@ -1,0 +1,5 @@
+# Automatic HTTPS (Let's Encrypt). LAILE_DOMAIN is a real domain, or <ip-with-dashes>.sslip.io.
+{$LAILE_DOMAIN} {
+	encode gzip
+	reverse_proxy laile:8080
+}
