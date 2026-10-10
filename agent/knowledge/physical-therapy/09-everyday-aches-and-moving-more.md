@@ -49,5 +49,5 @@ Laile's quick sessions and Lele's plans are for people who sit a lot and have li
 
 ## How Lele helps
 
-- **Will:** Lele can suggest which Laile sessions fit your time and which areas they work.
+- **Choosing sessions:** Lele can suggest which Laile sessions fit your time and which areas they work.
 - **For the cause of a pain:** see a doctor or physiotherapist, especially if it lasts or worries you.

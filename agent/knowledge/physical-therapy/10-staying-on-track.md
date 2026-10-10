@@ -33,11 +33,11 @@ When sessions are missed, Lele asks why before suggesting anything, because the 
 - Milestones mark the moments that matter, like 90° of knee bend or your first full push-up.
 
 ### "I'm tired or low"
-- A shorter, gentler session still counts. Try the gentle option on the Today screen.
+- A shorter, gentler session still counts. Gentle mode in Me keeps every session low impact.
 - If low mood is lasting, talk to your doctor. In Singapore, Samaritans of Singapore (SOS) is on 1767, 24 hours.
 
 ### "It's boring"
-- Try a stream: a timed follow-along session with other people and a live leaderboard.
+- Join a live class from Programs: a timed follow-along session with other people and a live leaderboard.
 - Earn XP, level up, and collect badges.
 
 ## Streaks without guilt: "never miss twice"
