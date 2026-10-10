@@ -6,7 +6,9 @@ COPY Packages/LaileCore Packages/LaileCore
 COPY Server/Package.swift Server/Package.resolved Server/
 RUN cd Server && swift package resolve
 COPY Server Server
-RUN cd Server && swift build -c release --static-swift-stdlib \
+# The build cache mount keeps compiled dependencies between deploys.
+RUN --mount=type=cache,target=/build/Server/.build \
+    cd Server && swift build -c release --static-swift-stdlib \
     && mkdir /staging \
     && cp "$(swift build -c release --show-bin-path)/LaileServer" /staging/ \
     && cp -R Public Resources /staging/

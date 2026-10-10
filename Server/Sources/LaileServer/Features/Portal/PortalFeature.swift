@@ -597,10 +597,16 @@ enum Formatters {
         return f.string(from: d)
     }
 
+    /// "3 hours ago", "in 2 days". Written out because RelativeDateTimeFormatter isn't in Foundation on Linux.
     static func relative(_ d: Date) -> String {
-        let f = RelativeDateTimeFormatter()
-        f.unitsStyle = .full
-        return f.localizedString(for: d, relativeTo: Date())
+        let seconds = Int(Date().timeIntervalSince(d))
+        let span = abs(seconds)
+        guard span >= 60 else { return "just now" }
+        let units = [(31_536_000, "year"), (2_592_000, "month"), (604_800, "week"), (86_400, "day"), (3_600, "hour"), (60, "minute")]
+        let (size, name) = units.first { span >= $0.0 } ?? (60, "minute")
+        let count = span / size
+        let phrase = "\(count) \(name)\(count == 1 ? "" : "s")"
+        return seconds > 0 ? "\(phrase) ago" : "in \(phrase)"
     }
 
     static func duration(_ seconds: Int) -> String { seconds >= 60 ? "\(seconds / 60) min" : "\(seconds)s" }
