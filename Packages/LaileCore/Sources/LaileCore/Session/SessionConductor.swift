@@ -333,8 +333,12 @@ public struct SessionConductor: Sendable {
                 phaseBeforePause = nil
                 events += completeSet()
             default:
-                // Not mid-set (setup or rest): nothing to stop, just carry on.
-                if case .paused = phase { events += resume(at: now) }
+                // Rest or setup: there is no set in progress to stop, but the next one must not
+                // start after a symptom report. Resting is exactly when the coach asks "how did
+                // that feel?", so ending the exercise here is what actually honours the decision.
+                phaseBeforePause = nil
+                closeCurrentSet()
+                events += finishExercise(stopReason: .symptom)
             }
         case .stopExercise:
             phaseBeforePause = nil

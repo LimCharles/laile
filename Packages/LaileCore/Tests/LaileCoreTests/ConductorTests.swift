@@ -49,6 +49,30 @@ struct ConductorHarness {
 @Suite struct ConductorTests {
     let library = ExerciseLibrary.standard
 
+    /// The coach asks "how did that feel?" during the rest, which is exactly when a stop-set
+    /// decision used to be a no-op: there was no set in progress to stop, so the code carried
+    /// on and set 2 began anyway.
+    @Test func painReportedDuringRestStopsTheNextSet() {
+        let heel = library.spec("heel-slide")!
+        var h = ConductorHarness(plan: [PlannedExercise(spec: heel, dose: Dose(sets: 2, reps: 3, restSeconds: 30))])
+        h.getReady()
+        for _ in 0..<3 { h.rep() }
+        guard case .rest = h.conductor.phase else { Issue.record("expected rest, got \(h.conductor.phase)"); return }
+
+        // 6/10 sits above the stop-set threshold but below stop-exercise.
+        let report = SymptomReport(category: .pain, utterance: "it's a six", severity: 6, source: .voiceOnDevice)
+        h.events += h.conductor.report(report, at: h.t)
+
+        #expect(report.category == .pain)
+        #expect(h.conductor.symptoms.last?.action == .stopSet)
+
+        // Let the rest run out. On the old code the report was a no-op during rest, so the
+        // conductor came back from the break and started set 2.
+        h.feed(seconds: 40) { _ in 170 }
+        #expect(h.conductor.isFinished)
+        #expect(h.conductor.summary().exercises.first?.repsPerSet == [3])
+    }
+
     @Test func fullRepSessionProducesVerifiedSummary() throws {
         let heel = library.spec("heel-slide")!
         var h = ConductorHarness(plan: [PlannedExercise(spec: heel, dose: Dose(sets: 2, reps: 3, restSeconds: 5))])

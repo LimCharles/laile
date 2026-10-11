@@ -86,7 +86,11 @@ struct VoiceFeature: LaileFeature {
         if let program = try await ProgramModel.activeSigned(for: profile.requireID(), on: db)?.program {
             return program.symptomPolicy
         }
-        return SymptomPolicy(painStopSetAbove: profile.painStopSetAbove, painStopExerciseAt: max(profile.painStopSetAbove + 2, 6), mode: .rehab)
+        // Clamped to 10 to match Program.symptomPolicy: a clinician can set painStopSetAbove to
+        // 9, and without the clamp the stop-exercise threshold becomes 11 — unreachable on a
+        // 0-10 scale, so a 10/10 report would only ever stop the set.
+        return SymptomPolicy(painStopSetAbove: profile.painStopSetAbove,
+                             painStopExerciseAt: min(10, max(profile.painStopSetAbove + 2, 6)), mode: .rehab)
     }
 
     func startSession(req: Request) async throws -> API.VoiceSessionResponse {

@@ -168,7 +168,12 @@ public enum SymptomRules {
         }
         switch report.category {
         case .redFlag:
-            return (.endSession(.contactCareTeamToday), nil)
+            // A classifier can spot a red flag our keyword net words differently ("there's a
+            // pressure on my chest"). If the utterance still matches emergency wording, it must
+            // be able to reach the emergency level instead of being capped at "contact today".
+            let level: EscalationLevel = RedFlagDetector.matchesEmergencyWording(report.utterance)
+                ? .emergency : .contactCareTeamToday
+            return (.endSession(level), nil)
         case .normal, .effort:
             return (.continueExercise, nil)
         case .expectedStretch:
@@ -193,7 +198,21 @@ public struct RedFlag: Sendable, Hashable {
 }
 
 /// Keyword safety net for symptoms that must never be handled by the chat model alone.
+///
+/// Two matching mechanisms, tried in this order:
+///
+///  1. `emergency` / `careTeamToday` — exact phrases, as before.
+///  2. `emergencyRules` / `careTeamRules` — an anchor word and a modifier word that only have
+///     to be *near* each other. This is what lets "my chest is really tight" through while
+///     "my calf feels tired" still does not match, because "tired" is not a swelling word.
+///
+/// Negation is applied to both: a match is dropped only when a negator sits **directly**
+/// beside it ("no chest pain", "not dizzy", "chest pain is gone"). Anything less direct keeps
+/// the red flag — when in doubt we escalate, we never quietly carry on.
 public enum RedFlagDetector {
+
+    // MARK: - Exact phrases
+
     static let emergency: [(pattern: [String], reason: String)] = [
         (["chest pain"], "chest pain"), (["chest hurts"], "chest pain"), (["chest is tight"], "chest tightness"),
         (["tight chest"], "chest tightness"), (["pain in my chest"], "chest pain"),
@@ -204,6 +223,44 @@ public enum RedFlagDetector {
         (["difficulty breathing"], "difficulty breathing"),
         (["passing out"], "fainting"), (["passed out"], "fainting"), (["going to faint"], "fainting"),
         (["about to faint"], "fainting"), (["coughing blood"], "coughing blood"), (["coughing up blood"], "coughing blood"),
+
+        // Speech recognition routinely drops the apostrophe, so every "can't" rule is listed twice.
+        (["cant breathe"], "difficulty breathing"), (["cant catch my breath"], "difficulty breathing"),
+        (["can't catch my breath"], "difficulty breathing"), (["cant get my breath"], "difficulty breathing"),
+        (["can't get my breath"], "difficulty breathing"), (["no air"], "difficulty breathing"),
+        (["not getting enough air"], "difficulty breathing"),
+        (["breathless"], "shortness of breath"), (["breathlessness"], "shortness of breath"),
+        (["gasping"], "difficulty breathing"), (["gasping for air"], "difficulty breathing"),
+        (["suffocating"], "difficulty breathing"),
+
+        // Fainting. "faint" alone is also an adjective ("a faint click"), so only the phrasings
+        // that actually mean it are listed.
+        (["feel faint"], "fainting"), (["feeling faint"], "fainting"), (["felt faint"], "fainting"),
+        (["fainting"], "fainting"), (["fainted"], "fainting"),
+        (["pass out"], "fainting"), (["black out"], "fainting"), (["blacking out"], "fainting"),
+        (["blacked out"], "fainting"), (["i collapsed"], "collapse"), (["i've collapsed"], "collapse"),
+        (["i have collapsed"], "collapse"), (["i just collapsed"], "collapse"),
+
+        (["heart attack"], "possible heart attack"), (["heart is racing"], "racing heart"),
+        (["heart racing"], "racing heart"), (["heart is pounding"], "racing heart"),
+        (["heart pounding"], "racing heart"),
+
+        (["vomiting blood"], "vomiting blood"), (["throwing up blood"], "vomiting blood"),
+        (["being sick with blood"], "vomiting blood"), (["cough up blood"], "coughing blood"),
+
+        // Stroke (FAST) and airway.
+        (["face is drooping"], "possible stroke"), (["face drooping"], "possible stroke"),
+        (["mouth is drooping"], "possible stroke"), (["slurred speech"], "possible stroke"),
+        (["slurring my words"], "possible stroke"), (["one side of my face"], "possible stroke"),
+        (["cant speak properly"], "possible stroke"), (["can't speak properly"], "possible stroke"),
+        (["sudden severe headache"], "sudden severe headache"), (["worst headache"], "sudden severe headache"),
+        (["thunderclap headache"], "sudden severe headache"),
+        (["throat is closing"], "airway swelling"), (["throat closing"], "airway swelling"),
+        (["tongue is swelling"], "airway swelling"), (["lips are swelling"], "airway swelling"),
+
+        // On the floor and unable to get up.
+        (["cant get up"], "collapse"), (["can't get up"], "collapse"),
+        (["cant get off the floor"], "collapse"), (["can't get off the floor"], "collapse"),
     ]
 
     static let careTeamToday: [(pattern: [String], reason: String)] = [
@@ -216,17 +273,213 @@ public enum RedFlagDetector {
         (["cannot feel my"], "loss of sensation"), (["can't put weight"], "can't bear weight"),
         (["cannot put weight"], "can't bear weight"), (["dizzy"], "dizziness"), (["light headed"], "light-headedness"),
         (["lightheaded"], "light-headedness"),
+
+        // Weight bearing. "can't bear weight" was the stated reason but never the matched phrase.
+        (["can't bear weight"], "can't bear weight"), (["cannot bear weight"], "can't bear weight"),
+        (["cant bear weight"], "can't bear weight"), (["cant put weight"], "can't bear weight"),
+        (["can't stand on it"], "can't bear weight"), (["cant stand on it"], "can't bear weight"),
+        (["can't stand on my"], "can't bear weight"), (["cant stand on my"], "can't bear weight"),
+        (["can't walk on it"], "can't bear weight"), (["cant walk on it"], "can't bear weight"),
+        (["can't walk on my"], "can't bear weight"), (["cant walk on my"], "can't bear weight"),
+        (["cant weight bear"], "can't bear weight"), (["can't weight bear"], "can't bear weight"),
+
+        // Falls.
+        (["i fell"], "a fall"), (["fell over"], "a fall"), (["fell down"], "a fall"), (["fell off"], "a fall"),
+        (["had a fall"], "a fall"), (["i've fallen"], "a fall"), (["ive fallen"], "a fall"),
+        (["i have fallen"], "a fall"), (["slipped and fell"], "a fall"), (["tripped and fell"], "a fall"),
+        (["fell onto the floor"], "a fall"), (["fell on the floor"], "a fall"),
+        (["ended up on the floor"], "a fall"),
+
+        // Fever, dizziness and circulation wordings.
+        (["have a temperature"], "fever"), (["having a temperature"], "fever"),
+        (["running a temperature"], "fever"), (["high temperature"], "fever"),
+        (["shivering"], "fever"), (["burning up"], "fever"),
+        (["vertigo"], "dizziness"), (["room is spinning"], "dizziness"),
+        (["everything is spinning"], "dizziness"), (["my head is spinning"], "dizziness"),
+        (["woozy"], "dizziness"), (["wheezing"], "wheezing"), (["wheeze"], "wheezing"),
+        (["leg is cold"], "poor circulation in the leg"), (["legs are cold"], "poor circulation in the leg"),
+        (["leg is pale"], "poor circulation in the leg"), (["leg is blue"], "poor circulation in the leg"),
+        (["leg is white"], "poor circulation in the leg"), (["leg has gone blue"], "poor circulation in the leg"),
+        (["foot is cold"], "poor circulation in the leg"), (["foot is pale"], "poor circulation in the leg"),
+        (["foot is blue"], "poor circulation in the leg"),
+
+        // Loss of sensation wordings.
+        (["no feeling in my"], "loss of sensation"), (["lost feeling in my"], "loss of sensation"),
+        (["gone numb"], "loss of sensation"), (["has gone dead"], "loss of sensation"),
     ]
 
+    // MARK: - Anchor + modifier rules
+
+    /// Fires when one `anchors` word and one `modifiers` word appear within `window` words of
+    /// each other. Empty `modifiers` means the anchor alone is enough.
+    ///
+    /// This is what makes the net survive ordinary speech: "my chest is really tight",
+    /// "chest tightness", "pain in the chest" and "chest pressure" are all the same report.
+    struct RedFlagRule: Sendable {
+        var anchors: [String]
+        var modifiers: [String]
+        var window: Int
+        var reason: String
+    }
+
+    static let emergencyRules: [RedFlagRule] = [
+        // Deliberately not matched on proximity: breathing. "breathing hard" and "let me catch
+        // my breath" are normal mid-exercise talk, so breathing stays on exact phrases only.
+        .init(anchors: ["chest"],
+              // "sore" is left out on purpose — a sore chest after push-ups is usually muscular,
+              // and a false ambulance call is its own harm.
+              modifiers: ["pain", "painful", "tight", "tightness", "tightens", "tightening", "hurts", "hurt",
+                          "hurting", "ache", "aches", "aching", "pressure", "heavy", "heaviness", "squeezing",
+                          "squeezed", "crushing", "crushed", "burning", "burns", "discomfort", "constriction"],
+              window: 4,
+              reason: "chest pain"),
+    ]
+
+    static let careTeamRules: [RedFlagRule] = [
+        // Swelling in a leg (DVT). Plurals and "warm" are included on purpose.
+        .init(anchors: ["leg", "legs", "calf", "calves", "thigh", "thighs", "ankle", "ankles", "foot", "feet"],
+              modifiers: ["swollen", "swelling", "swelled", "swells", "puffy", "puffed", "hot", "warm",
+                          "warmth", "red", "redness", "tender", "tenderness"],
+              window: 5,
+              reason: "swelling or heat in a leg"),
+        // Surgical site. People say incision, scar or stitches far more often than "wound".
+        .init(anchors: ["wound", "wounds", "incision", "incisions", "scar", "scars", "stitches", "stitch", "dressing"],
+              modifiers: ["oozing", "ooze", "oozes", "pus", "pussy", "leaking", "leak", "leaks", "leaked",
+                          "bleeding", "bleed", "bled", "opened", "open", "gaping", "split", "weeping",
+                          "discharge", "warm", "hot", "red", "smelly", "smell"],
+              window: 5,
+              reason: "wound problem"),
+        .init(anchors: ["fell", "fallen", "falling", "slipped", "tripped"], modifiers: [], window: 0,
+              reason: "a fall"),
+    ]
+
+    // MARK: - Negation
+
+    /// Words that flip the meaning of a symptom mentioned right after them. Both apostrophe
+    /// forms are listed: the normalizer keeps apostrophes and speech recognition often drops
+    /// them. "can't" is deliberately absent — "I can't stop the pain in my chest" means the
+    /// opposite of a denial, and a missed cardiac flag is worse than a false one.
+    static let negatorsBefore: Set<String> = [
+        "no", "not", "never", "without", "nor", "none", "nothing",
+        "don't", "dont", "doesn't", "doesnt", "didn't", "didnt", "isn't", "isnt", "aren't", "arent",
+        "wasn't", "wasnt", "weren't", "werent", "won't", "wont", "haven't", "havent", "hasn't", "hasnt",
+        "hadn't", "hadnt", "ain't", "aint", "resolved", "cleared",
+    ]
+
+    /// Words that follow a symptom and mean it has settled.
+    static let negatorsAfter: Set<String> = [
+        "gone", "resolved", "settled", "better", "improved", "improving", "eased", "easing",
+        "cleared", "disappeared", "stopped",
+    ]
+
+    /// How far a negator can sit from the match and still count as a direct denial.
+    /// Kept tight on purpose: anything looser risks reading "I had chest pain last week but
+    /// not now" as a denial, and doubt must fall on keeping the red flag.
+    static let negatorLookBehind = 3
+    static let negatorLookAhead = 2
+
     public static func detect(_ utterance: String) -> RedFlag? {
-        let text = TextNormalizer.normalize(utterance)
-        for entry in emergency where entry.pattern.allSatisfy({ TextNormalizer.contains(text, phrase: $0) }) {
-            return RedFlag(level: .emergency, reason: entry.reason)
+        if let flag = firstMatch(in: utterance, tier: .emergency) { return flag }
+        if let flag = firstMatch(in: utterance, tier: .careTeamToday) { return flag }
+        return nil
+    }
+
+    /// Emergency *subjects*. `detect` needs a full phrase to fire ("chest" plus a pain word);
+    /// this only needs the subject. It is used after something else — the cloud coach or the
+    /// on-device classifier — has already judged the remark a red flag and we are deciding how
+    /// far to escalate. If it is about one of these, "contact the care team today" is not far
+    /// enough: "there's a pressure on my chest" and "an elephant is sitting on my chest" both
+    /// have to be able to reach the emergency level.
+    static let emergencyTopics: Set<String> = [
+        "chest", "heart", "breath", "breathe", "breathing", "breathless", "breathlessness", "air",
+        "faint", "fainting", "fainted", "collapse", "collapsed", "collapsing", "blood", "stroke",
+        "airway", "throat", "suffocating", "gasping", "ambulance",
+    ]
+
+    /// True when the utterance is about an emergency subject and that subject is not being
+    /// denied. Used to let a classifier's own `redFlag` verdict reach `.emergency` instead of
+    /// being capped at `.contactCareTeamToday`.
+    public static func matchesEmergencyWording(_ utterance: String) -> Bool {
+        let tokens = TextNormalizer.tokens(utterance)
+        for (index, token) in tokens.enumerated() where emergencyTopics.contains(token) {
+            if !isNegated(tokens, match: Set([index]), span: index...index) { return true }
         }
-        for entry in careTeamToday where entry.pattern.allSatisfy({ TextNormalizer.contains(text, phrase: $0) }) {
-            return RedFlag(level: .contactCareTeamToday, reason: entry.reason)
+        return false
+    }
+
+    private enum Tier { case emergency, careTeamToday }
+
+    private static func firstMatch(in utterance: String, tier: Tier) -> RedFlag? {
+        let tokens = TextNormalizer.tokens(utterance)
+        guard !tokens.isEmpty else { return nil }
+        let level: EscalationLevel = tier == .emergency ? .emergency : .contactCareTeamToday
+        let exact = tier == .emergency ? emergency : careTeamToday
+        let rules = tier == .emergency ? emergencyRules : careTeamRules
+
+        for entry in exact {
+            var hit = Set<Int>()
+            var low = Int.max
+            var high = 0
+            var matchedAll = true
+            for phrase in entry.pattern {
+                guard let range = TextNormalizer.range(ofPhrase: phrase, in: tokens) else {
+                    matchedAll = false
+                    break
+                }
+                hit.formUnion(range)
+                low = min(low, range.lowerBound)
+                high = max(high, range.upperBound)
+            }
+            guard matchedAll else { continue }
+            if isNegated(tokens, match: hit, span: low...high) { continue }
+            return RedFlag(level: level, reason: entry.reason)
+        }
+
+        for rule in rules {
+            guard let hit = match(rule, in: tokens) else { continue }
+            if isNegated(tokens, match: Set([hit.lowerBound, hit.upperBound]), span: hit) { continue }
+            return RedFlag(level: level, reason: rule.reason)
         }
         return nil
+    }
+
+    /// The closest anchor/modifier pair within the rule's window, as a token range.
+    private static func match(_ rule: RedFlagRule, in tokens: [String]) -> ClosedRange<Int>? {
+        let anchors = tokens.indices.filter { rule.anchors.contains(tokens[$0]) }
+        guard let first = anchors.first else { return nil }
+        if rule.modifiers.isEmpty { return first...first }
+        var best: ClosedRange<Int>? = nil
+        for anchor in anchors {
+            for (offset, token) in tokens.enumerated() where rule.modifiers.contains(token) {
+                guard abs(anchor - offset) <= rule.window else { continue }
+                if best == nil || abs(anchor - offset) < (best!.upperBound - best!.lowerBound) {
+                    best = min(anchor, offset)...max(anchor, offset)
+                }
+            }
+        }
+        return best
+    }
+
+    /// True when a negator sits directly beside the match. Tokens that are part of the match
+    /// itself are skipped, so "can't breathe" and "can't feel my leg" are never self-negating.
+    private static func isNegated(_ tokens: [String], match: Set<Int>, span: ClosedRange<Int>) -> Bool {
+        for index in match.sorted() {
+            var behind = index - 1
+            var steps = 0
+            while behind >= 0, steps < negatorLookBehind {
+                if !match.contains(behind), negatorsBefore.contains(tokens[behind]) { return true }
+                behind -= 1
+                steps += 1
+            }
+        }
+        var ahead = span.upperBound + 1
+        var steps = 0
+        while ahead < tokens.count, steps < negatorLookAhead {
+            if !match.contains(ahead), negatorsAfter.contains(tokens[ahead]) { return true }
+            ahead += 1
+            steps += 1
+        }
+        return false
     }
 }
 
@@ -240,6 +493,23 @@ enum TextNormalizer {
         }
         let words = String(mapped).split(separator: " ", omittingEmptySubsequences: true)
         return " " + words.joined(separator: " ") + " "
+    }
+
+    /// `normalize` split into words, for rules that need positions (proximity, negation).
+    static func tokens(_ s: String) -> [String] {
+        normalize(s).split(separator: " ", omittingEmptySubsequences: true).map(String.init)
+    }
+
+    /// Where `phrase` sits inside `tokens` as a run of words, or nil when it isn't there.
+    static func range(ofPhrase phrase: String, in tokens: [String]) -> ClosedRange<Int>? {
+        let parts = phrase.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
+        guard !parts.isEmpty, parts.count <= tokens.count else { return nil }
+        for start in 0...(tokens.count - parts.count) {
+            if (0..<parts.count).allSatisfy({ tokens[start + $0] == parts[$0] }) {
+                return start...(start + parts.count - 1)
+            }
+        }
+        return nil
     }
 
     static func contains(_ normalized: String, phrase: String) -> Bool {

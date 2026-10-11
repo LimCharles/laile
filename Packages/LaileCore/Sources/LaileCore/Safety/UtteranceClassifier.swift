@@ -60,8 +60,11 @@ public enum UtteranceClassifier {
         if awaitingRating, let severity {
             return report(severity == 0 ? .normal : .pain, severity: severity)
         }
-        if TextNormalizer.containsAny(text, negatedPain) { return report(.normal) }
+        // Mechanical and neurological signs outrank a denial of pain. "No pain, but my foot has
+        // gone numb" used to be read as "no pain" and waved through; numbness, giving way and
+        // clicking are checked first so the exercise stops.
         if TextNormalizer.containsAny(text, wrong) { return report(.wrongSensation) }
+        if TextNormalizer.containsAny(text, negatedPain) { return report(.normal) }
 
         let mentionsPain = TextNormalizer.containsAny(text, painWords)
         let mentionsStretch = TextNormalizer.containsAny(text, stretch)
