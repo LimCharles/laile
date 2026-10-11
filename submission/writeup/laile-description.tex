@@ -215,7 +215,7 @@ Safe, strictly bounded, honest & Fixed referral for dose questions, red flags ha
 \end{itemize}
 
 \section{Status and next steps}
-\textbf{Working today.} The iOS app (Today, Programs, Lele, Progress), sessions with the camera pipeline (exercised in the iOS Simulator with a simulated skeleton), the server and clinician portal running on Tencent Cloud Lighthouse, Lele published on Tencent Cloud ADP and called by the server, the iPhone app uploaded to TestFlight, demo accounts with realistic history, and 142 automated tests across the shared domain package and the server.
+\textbf{Working today.} The iOS app (Today, Programs, Lele, Progress), sessions with the camera pipeline (exercised in the iOS Simulator with a simulated skeleton), the server and clinician portal running on Tencent Cloud Lighthouse, Lele published on Tencent Cloud ADP and called by the server, the iPhone app uploaded to TestFlight, demo accounts with realistic history, and 146 automated tests across the shared domain package and the server.
 
 \textbf{Next.} Move records to TencentDB for PostgreSQL; test on a real iPhone (camera placement, lighting, rep thresholds, voice across a room); open TestFlight to outside testers; have a physiotherapist and a pharmacist review the knowledge base; pilot with one clinic.
 
@@ -243,7 +243,7 @@ In the final week the code was handed to WorkBuddy, CodeBuddy's coding agent (Te
 \begin{itemize}
   \item \textbf{Safety audit} of the symptom rules. Findings included: a denial of pain hid numbness (``no pain but my foot is numb'' was answered with ``carry on''); denials raised false emergencies (``no chest pain'' told the person to call 995); a red flag judged by the model could never reach the emergency level; the server's pain threshold could become 11 on a 0 to 10 scale; a stop decision during rest was ignored; and common wordings were missed (``my chest is really tight'', ``my incision is leaking'', falls).
   \item \textbf{Safety fixes.} WorkBuddy implemented all six fixes with tests for every case in its audit; 112 core tests passed in its own Swift toolchain (92 before). The commit was reviewed and merged under CodeBuddy's name, followed by a review commit that keeps ordinary workout talk (``my heart is racing'', ``I fell asleep'') from raising red flags.
-  \item \textbf{ADP and reply review.} Sixteen findings on the Lele integration, the most serious being that ``I haven't taken it yet'' was logged as a taken medicine dose, plus reasoning text that could leak into replies, no server-side timeout on the ADP call, and a failed turn that could not be retried.
+  \item \textbf{ADP and reply review.} Sixteen findings on the Lele integration, the most serious being that ``I haven't taken it yet'' was logged as a taken medicine dose, plus reasoning text that could leak into replies, no server-side timeout on the ADP call, and a failed turn that could not be retried. The confirmed findings were fixed with regression tests: reminder answers now need a clear ``taken'', negated answers (``no more pain'') no longer save a flare, only reply messages reach the person, and outbound calls time out.
 \end{itemize}
 
 \begin{figure}[htbp]
