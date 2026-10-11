@@ -13,24 +13,24 @@
   }
 
   \stackcol{0}{tc}{accent}{Tencent Cloud and Tencent tools}{%
-    \textbf{ADP}: Lele agent on the Hy3 model, 12-document knowledge base, published chat link\\[3pt]
-    \textbf{Lighthouse}: hosts the API and clinician portal (Docker, Caddy, HTTPS)\\[3pt]
-    \textbf{Hunyuan}: program drafts when configured\\[3pt]
+    \textbf{ADP}: Lele agent on the Hy3 model with a 12-document knowledge base: chat, program drafts, the physio's summary\\[3pt]
+    \textbf{Lighthouse}: hosts the API, web app and clinician portal (Docker, Caddy, HTTPS)\\[3pt]
+    \textbf{Hunyuan (TokenHub)}: optional direct model\\[3pt]
     \textbf{CodeBuddy / WorkBuddy}: safety and ADP audits, safety fixes (Hy4)\\[3pt]
     \textbf{Miora}: logo, cover, app icon and the Lele mascot (Hy Image 3.5)}
 
-  \stackcol{5.75}{ph}{ink}{iPhone app}{%
+  \stackcol{5.75}{ph}{ink}{iPhone and web apps}{%
     \textbf{Swift 6, SwiftUI}: feature modules in LaileKit\\[3pt]
-    \textbf{Apple Vision}: body pose on the phone for reps, holds and joint angles\\[3pt]
-    \textbf{AVFoundation, Apple Speech}: camera, spoken symptoms\\[3pt]
-    \textbf{ElevenLabs}: Lele's voice, cached lines and live turns; on-device voice as fallback\\[3pt]
-    \textbf{TestFlight}: iPhone builds for testers}
+    \textbf{Apple Vision, Speech}: body pose for reps, holds and angles; spoken symptoms\\[3pt]
+    \textbf{Web app}: plain JavaScript, MediaPipe pose in the browser, the same API\\[3pt]
+    \textbf{ElevenLabs}: Lele's voice on phone and web, cached per line\\[3pt]
+    \textbf{TestFlight}: public link for testers}
 
   \stackcol{11.5}{sv}{reward}{Server and shared code}{%
     \textbf{Vapor (Swift)}: API, Leaf clinician portal, live session view over WebSocket\\[3pt]
     \textbf{Fluent}: SQLite, or TencentDB for PostgreSQL\\[3pt]
     \textbf{LaileCore}: one Swift package for safety rules, programs, care notes and Lele's round, shared by phone and server\\[3pt]
-    \textbf{146 automated tests}: 117 core, 29 server\\[3pt]
+    \textbf{158 automated tests}: 121 core, 32 server, 5 web\\[3pt]
     \textbf{Tooling}: XcodeGen, Docker Compose, Tectonic}
 
   \begin{scope}[on background layer]

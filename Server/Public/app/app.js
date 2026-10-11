@@ -235,6 +235,9 @@ function leleQuestionCard() {
   </div>`;
 }
 
+const sameText = (a, b) => String(a || '').replace(/[.\s]+$/, '') === String(b || '').replace(/[.\s]+$/, '');
+const showSummary = (e) => e.program?.summary && e.kind !== 'catalog' && !sameText(e.program.summary, e.subtitle);
+
 function enrollmentCard(e) {
   const checkIn = !e.calibration;
   const items = e.program?.items?.length ?? 0;
@@ -247,7 +250,7 @@ function enrollmentCard(e) {
   return `<div class="card">
     <div class="row spread top"><div class="grow"><h3>${esc(e.title)}</h3><p class="muted small">${esc(e.subtitle)}${items ? ` · ${items} exercises` : ''}</p></div></div>
     <div class="chips">${tags}</div>
-    ${e.program?.summary && e.kind !== 'catalog' ? `<p class="small muted">${esc(e.program.summary)}</p>` : ''}
+    ${showSummary(e) ? `<p class="small muted">${esc(e.program.summary)}</p>` : ''}
     <div class="row" style="margin-top:12px"><button class="btn" data-act="start" data-enrollment="${esc(e.id)}">${icon.play} ${checkIn ? 'Start check-in' : 'Start session'}</button></div>
   </div>`;
 }

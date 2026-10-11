@@ -1,6 +1,6 @@
 # Architecture
 
-One language (Swift), three deliverables, one shared brain.
+Swift for the domain, four deliverables (iPhone app, server, clinician portal, web app), one shared brain.
 
 ```
 Packages/LaileCore      Pure Swift domain logic, builds for iOS, macOS and Linux.
@@ -10,6 +10,7 @@ Packages/LaileCore      Pure Swift domain logic, builds for iOS, macOS and Linux
 Server/                 Vapor: REST API + WebSockets + clinician portal (Leaf) + AI + TTS + TRTC
 Packages/LaileKit       iOS feature modules (SwiftUI)
 iOS/                    Thin app target (XcodeGen `project.yml`) → TestFlight
+Server/Public/app/      Web app: plain JS modules served by the server; conductor.js mirrors SessionConductor
 ```
 
 The server and the phone run **the same** `LaileCore` code: the phone counts reps and applies
@@ -29,28 +30,29 @@ safety rules (also offline); the server re-derives PBs, streaks and XP with the 
 ## Trust boundary
 
 ```
-┌──────────────────────── PHONE (trusted, private) ────────────────────────┐
-│ Camera → Apple Vision pose → joint angles ─┐                              │
-│                                            ▼                              │
+┌─────────────────── PHONE OR BROWSER (trusted, private) ───────────────────┐
+│ Camera → Apple Vision (iPhone) or MediaPipe (browser) → joint angles      │
+│                                     ▼                                     │
 │  SessionConductor (deterministic): reps · holds · form · setup            │
 │  SymptomRules (deterministic): continue / stop set / stop / escalate      │
-│  Red-flag keywords checked on-device, before and after any model          │
-│  Pre-generated voice cues (bundled MP3s)                                  │
+│  Red-flag keywords: on the iPhone, and again on the server                │
+│  Voice: ElevenLabs lines cached on the server, fetched ahead              │
 │  RAW VIDEO NEVER LEAVES THE DEVICE                                        │
 └──────────┬────────────────────────────────────────────┬───────────────────┘
            │ counts, angles, symptom reports             │ utterance text
            ▼                                             ▼
-┌──────────────────────────── TENCENT CLOUD ───────────────────────────────┐
+┌──────────────────────────── TENCENT CLOUD ────────────────────────────────┐
 │ Vapor API on Lighthouse · TencentDB for PostgreSQL                        │
-│ CoachAgent: red flags + dose questions handled by fixed rules FIRST;     │
-│   Hunyuan only classifies (tool call) and chats; rules decide the action  │
-│ ProgramDraftService: Hunyuan drafts → schema check → contraindication     │
+│ CoachAgent: red flags + dose questions handled by fixed rules FIRST;      │
+│   a model (if configured) only classifies and chats; rules decide         │
+│ Drafts: Lele on ADP (PLAN REQUEST) → schema check → contraindication      │
 │   checker removes violations → DRAFT → clinician edits → clinician SIGNS  │
 │ TRTC Conversational AI (ASR ⇄ ElevenLabs TTS) calls our /v1/voice/llm     │
 │ CareMemory (deterministic): sore spot → ease that exercise next time;     │
 │   comfortable sessions → ease back; clinician can keep/close/add notes    │
 │ Lele on Tencent Cloud ADP (Hy3 + knowledge base): explains, reviews,      │
 │   remembers; its suggestions and notes are checked by code before saving  │
+│ Lele's brief: ADP (CLINICIAN BRIEF) summarises numbers code computed      │
 │ Clinician portal: numbers straight from the DB, never model-generated     │
 └───────────────────────────────────────────────────────────────────────────┘
 ```
@@ -79,9 +81,10 @@ Design rules:
 
 ## Key trade-offs
 
-- **SwiftUI + Vapor instead of a web PWA:** real TestFlight app with native camera/Vision performance and one
-  language end to end; cost is no Android/web patient app (clinician side is web).
-- **Apple Vision instead of MediaPipe:** on-device, no model download, fast on iPhone; 2D joints only, so
-  angles are camera estimates for trends, not clinical goniometry (stated in the report).
+- **SwiftUI + Vapor, plus a web app:** a real TestFlight app with native camera/Vision performance; the web
+  app covers Android and laptops with no install. Its session engine is a JavaScript port of the Swift one,
+  so it is kept honest by tests that run it against the same plan the server sends.
+- **Apple Vision on iPhone, MediaPipe in the browser:** both on the device, video never uploaded; 2D joints
+  only, so angles are camera estimates for trends, not clinical goniometry (stated in the report).
 - **Server-rendered portal (Leaf) instead of an SPA:** fast to build, prints cleanly as a pre-visit report,
   no second front-end stack.

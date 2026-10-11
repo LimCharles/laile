@@ -69,6 +69,7 @@
   \item \textbf{Lele checks in.} A coach that talks you through sessions, asks how you are each morning, reminds, notices, remembers what hurt.
   \item \textbf{The physio stays on top.} Live sessions, a daily list, approvals, signatures, discharge.
   \item \textbf{Code decides, the model talks.} Safety and every number come from tested rules.
+  \item \textbf{iPhone or any browser.} Same account, same sessions, same Lele.
 \end{itemize}
 \end{column}
 \begin{column}{0.36\textwidth}\centering
@@ -98,7 +99,7 @@
 \end{column}
 \begin{column}{0.66\textwidth}
 \begin{itemize}
-  \item Apple Vision tracks joints on the phone; a rep counts only at the target angle, a hold only while in position.
+  \item Apple Vision on iPhone, MediaPipe in the browser: joints are tracked on the device; a rep counts only at the target angle, a hold only while in position.
   \item Lele takes turns like a conversation: explains, says \emph{``In your own time''}, counts, asks \emph{``How did that feel?''} between sets.
   \item Say ``it's pulling'' or ``sharp pain'' any time. Fixed rules decide: carry on, stop the set, stop, or get help.
   \item Something sore? Lele notes it and makes that exercise easier next time, then eases back after two comfortable sessions.
@@ -127,17 +128,75 @@
 \end{columns}
 \end{frame}
 
+% ---- 6b. Plan with Lele ---------------------------------------------------
+\begin{frame}{Talk to Lele to change your goals}
+\begin{columns}[c]
+\begin{column}{0.5\textwidth}\centering
+  \fbox{\includegraphics[width=\linewidth,height=0.78\textheight,keepaspectratio]{../screenshots/31-web-lele-plan-crop.png}}
+\end{column}
+\begin{column}{0.47\textwidth}
+\begin{itemize}
+  \item Tap \emph{Plan a new program}, or just say ``my goals have changed''.
+  \item Five questions: goals, minutes, experience, what hurts, a safety check. Tap an answer or use your own words.
+  \item Lele on \textbf{Tencent Cloud ADP} drafts the program from the knowledge base, using only Laile's vetted exercises. Code checks it against the person's limits.
+  \item \textbf{No physio:} it replaces Lele's old plan and starts with a check-in.
+  \item \textbf{Physio patient:} it goes to the physio to approve. Nothing starts before a yes.
+\end{itemize}
+\end{column}
+\end{columns}
+\end{frame}
+
+% ---- 6c. Lele's record and brief -------------------------------------------
+\begin{frame}{Lele learns each person, and briefs the physio}
+\begin{columns}[T]
+\begin{column}{0.37\textwidth}\centering
+  \fbox{\includegraphics[width=\linewidth]{../screenshots/32-web-me.png}}\\[2pt]
+  \capt{What Lele knows and remembers, on the person's Me screen}
+\end{column}
+\begin{column}{0.6\textwidth}\centering
+  \fbox{\includegraphics[width=\linewidth]{../screenshots/35-portal-patient-brief-crop.png}}\\[2pt]
+  \capt{Lele's summary on the physio's patient page}
+\end{column}
+\end{columns}
+\vspace{6pt}
+\begin{itemize}
+  \item Every chat and session adds to one record: goals, time, sore spots in their words, what was eased, measurements, requests.
+  \item Lele reads it before every reply. For the physio, ADP writes a 4 to 6 line brief from that record plus the knowledge base (``typical week 2 to 6 aim to pass 90\textdegree''). The numbers come from code.
+\end{itemize}
+\end{frame}
+
+% ---- 6d. Web --------------------------------------------------------------
+\begin{frame}{Laile in any browser, no install}
+\begin{columns}[T]
+\begin{column}{0.7\textwidth}
+  \fbox{\includegraphics[width=0.47\linewidth]{../screenshots/30-web-today.png}}\hfill
+  \fbox{\includegraphics[width=0.47\linewidth]{../screenshots/33-web-session.png}}\\[2pt]
+  \begin{minipage}[t]{0.47\linewidth}\centering\capt{Today on a laptop}\end{minipage}\hfill
+  \begin{minipage}[t]{0.47\linewidth}\centering\capt{A webcam session; heel slides eased by Lele}\end{minipage}
+  \begin{itemize}
+    \item Same account, programs, Lele and progress as the iPhone app.
+    \item MediaPipe pose in the browser and a port of Laile's session engine, tested against the same plan: web sessions count and report like phone sessions.
+    \item Lele's ElevenLabs voice; the physio can watch live.
+  \end{itemize}
+\end{column}
+\begin{column}{0.26\textwidth}\centering
+  \fbox{\includegraphics[height=0.64\textheight]{../screenshots/34-web-today-phone.png}}\\[2pt]
+  \capt{43-156-108-79.sslip.io/app}
+\end{column}
+\end{columns}
+\end{frame}
+
 % ---- 7. Physio -----------------------------------------------------------
 \begin{frame}{The physio stays on top}
 \begin{columns}[c]
 \begin{column}{0.62\textwidth}
-  \fbox{\includegraphics[width=\linewidth,height=0.7\textheight,keepaspectratio]{../screenshots/20-portal-dashboard-crop.png}}
+  \fbox{\includegraphics[width=\linewidth,height=0.7\textheight,keepaspectratio]{../screenshots/36-portal-lele-plan-approval-crop.png}}
 \end{column}
 \begin{column}{0.35\textwidth}
 \begin{itemize}
   \item \textbf{Today from Lele}, most pressing first: red flags, worse this morning, pain reports, requests, missed days.
   \item \textbf{Live view} of a session: exercise, reps, measured angle.
-  \item \textbf{Approve} extra programs; \textbf{ask Lele} to change one in plain words; \textbf{sign} every version.
+  \item \textbf{Approve} extra programs and \textbf{Lele's plans}; \textbf{ask Lele} to change one in plain words; \textbf{sign} every version.
   \item \textbf{Discharge} hands the patient to a follow-on program, limits kept.
 \end{itemize}
 \end{column}
@@ -152,21 +211,22 @@
 
 % ---- 9. AI and safety ---------------------------------------------------
 \begin{frame}{How the AI is used, and kept safe}
-\small
+\footnotesize
 \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.3cm}>{\raggedright\arraybackslash}p{4.4cm}>{\raggedright\arraybackslash}X@{}}
 \toprule
 \textbf{Job} & \textbf{Done by} & \textbf{Kept safe by}\\
 \midrule
 Conversation and explanations & Lele on \textbf{Tencent Cloud ADP} (Hy3, 12-document knowledge base) & Real context sent with each message; red flags and dose questions answered by rules first\\
 Remembering what hurt & Care notes & Easing computed by code; physio sees every note\\
-Program drafts & Hunyuan or rule-based drafter & Vetted library only, precautions enforced, physio signs\\
+Program drafts & Lele on \textbf{ADP} (plan mode, knowledge base); rule-based fallback & Vetted library only, precautions enforced, physio signs or approves\\
+Brief for the physio & Lele on \textbf{ADP} (brief mode) with the record and knowledge base & Numbers and flags computed by code and passed in\\
 Understanding replies & Keyword rules & ``Lele heard: \ldots''; asks again if unclear\\
-Seeing movement & Apple Vision on device & Video stays on the phone\\
+Seeing movement & Apple Vision (iPhone), MediaPipe (browser) & Video stays on the device\\
 \bottomrule
 \end{tabularx}\\[8pt]
 \begin{itemize}
   \item Dose questions: fixed referral to the doctor or pharmacist. Unknown medicine: \emph{``I'm not able to identify that medication, please check with your pharmacist.''}
-  \item 146 automated tests cover counting, safety rules, care notes, Lele's round and the server flows.
+  \item 158 automated tests cover counting, safety rules, care notes, Lele's round, planning by chat, the server flows and the web session engine.
 \end{itemize}
 \end{frame}
 
@@ -200,7 +260,7 @@ Seeing movement & Apple Vision on device & Video stays on the phone\\
 \vspace{6pt}
 \begin{itemize}
   \item \textbf{CodeBuddy} found that ``no pain but my foot is numb'' was answered with ``carry on'' and that ``I haven't taken it yet'' was logged as a dose; its fixes were reviewed and merged.
-  \item \textbf{ADP} runs Lele; \textbf{Lighthouse} hosts the API and portal; \textbf{ElevenLabs} gives Lele a voice.
+  \item \textbf{ADP} runs Lele (chat, drafts, physio summaries); \textbf{Lighthouse} hosts the server, web app and portal.
 \end{itemize}
 \end{frame}
 
@@ -211,10 +271,10 @@ Seeing movement & Apple Vision on device & Video stays on the phone\\
 \toprule
 Medication understanding & ``What's this for?'' on every dose, from the medicines knowledge base\\
 Medication management & Reminders at the doctor's times; one tap or a typed reply marks a dose taken\\
-Adherence support & Camera-verified sessions, check-in targets, forgiving streaks, barrier questions\\
+Adherence support & Camera-verified sessions, check-in targets, forgiving streaks, barrier questions, new plans by chat\\
 Health tracking & Knee bend, straightening gap, arm lift, reps, holds and pain against baseline\\
 Preventive health & Precautions follow you; plateau and missed-day flags; follow-on programs\\
-Healthcare preparation & Visit prep questions; pre-visit report for the physio\\
+Healthcare preparation & Visit prep questions; pre-visit report and Lele's summary for the physio\\
 Safe, bounded, honest & Rule-based red flags and referrals; no count without a clear view\\
 \bottomrule
 \end{tabularx}
@@ -233,7 +293,7 @@ Safe, bounded, honest & Rule-based red flags and referrals; no count without a c
   \textbf{\color{accent}A loop}\\
   Everyday users with aches are pointed to a physio; physio patients become everyday users afterwards.\\[10pt]
   \textbf{\color{accent}Cheap to run}\\
-  Pose estimation on the phone; model calls only for conversation; voice lines cached and paid for once.
+  Pose estimation on the device; model calls only for conversation, drafts and briefs; voice lines cached and paid for once.
 \end{column}
 \end{columns}
 \end{frame}
@@ -244,26 +304,26 @@ Safe, bounded, honest & Rule-based red flags and referrals; no count without a c
 \begin{column}{0.48\textwidth}
   \textbf{\color{accent}Working now}
   \begin{itemize}
-    \item iOS app: Today, Programs, Lele, Progress
-    \item Camera pipeline (Simulator, simulated skeleton)
-    \item Server and portal live on Tencent Cloud Lighthouse
-    \item Lele published on Tencent Cloud ADP
-    \item Demo accounts with realistic history
-    \item 146 automated tests
+    \item iOS app on TestFlight with a public link
+    \item Web app with webcam sessions, no install
+    \item Server, portal and web app on Tencent Cloud Lighthouse
+    \item Lele on Tencent Cloud ADP: chat, plans, physio summaries
+    \item Camera pipeline tested with simulated skeletons
+    \item 158 automated tests
   \end{itemize}
 \end{column}
 \begin{column}{0.48\textwidth}
   \textbf{\color{accent}Next}
   \begin{itemize}
     \item TencentDB for PostgreSQL
-    \item Real-iPhone testing; TestFlight for outside testers
+    \item Testing with people at home: camera placement, lighting, voice across a room
     \item Knowledge base review by a physiotherapist and a pharmacist
     \item Pilot with one clinic
   \end{itemize}
 \end{column}
 \end{columns}
 \vfill
-{\small\color{muted}Source: github.com/LimCharles/laile \ \textbullet\ \ Try Lele: \href{https://adp.tencentcloud.com/webim_exp/\#/chat/nZbZZz}{adp.tencentcloud.com/webim\_exp/\#/chat/nZbZZz}\\ Portal: \href{https://43-156-108-79.sslip.io/portal}{43-156-108-79.sslip.io/portal} (clinician@laile.demo / laile-demo-2026)\\ iPhone app: \href{https://testflight.apple.com/join/WuymKzUH}{testflight.apple.com/join/WuymKzUH}}
+{\small\color{muted}Source: github.com/LimCharles/laile \ \textbullet\ \ Try Lele: \href{https://adp.tencentcloud.com/webim_exp/\#/chat/nZbZZz}{adp.tencentcloud.com/webim\_exp/\#/chat/nZbZZz}\\ Portal: \href{https://43-156-108-79.sslip.io/portal}{43-156-108-79.sslip.io/portal} (clinician@laile.demo / laile-demo-2026)\\ Web app: \href{https://43-156-108-79.sslip.io/app}{43-156-108-79.sslip.io/app} \ \textbullet\ \ iPhone app: \href{https://testflight.apple.com/join/WuymKzUH}{testflight.apple.com/join/WuymKzUH}}
 \end{frame}
 
 % ---- 13. References ------------------------------------------------------

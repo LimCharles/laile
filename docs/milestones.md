@@ -56,11 +56,11 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
 - ✅ Vapor clinician portal (Leaf, server-rendered, prints cleanly): patient list, patient record with
   trend charts, baselines, PB dots, milestone lines, flags (plateau / regression / red flag / missed sessions)
 - ✅ Pain & symptom reports with verbatim quote + exercise / set / rep / knee angle; "mark reviewed"
-- ✅ AI program drafting (Hunyuan) → contraindication check (blocked, not warned) →
+- ✅ AI program drafting (Lele on ADP, `PLAN REQUEST`) → contraindication check (blocked, not warned) →
   clinician edits → **sign**; versioning + archive; rule-based template fallback when no LLM
 - ✅ Pre-visit report page
 - ✅ Invite codes + patient consent linking; medications (explain + remind, never dose advice)
-- ⬜ Hunyuan key + real draft test; tune prompt on 3 to 4 fictional patients
+- ✅ Real drafts through ADP tested live (Hunyuan on TokenHub stays wired in as an optional direct model)
 
 ## M5: Streams ✅ (v1)
 
@@ -132,21 +132,32 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
   - "How did that feel?";
   - a sore spot eases the exercise the next day.
 
-## M6: Ship it ⬜ (target 8 Oct)
+## M6: Ship it ✅
 
-- ⬜ Deploy server to **Tencent Cloud Lighthouse** (Dockerfile included) + TencentDB for PostgreSQL; HTTPS domain
-- ⬜ TestFlight: set `DEVELOPMENT_TEAM`, archive, upload, internal testers (no review needed)
-- ⬜ Set the Release `LAILE_API_BASE_URL` in `iOS/project.yml` to the deployed domain
-- ⬜ Portal "discharge → Move mode" action (rehab graduation)
-- ⬜ Miora: app icon, cover image (380×216), exercise demo clips
+- ✅ Server, portal and web app on **Tencent Cloud Lighthouse** with HTTPS (`deploy/deploy.sh`); SQLite on a volume
+- ⬜ TencentDB for PostgreSQL
+- ✅ TestFlight with a public link for judges (testflight.apple.com/join/WuymKzUH)
+- ✅ Release `LAILE_API_BASE_URL` points at the deployed server
+- ✅ Portal discharge to a follow-on program
+- ✅ Miora: app icon, cover image (380×216), Lele mascot; ⬜ exercise demo clips
 
-## M7: Submission package ⬜ (target 14 Oct)
+## M7: Submission package (target 14 Oct)
 
-- ⬜ **CodeBuddy/WorkBuddy usage proof**: mandatory, project isn't scored without it (3+ screenshots)
-- ⬜ Architecture + trust-boundary diagram (see `docs/architecture.md`)
+- ✅ **CodeBuddy/WorkBuddy usage proof** (`submission/codebuddy/`): safety audit, fixes merged, ADP review
+- ✅ Architecture + trust-boundary diagram (`submission/diagram/`)
 - ⬜ Physio interviews (2 to 3) for pain-point sourcing
 - ⬜ 5 to 8 min demo video following the script in `docs/concept.md`
-- ⬜ Project title, blurb, description, cover image, live link
+- ✅ Project title, blurb, description, deck, cover image, live links
+
+## M8: Lele plans, briefs, and the web app ✅
+
+- ✅ Plan with Lele in chat (`PlanChat`, `LelePlanService`): five questions, buttons or free text; replaces
+  Lele's old plan, or goes to the physio with the draft attached while they supervise
+- ✅ Physio approves Lele's plans from Today from Lele; the approved plan is signed and starts with a check-in
+- ✅ Lele's summary on each patient page (`CLINICIAN BRIEF` on ADP, from the record and the knowledge base)
+- ✅ Web app at `/app`: Today, Programs, Lele, Progress, Me; webcam sessions with MediaPipe and a port of
+  `SessionConductor` (tested with `node --test Server/Tests/Web`); Lele's ElevenLabs voice
+- ✅ Landing page at `/`; privacy page covers the web app
 
 ---
 
@@ -156,4 +167,3 @@ Status key: ✅ done · 🟡 partly done · ⬜ not started
 - WorkBuddy weekly digest to clinician + caregiver
 - Caregiver read-only view
 - Hip-replacement protocol, more exercises, more progression families (squat, lunge)
-- Patient-facing web app (only if judges need a non-iPhone path)
