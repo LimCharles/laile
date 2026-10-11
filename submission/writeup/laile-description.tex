@@ -215,18 +215,34 @@ Safe, strictly bounded, honest & Fixed referral for dose questions, red flags ha
 \end{itemize}
 
 \section{Status and next steps}
-\textbf{Working today.} The iOS app (Today, Programs, Lele, Progress), sessions with the camera pipeline (exercised in the iOS Simulator with a simulated skeleton), the server and clinician portal running on Tencent Cloud Lighthouse, Lele published on Tencent Cloud ADP and called by the server, the iPhone app uploaded to TestFlight, demo accounts with realistic history, and 121 automated tests across the shared domain package and the server.
+\textbf{Working today.} The iOS app (Today, Programs, Lele, Progress), sessions with the camera pipeline (exercised in the iOS Simulator with a simulated skeleton), the server and clinician portal running on Tencent Cloud Lighthouse, Lele published on Tencent Cloud ADP and called by the server, the iPhone app uploaded to TestFlight, demo accounts with realistic history, and 142 automated tests across the shared domain package and the server.
 
 \textbf{Next.} Move records to TencentDB for PostgreSQL; test on a real iPhone (camera placement, lighting, rep thresholds, voice across a room); open TestFlight to outside testers; have a physiotherapist and a pharmacist review the knowledge base; pilot with one clinic.
 
 \section{How it was built}
 \laile\ is a Swift monorepo: \texttt{LaileCore} (pure Swift domain logic shared by phone and server), \texttt{LaileKit} (SwiftUI feature modules), the iOS app, and a Vapor server with the clinician portal. Lele's prompt and knowledge base live in \texttt{agent/} and are imported into ADP.
 
+\begin{figure}[htbp]
+\centering
+\resizebox{\linewidth}{!}{\input{../diagram/stack-body}}
+\caption{The tech stack. Tencent Cloud runs the agent and the server; Tencent's CodeBuddy and Miora were used to audit the code and make the brand.}
+\end{figure}
+
+\subsection*{Brand made with Miora}
+The logo, the cover image, the app icon and the Lele mascot sheet were made in Miora, Tencent's creative studio, from one brief with its Brand Specialist skill. Lele's spoken voice comes from ElevenLabs: each coaching line is generated once on the server and cached, and the phone falls back to its own voice when offline.
+
+\begin{figure}[htbp]
+\centering
+\fbox{\includegraphics[width=0.47\linewidth]{../codebuddy/07-miora-brand-chat.jpg}}\hfill
+\fbox{\includegraphics[width=0.47\linewidth]{../codebuddy/08-miora-brand-canvas.jpg}}
+\caption{The Laile brand project in Miora: the conversation that produced the app icon and mascot (left) and the four deliverables on its canvas (right).}
+\end{figure}
+
 \subsection*{Audited and fixed with CodeBuddy}
 In the final week the code was handed to WorkBuddy, CodeBuddy's coding agent (Tencent Hy4 model), through its GitHub connector. It cloned the repository, ported the safety rules to Python to test real phrasings against them, and later installed a Swift toolchain to compile and run its own changes. Three tasks:
 \begin{itemize}
   \item \textbf{Safety audit} of the symptom rules. Findings included: a denial of pain hid numbness (``no pain but my foot is numb'' was answered with ``carry on''); denials raised false emergencies (``no chest pain'' told the person to call 995); a red flag judged by the model could never reach the emergency level; the server's pain threshold could become 11 on a 0 to 10 scale; a stop decision during rest was ignored; and common wordings were missed (``my chest is really tight'', ``my incision is leaking'', falls).
-  \item \textbf{Safety fixes.} WorkBuddy implemented all six fixes with tests for every case in its audit; 112 core tests pass in its toolchain (92 before). The patch is reviewed before it is merged.
+  \item \textbf{Safety fixes.} WorkBuddy implemented all six fixes with tests for every case in its audit; 112 core tests passed in its own Swift toolchain (92 before). The commit was reviewed and merged under CodeBuddy's name, followed by a review commit that keeps ordinary workout talk (``my heart is racing'', ``I fell asleep'') from raising red flags.
   \item \textbf{ADP and reply review.} Sixteen findings on the Lele integration, the most serious being that ``I haven't taken it yet'' was logged as a taken medicine dose, plus reasoning text that could leak into replies, no server-side timeout on the ADP call, and a failed turn that could not be retried.
 \end{itemize}
 

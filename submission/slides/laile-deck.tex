@@ -166,7 +166,41 @@ Seeing movement & Apple Vision on device & Video stays on the phone\\
 \end{tabularx}\\[8pt]
 \begin{itemize}
   \item Dose questions: fixed referral to the doctor or pharmacist. Unknown medicine: \emph{``I'm not able to identify that medication, please check with your pharmacist.''}
-  \item 121 automated tests cover counting, safety rules, care notes, Lele's round and the server flows.
+  \item 142 automated tests cover counting, safety rules, care notes, Lele's round and the server flows.
+\end{itemize}
+\end{frame}
+
+% ---- 9b. Stack ----------------------------------------------------------
+\begin{frame}{Built with}
+\vspace{4pt}
+\centering
+\resizebox{0.98\linewidth}{!}{\input{../diagram/stack-body}}
+\end{frame}
+
+% ---- 9c. Tencent tools in the build --------------------------------------
+\begin{frame}{Made with Tencent's own tools}
+\small
+\begin{columns}[T]
+\begin{column}{0.36\textwidth}
+  \centering
+  \fbox{\includegraphics[width=0.95\linewidth]{../codebuddy/08-miora-brand-canvas.jpg}}\\[2pt]
+  \capt{\textbf{Miora}: logo, cover, app icon, Lele mascot}
+\end{column}
+\begin{column}{0.30\textwidth}
+  \centering
+  \fbox{\includegraphics[width=0.95\linewidth]{../codebuddy/02-safety-audit-findings.jpg}}\\[2pt]
+  \capt{\textbf{WorkBuddy}: safety audit with file and line findings}
+\end{column}
+\begin{column}{0.30\textwidth}
+  \centering
+  \fbox{\includegraphics[width=0.95\linewidth]{../codebuddy/06-safety-fixes-done.jpg}}\\[2pt]
+  \capt{\textbf{WorkBuddy}: six safety fixes, 112 tests passing}
+\end{column}
+\end{columns}
+\vspace{6pt}
+\begin{itemize}
+  \item \textbf{CodeBuddy} found that ``no pain but my foot is numb'' was answered with ``carry on'' and that ``I haven't taken it yet'' was logged as a dose; its fixes were reviewed and merged.
+  \item \textbf{ADP} runs Lele; \textbf{Lighthouse} hosts the API and portal; \textbf{ElevenLabs} gives Lele a voice.
 \end{itemize}
 \end{frame}
 
@@ -215,7 +249,7 @@ Safe, bounded, honest & Rule-based red flags and referrals; no count without a c
     \item Server and portal live on Tencent Cloud Lighthouse
     \item Lele published on Tencent Cloud ADP
     \item Demo accounts with realistic history
-    \item 121 automated tests
+    \item 142 automated tests
   \end{itemize}
 \end{column}
 \begin{column}{0.48\textwidth}
