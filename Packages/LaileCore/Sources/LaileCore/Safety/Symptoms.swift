@@ -229,8 +229,8 @@ public enum RedFlagDetector {
         (["can't catch my breath"], "difficulty breathing"), (["cant get my breath"], "difficulty breathing"),
         (["can't get my breath"], "difficulty breathing"), (["no air"], "difficulty breathing"),
         (["not getting enough air"], "difficulty breathing"),
-        (["breathless"], "shortness of breath"), (["breathlessness"], "shortness of breath"),
-        (["gasping"], "difficulty breathing"), (["gasping for air"], "difficulty breathing"),
+        // "breathless", "gasping" and a racing or pounding heart are left out: after jumping jacks
+        // or high knees they are normal, and an ambulance call for a hard set is its own harm.
         (["suffocating"], "difficulty breathing"),
 
         // Fainting. "faint" alone is also an adjective ("a faint click"), so only the phrasings
@@ -241,9 +241,7 @@ public enum RedFlagDetector {
         (["blacked out"], "fainting"), (["i collapsed"], "collapse"), (["i've collapsed"], "collapse"),
         (["i have collapsed"], "collapse"), (["i just collapsed"], "collapse"),
 
-        (["heart attack"], "possible heart attack"), (["heart is racing"], "racing heart"),
-        (["heart racing"], "racing heart"), (["heart is pounding"], "racing heart"),
-        (["heart pounding"], "racing heart"),
+        (["heart attack"], "possible heart attack"),
 
         (["vomiting blood"], "vomiting blood"), (["throwing up blood"], "vomiting blood"),
         (["being sick with blood"], "vomiting blood"), (["cough up blood"], "coughing blood"),
@@ -284,7 +282,8 @@ public enum RedFlagDetector {
         (["cant weight bear"], "can't bear weight"), (["can't weight bear"], "can't bear weight"),
 
         // Falls.
-        (["i fell"], "a fall"), (["fell over"], "a fall"), (["fell down"], "a fall"), (["fell off"], "a fall"),
+        // "i fell" and "fell off" are left out: "I fell asleep" and "the strap fell off" are not falls.
+        (["fell over"], "a fall"), (["fell down"], "a fall"),
         (["had a fall"], "a fall"), (["i've fallen"], "a fall"), (["ive fallen"], "a fall"),
         (["i have fallen"], "a fall"), (["slipped and fell"], "a fall"), (["tripped and fell"], "a fall"),
         (["fell onto the floor"], "a fall"), (["fell on the floor"], "a fall"),
@@ -336,10 +335,10 @@ public enum RedFlagDetector {
     ]
 
     static let careTeamRules: [RedFlagRule] = [
-        // Swelling in a leg (DVT). Plurals and "warm" are included on purpose.
+        // Swelling in a leg (DVT), plurals included. Warm, hot and tender legs are left out: after
+        // squats or a walk they are ordinary, and the exact "calf" + "hot" pair above still applies.
         .init(anchors: ["leg", "legs", "calf", "calves", "thigh", "thighs", "ankle", "ankles", "foot", "feet"],
-              modifiers: ["swollen", "swelling", "swelled", "swells", "puffy", "puffed", "hot", "warm",
-                          "warmth", "red", "redness", "tender", "tenderness"],
+              modifiers: ["swollen", "swelling", "swelled", "swells", "puffy", "puffed", "red", "redness"],
               window: 5,
               reason: "swelling or heat in a leg"),
         // Surgical site. People say incision, scar or stitches far more often than "wound".
@@ -349,8 +348,6 @@ public enum RedFlagDetector {
                           "discharge", "warm", "hot", "red", "smelly", "smell"],
               window: 5,
               reason: "wound problem"),
-        .init(anchors: ["fell", "fallen", "falling", "slipped", "tripped"], modifiers: [], window: 0,
-              reason: "a fall"),
     ]
 
     // MARK: - Negation
@@ -368,15 +365,23 @@ public enum RedFlagDetector {
 
     /// Words that follow a symptom and mean it has settled.
     static let negatorsAfter: Set<String> = [
-        "gone", "resolved", "settled", "better", "improved", "improving", "eased", "easing",
-        "cleared", "disappeared", "stopped",
+        "gone", "resolved", "settled", "better", "improved", "eased", "cleared", "disappeared",
+    ]
+
+    /// The only words allowed between a negator and the symptom it denies ("I don't *have* chest
+    /// pain", "chest pain *has completely* gone"). Any other word ends the search, so "not good,
+    /// chest pain" and "chest pain stopped me" keep their red flag.
+    static let negationFiller: Set<String> = [
+        "i", "i'm", "im", "it", "it's", "its", "is", "am", "are", "was", "has", "have", "had", "got",
+        "get", "getting", "any", "a", "an", "the", "my", "more", "much", "really", "been", "feel",
+        "feeling", "felt", "sign", "signs", "of", "now", "all", "completely", "totally", "lot", "bit",
     ]
 
     /// How far a negator can sit from the match and still count as a direct denial.
     /// Kept tight on purpose: anything looser risks reading "I had chest pain last week but
     /// not now" as a denial, and doubt must fall on keeping the red flag.
     static let negatorLookBehind = 3
-    static let negatorLookAhead = 2
+    static let negatorLookAhead = 3
 
     public static func detect(_ utterance: String) -> RedFlag? {
         if let flag = firstMatch(in: utterance, tier: .emergency) { return flag }
@@ -467,7 +472,10 @@ public enum RedFlagDetector {
             var behind = index - 1
             var steps = 0
             while behind >= 0, steps < negatorLookBehind {
-                if !match.contains(behind), negatorsBefore.contains(tokens[behind]) { return true }
+                if !match.contains(behind) {
+                    if negatorsBefore.contains(tokens[behind]) { return true }
+                    if !negationFiller.contains(tokens[behind]) { break }
+                }
                 behind -= 1
                 steps += 1
             }
@@ -475,7 +483,10 @@ public enum RedFlagDetector {
         var ahead = span.upperBound + 1
         var steps = 0
         while ahead < tokens.count, steps < negatorLookAhead {
-            if !match.contains(ahead), negatorsAfter.contains(tokens[ahead]) { return true }
+            if !match.contains(ahead) {
+                if negatorsAfter.contains(tokens[ahead]) { return true }
+                if !negationFiller.contains(tokens[ahead]) { break }
+            }
             ahead += 1
             steps += 1
         }

@@ -81,6 +81,18 @@ import Testing
         #expect(RedFlagDetector.detect(text) != nil, "\(text)")
     }
 
+    /// A negator only counts when nothing but filler sits between it and the symptom, so an
+    /// answer like "not good" in front of a real report does not cancel it.
+    @Test(arguments: [
+        "not good, chest pain",
+        "not great, my chest is tight",
+        "chest pain stopped me from finishing",
+        "no idea why but my chest hurts",
+    ])
+    func unrelatedNegatorKeepsTheRedFlag(_ text: String) {
+        #expect(RedFlagDetector.detect(text) != nil, "\(text)")
+    }
+
     /// The clarify flow stitches the question and the answer into one utterance
     /// (SessionConductor.report), so a denial has to survive being appended to an earlier "ow".
     @Test func denialSurvivesTheMergedUtterance() {
@@ -108,8 +120,6 @@ import Testing
         "pain in the chest",
         "chest pressure",
         "my chest is heavy",
-        // Heart
-        "heart is racing",
         // Fainting
         "I feel faint",
         "I feel like I'm going to pass out",
@@ -117,7 +127,6 @@ import Testing
         // Breathing: apostrophe dropped by speech recognition, and non-"can't breathe" wordings.
         "cant breathe",
         "I can't catch my breath",
-        "I'm breathless",
         // Stroke, bleeding
         "sudden severe headache",
         "my face is drooping",
@@ -128,11 +137,10 @@ import Testing
     }
 
     @Test(arguments: [
-        // Swelling: plurals and "warm" used to be missed entirely.
+        // Swelling: plurals used to be missed entirely.
         "my legs are swollen",
         "both legs swelling",
         "my calves are swollen",
-        "my calf is warm",
         // Surgical site: people say incision, scar or stitches, not "wound".
         "my incision is leaking",
         "my scar is oozing",
@@ -164,6 +172,18 @@ import Testing
         "let me catch my breath",
         "I'm breathing hard",
         "I heard a faint click in my knee",
+        // Normal after jumping jacks or high knees.
+        "my heart is racing",
+        "my heart is pounding",
+        "I'm a bit breathless",
+        "I'm gasping",
+        // Muscles that worked, not a clot.
+        "my legs feel warm",
+        "my thighs are tender",
+        // Not falls.
+        "I fell asleep before my session",
+        "my foot slipped a bit",
+        "my knee keeps falling in",
     ])
     func ordinaryExerciseTalkIsStillNotARedFlag(_ text: String) {
         #expect(RedFlagDetector.detect(text) == nil, "\(text)")
