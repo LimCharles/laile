@@ -116,10 +116,12 @@ struct LeleService {
         // Buttons are suggestions: a typed answer is matched to the option it means.
         let action = actionId.flatMap { id in question.actions.first { $0.id == id } }
             ?? typed.flatMap { ReplyReader.action(in: question, for: $0) }
+        guard typed != nil || action != nil else { throw Abort(.badRequest, reason: "Pick an answer or type one.") }
         let answer = typed ?? action?.label ?? ""
         question.answer = answer
         question.answeredAt = now
-        try await save(question, userID: userID)
+        // The question is only saved as answered once the turn has succeeded, so a failed reply
+        // can be answered again.
         var out: [LeleMessage] = [question, LeleMessage(createdAt: now, kind: .chat, author: .person, text: answer)]
         var notes: [CareNote] = []
         let clinician = try await activePatientProfile(for: userID).map { CallName.plain($0.clinician.displayName) }
@@ -156,10 +158,13 @@ struct LeleService {
             }
             say("Thanks, noted.")
         default:
-            if let text, !text.isEmpty {
-                return try await chat(text, user: user, echo: false, prefix: out)
+            if let typed {
+                let turn = try await chat(typed, user: user, echo: false, prefix: out)
+                try await save(question, userID: userID)
+                return turn
             }
         }
+        try await save(question, userID: userID)
         for message in out.dropFirst(2) { try await save(message, userID: userID) }
         try await save(out[1], userID: userID)
         return API.LeleTurnResponse(messages: out, careNotes: notes)
@@ -251,7 +256,11 @@ struct RememberRequest: Codable {
     var remember: Body
 
     func careNote(at date: Date) -> CareNote? {
-        let body = remember
+        // The model writes this JSON, so its numbers and text are bounded before they reach a record.
+        var body = remember
+        body.note = String(body.note.trimmingCharacters(in: .whitespacesAndNewlines).prefix(500))
+        body.severity = body.severity.map { min(max($0, 0), 10) }
+        guard !body.note.isEmpty else { return nil }
         let exercise = body.exercise_id.flatMap { ExerciseLibrary.standard.spec($0) }
         switch body.kind {
         case "sore_spot", "feels_wrong":
@@ -288,8 +297,10 @@ struct LeleFeature: LaileFeature {
         lele.post("messages", ":id", "reply") { req async throws -> API.LeleTurnResponse in
             guard let id = req.parameters.get("id", as: UUID.self) else { throw Abort(.badRequest) }
             let body = try req.content.decode(API.LeleReplyRequest.self)
+            // Same limits as chat: a typed answer is trimmed and capped at 1000 characters.
+            let text = body.text?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty.map { String($0.prefix(1000)) }
             return try await LeleService(app: req.application, db: req.db, logger: req.logger)
-                .reply(to: id, actionId: body.actionId, text: body.text, user: req.user)
+                .reply(to: id, actionId: body.actionId, text: text, user: req.user)
         }
         lele.post("chat") { req async throws -> API.LeleTurnResponse in
             let body = try req.content.decode(API.LeleChatRequest.self)

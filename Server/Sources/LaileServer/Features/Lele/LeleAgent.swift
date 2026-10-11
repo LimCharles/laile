@@ -109,7 +109,8 @@ struct ADPClient {
     }
 
     /// Collects the reply from the SSE stream. ADP streams several messages per response: a
-    /// "thought" (the thinking model's reasoning) and the "reply". Only reply text is kept.
+    /// "thought" (the thinking model's reasoning) and the "reply". Only reply text is kept: when
+    /// any message is typed "reply", only those are used; otherwise anything that isn't reasoning.
     /// `text.delta` appends, `text.replace` swaps a message's text, and `response.completed`
     /// carries every message in full, which wins when present.
     static func parse(_ stream: String) throws -> String {
@@ -147,7 +148,8 @@ struct ADPClient {
                 note(id)
             case "response.completed":
                 let messages = (json["Response"] as? [String: Any])?["Messages"] as? [[String: Any]] ?? []
-                let replies = messages.filter { ($0["Type"] as? String) != "thought" }.map { message in
+                let typed = messages.contains { ($0["Type"] as? String) == "reply" }
+                let replies = messages.filter { isReply($0["Type"] as? String, anyTypedReply: typed) }.map { message in
                     ((message["Contents"] as? [[String: Any]]) ?? []).filter { ($0["Type"] as? String) == "text" }
                         .compactMap { $0["Text"] as? String }.joined()
                 }.filter { !$0.isEmpty }
@@ -161,6 +163,14 @@ struct ADPClient {
                 }
             }
         }
-        return completed ?? order.filter { kinds[$0] != "thought" }.compactMap { texts[$0] }.joined(separator: "\n")
+        let anyTypedReply = kinds.values.contains("reply")
+        return completed ?? order.filter { isReply(kinds[$0], anyTypedReply: anyTypedReply) }.compactMap { texts[$0] }.joined(separator: "\n")
+    }
+
+    static let reasoningTypes: Set<String> = ["thought", "reasoning", "thinking", "think"]
+
+    static func isReply(_ type: String?, anyTypedReply: Bool) -> Bool {
+        if anyTypedReply { return type == "reply" }
+        return !reasoningTypes.contains(type ?? "")
     }
 }

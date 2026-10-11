@@ -29,6 +29,10 @@ func makeFeatures() -> [any LaileFeature] {
 }
 
 public func configure(_ app: Application) async throws {
+    // Outbound calls (ADP, Hunyuan, ElevenLabs) give up well before the app's 90 s, so a stalled
+    // model never leaves a request hanging. Set before anything touches app.client.
+    app.http.client.configuration.timeout = .init(connect: .seconds(10), read: .seconds(45))
+
     let config = LaileConfig.fromEnvironment(app.environment)
     app.laile = AppServices(config: config, llm: makeLLMProvider(config: config, app: app),
                             speech: SpeechFactory.make(config: config.speech, tencent: config.tencent, client: app.client))

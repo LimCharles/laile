@@ -180,6 +180,16 @@ final class ProgramsFlowTests: XCTestCase {
         XCTAssertEqual(note.exerciseId, "knee-push-up")
         XCTAssertEqual(note.source, .lele)
         XCTAssertNotNil(note.adjustment)
+
+        // The model writes this JSON, so the note is capped and severity kept on the 0 to 10 scale.
+        let (_, wild) = LeleAgent.extractRemember("""
+        Noted.
+        {"remember":{"kind":"barrier","severity":42,"note":"\(String(repeating: "x", count: 2000))"}}
+        """)
+        let bounded = try XCTUnwrap(wild?.careNote(at: Date()))
+        XCTAssertLessThanOrEqual(bounded.text.count, 500)
+        let (_, empty) = LeleAgent.extractRemember(#"{"remember":{"kind":"barrier","note":"   "}}"#)
+        XCTAssertNil(empty?.careNote(at: Date()))
     }
 
     func testADPStreamParsing() throws {
@@ -208,6 +218,17 @@ final class ProgramsFlowTests: XCTestCase {
         XCTAssertEqual(LeleAgent.tidy(try ADPClient.parse(thinking)), "Heel slides help your knee bend.")
         let completed = thinking + "\n" + #"data: {"Type":"response.completed","Response":{"Messages":[{"Type":"thought","Contents":[{"Type":"text","Text":"reasoning"}]},{"Type":"reply","Contents":[{"Type":"text","Text":"Final answer."}]}]}}"#
         XCTAssertEqual(try ADPClient.parse(completed), "Final answer.")
+
+        // Reasoning under another type name, or text with no message id, never reaches the
+        // person once a reply message is known.
+        let renamed = [
+            #"data: {"Type":"message.added","Message":{"Type":"reasoning","MessageId":"t1"}}"#,
+            #"data: {"Type":"text.delta","MessageId":"t1","Text":"Thinking about knees."}"#,
+            #"data: {"Type":"text.delta","Text":"stray"}"#,
+            #"data: {"Type":"message.added","Message":{"Type":"reply","MessageId":"r1"}}"#,
+            #"data: {"Type":"text.delta","MessageId":"r1","Text":"Bend gently."}"#,
+        ].joined(separator: "\n")
+        XCTAssertEqual(try ADPClient.parse(renamed), "Bend gently.")
         XCTAssertEqual(LeleAgent.tidy("Hold 15–20 seconds — then rest."), "Hold 15 to 20 seconds, then rest.")
     }
 

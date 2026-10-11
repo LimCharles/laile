@@ -294,5 +294,53 @@ import Testing
         #expect(GoalsReader.safetyConcern(in: "not really, but I get dizzy on stairs") == true)
         #expect(GoalsReader.safetyConcern(in: "my doctor told me to take it easy") == true)
         #expect(GoalsReader.safetyConcern(in: "yep") == true)
+        // A denied symptom after "but" must not hide the one before it.
+        #expect(GoalsReader.safetyConcern(in: "I get dizzy sometimes, but no chest pain") == true)
+        #expect(GoalsReader.safetyConcern(in: "nothing like that") == false)
+    }
+
+    /// From the CodeBuddy review: a dose was logged for "I haven't taken it yet" and "I took it
+    /// yesterday", because cues matched word starts ("yes" in "yesterday") and ignored negation.
+    @Test(arguments: [
+        "I haven't taken it yet",
+        "I took it yesterday",
+        "not yet",
+        "I'm not done yet",
+        "I never had it",
+        "yesterday",
+        "I'll take it later",
+        "forgot, will take it now",
+    ])
+    func reminderNeverLogsADoseThatWasntTaken(_ text: String) {
+        let reminder = question(.reminder, ["taken"])
+        #expect(ReplyReader.action(in: reminder, for: text) == nil, "\(text)")
+    }
+
+    @Test(arguments: ["yes", "yep, done", "took it after breakfast", "just had it", "Taken"])
+    func reminderStillLogsAClearYes(_ text: String) {
+        let reminder = question(.reminder, ["taken"])
+        #expect(ReplyReader.action(in: reminder, for: text)?.id == "taken", "\(text)")
+    }
+
+    /// A denied symptom on the morning check-in is not a flare: it used to save a flare note and
+    /// ease the next session.
+    @Test(arguments: [
+        ("no more pain", "better"),
+        ("not stiff anymore", "better"),
+        ("no swelling today", "better"),
+        ("not so bad", "same"),
+        ("not fine at all", "worse"),
+        ("still sore", "worse"),
+        ("pain's not gone yet, it's worse", "worse"),
+    ])
+    func morningCheckInHonoursNegation(_ text: String, _ expected: String) {
+        let q = question(.morningCheckIn, ["better", "same", "worse", "talk"])
+        #expect(ReplyReader.action(in: q, for: text)?.id == expected, "\(text)")
+    }
+
+    @Test func barrierHonoursNegation() {
+        let progress = question(.progress, ["time", "pain", "worried", "forgot", "energy", "fine"])
+        #expect(ReplyReader.action(in: progress, for: "no pain, all fine")?.id == "fine")
+        #expect(ReplyReader.action(in: progress, for: "my knee hurts on the stairs")?.id == "pain")
     }
 }
