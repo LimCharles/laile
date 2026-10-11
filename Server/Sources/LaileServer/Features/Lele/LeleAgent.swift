@@ -9,7 +9,7 @@ struct LeleAgent {
     let logger: Logger
 
     func reply(to text: String, context: String, userID: UUID) async throws -> String {
-        let message = "\(context)\n\nQUESTION: \(text)"
+        let message = "\(context)\n\nQUESTION: \(text)\n\(Self.voiceReminder)"
         if let appKey = app.laile.config.adpAppKey {
             do {
                 let answer = try await ADPClient(appKey: appKey, client: app.client).chat(message, visitorId: userID.uuidString,
@@ -31,6 +31,10 @@ struct LeleAgent {
         "laile-\(userID.uuidString.replacingOccurrences(of: "-", with: "").lowercased())-\(DayKey(now, timeZone: .current).description)"
     }
 
+    /// ADP's knowledge-base template can override the persona prompt (third person, headings, file
+    /// names as citations), so each message restates Lele's voice.
+    static let voiceReminder = "(Reply as Lele, talking to them as \"you\": under 120 words, plain sentences, no headings, no document names.)"
+
     /// ADP's Fallback Reply (set in the console, see agent/README.md): the knowledge base had no answer.
     static func isFallback(_ text: String) -> Bool {
         text.replacingOccurrences(of: "’", with: "'").hasPrefix("I'm not able to answer that one")
@@ -50,7 +54,15 @@ struct LeleAgent {
                 // ADP strips its citations itself and leaves the gap: "work ." → "work."
                 .replacingOccurrences(of: #"\s+([.,;:!?])"#, with: "$1", options: .regularExpression)
         }
+        // A report-style title line ("How Mdm Tan Is Doing") before the first paragraph.
+        if let first = lines.firstIndex(where: { !$0.isEmpty }), lines.indices.contains(first + 1), lines[first + 1].isEmpty,
+           let last = lines[first].last, !".?!:)\"”".contains(last), lines[first].split(separator: " ").count <= 8 {
+            lines.remove(at: first)
+        }
         return lines.joined(separator: "\n").replacingOccurrences(of: "**", with: "")
+            // Knowledge-base file names cited inline ("... a few weeks 07-medicines-after-joint-surgery.").
+            .replacingOccurrences(of: #"\s?\b\d{2}(-[a-z0-9]+){2,}(\.md)?\b"#, with: "", options: .regularExpression)
+            .replacingOccurrences(of: #"(?i)based on the provided [^,:.]*[,:]\s*"#, with: "", options: .regularExpression)
             // No dashes in Lele's voice: number ranges read "3 to 5", other dashes become commas.
             .replacingOccurrences(of: #"(\d)\s?[–—]\s?(\d)"#, with: "$1 to $2", options: .regularExpression)
             .replacingOccurrences(of: #"\s*[—–]\s*"#, with: ", ", options: .regularExpression)

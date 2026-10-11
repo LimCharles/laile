@@ -331,17 +331,5 @@ and keep all the depth in Rehab and the clinician portal. That's what the judges
 
 ## 11. Demo script (5 to 8 min)
 
-1. **Clinician** enters a fictional patient (Mdm Tan, 68, right total knee replacement,
-   day 10), clicks *Draft program*, the AI proposes 4 exercises with reasons, one is blocked
-   by a precaution rule, clinician tweaks a hold time and signs.
-2. **Patient** scans the invite, the voice agent walks through camera setup, runs the
-   baseline: knee bend 72°.
-3. Heel slides with counting; during a hold the patient says *"it's pulling at the back"*
-   → reassured, continues. Next set: *"ow, sharp, inside of my knee"* → pause, 6/10, set
-   stopped, logged at 95° on rep 7.
-4. Skip ahead two weeks (seeded data): ROM trend with a milestone at 90°, one plateau flag.
-5. **Clinician** opens the pre-visit report: adherence, ROM trend, the pain event with
-   angle context, the patient's questions.
-6. Discharge → **graduation into Move mode**: first push-up baseline, progression path.
-7. Close on the trust boundary: video never leaves the device, the AI drafts but never
-   decides, clinicians sign.
+The current script, checked against the live server, is in
+[`submission/video/demo-script.md`](../submission/video/demo-script.md).

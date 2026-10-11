@@ -279,12 +279,6 @@ enum LeleContext {
         if let health = try await HealthStore(db: db).get(userID) {
             lines.append("Goals: \(health.goals.map(\.label).joined(separator: ", ")); \(health.minutesPerDay) min a day; careful with: \(health.sensitiveAreas.map(\.label).joined(separator: ", ")).")
         }
-        if let profile = try await PatientProfileModel.query(on: db).filter(\.$user.$id == userID).filter(\.$dischargedAt == nil).first(),
-           !profile.medications.isEmpty {
-            lines.append("MEDICINES (as prescribed): " + profile.medications.map { med in
-                "\(med.name), \(med.doseText) at \(med.times.sorted().map(\.label).joined(separator: ", ")): \(med.purpose)"
-            }.joined(separator: " | "))
-        }
         let samples = try await MetricSampleModel.samples(for: userID, on: db)
         for trend in ProgressOverviewBuilder.trends(samples: samples, mode: user.mode) {
             guard let latest = trend.latest else { continue }

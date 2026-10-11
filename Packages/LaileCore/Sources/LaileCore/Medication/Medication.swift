@@ -100,7 +100,7 @@ public enum MedicationExplainer {
     public static func answer(_ med: Medication) -> String {
         let times = med.times.sorted().map(\.label)
         let when = times.isEmpty ? "" : " at \(times.joined(separator: " and "))"
-        return "Here's what \(med.prescribedBy) wrote about \(med.name): \(med.purpose) "
+        return "Here's what \(CallName.plain(med.prescribedBy)) wrote about \(med.name): \(med.purpose) "
             + "It's \(med.doseText)\(when). \(med.howToTake) "
             + "Questions about the dose or timing go to your doctor or pharmacist."
     }

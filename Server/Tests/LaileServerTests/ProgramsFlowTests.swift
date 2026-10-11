@@ -231,6 +231,8 @@ final class ProgramsFlowTests: XCTestCase {
         XCTAssertEqual(try ADPClient.parse(renamed), "Bend gently.")
         XCTAssertEqual(LeleAgent.tidy("Hold 15–20 seconds — then rest."), "Hold 15 to 20 seconds, then rest.")
         XCTAssertEqual(LeleAgent.tidy("We eased the bend by 10° [CARE NOTES]."), "We eased the bend by 10°.")
+        XCTAssertEqual(LeleAgent.tidy("How You Are Doing\n\nBased on the provided reference, your bend is 86°, often for a few weeks 07-medicines-after-joint-surgery."),
+                       "your bend is 86°, often for a few weeks.")
         XCTAssertTrue(LeleAgent.isFallback("I’m not able to answer that one, and I don't want to guess."))
     }
 
