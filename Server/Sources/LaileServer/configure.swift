@@ -23,6 +23,7 @@ func makeFeatures() -> [any LaileFeature] {
         StreamsFeature(),
         VoiceFeature(),
         SpeechFeature(),
+        WebFeature(),
         PortalFeature(),
         DemoFeature(),
     ]
@@ -74,7 +75,6 @@ public func configure(_ app: Application) async throws {
 
     app.asyncCommands.use(GenerateCuesCommand(), as: "generate-cues")
     app.get("health") { _ in ["status": "ok", "llm": app.laile.llm.name, "planner": app.laile.planner.name] }
-    app.get { req in req.redirect(to: "/portal") }
     app.logger.info("Laile features: \(features.map(\.name).joined(separator: ", "))")
     app.logger.info("LLM: \(app.laile.llm.name) · Planner: \(app.laile.planner.name) · Voice: \(app.laile.speech?.name ?? "none (on-device fallback)") · TRTC: \(config.trtc == nil ? "off" : "on")")
 }

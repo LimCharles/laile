@@ -116,6 +116,10 @@ struct LeleService {
         // Buttons are suggestions: a typed answer is matched to the option it means.
         let action = actionId.flatMap { id in question.actions.first { $0.id == id } }
             ?? typed.flatMap { ReplyReader.action(in: question, for: $0) }
+        // Asking for a new plan isn't an answer to this question: it starts planning instead.
+        if action == nil, let typed, !PlanChat.isPlanQuestion(question), PlanChat.wantsNewPlan(typed) {
+            return try await chat(typed, user: user)
+        }
         guard typed != nil || action != nil else { throw Abort(.badRequest, reason: "Pick an answer or type one.") }
         let answer = typed ?? action?.label ?? ""
         if PlanChat.isPlanQuestion(question), let key = question.dedupeKey {

@@ -393,6 +393,21 @@ final class ProgramsFlowTests: XCTestCase {
         XCTAssertEqual(approved?.program.signedBy?.contains("Nair"), true)
     }
 
+    /// The app sends typed words as the answer to Lele's open question; asking for a new plan starts planning instead.
+    func testAskingForANewPlanWhileLeleWaitsForAnAnswerStartsPlanning() async throws {
+        let auth = try await demo(.patient)
+        var messages: [LeleMessage] = []
+        try await app.test(.GET, "v1/lele/messages", headers: bearer(auth.token)) { res in messages = try res.content.decode([LeleMessage].self) }
+        let open = try XCTUnwrap(messages.last { $0.isOpenQuestion && !PlanChat.isPlanQuestion($0) })
+        var turn: API.LeleTurnResponse?
+        try await app.test(.POST, "v1/lele/messages/\(open.id)/reply", headers: bearer(auth.token), beforeRequest: { req in
+            try req.content.encode(API.LeleReplyRequest(text: "I'd like a new program with new goals."))
+        }, afterResponse: { res in turn = try res.content.decode(API.LeleTurnResponse.self) })
+        let planQuestion = try XCTUnwrap(turn?.messages.last)
+        XCTAssertTrue(PlanChat.isPlanQuestion(planQuestion), "Lele asks the first planning question")
+        XCTAssertFalse(turn?.messages.contains { $0.id == open.id } ?? true, "the earlier question is left for later")
+    }
+
     func testShoulderDemoPatientHasAnArmLiftTrend() async throws {
         try await DemoWorld(app: app).ensureBase()
         let userFound = try await UserModel.query(on: app.db).filter(\.$email == DemoSeed.shoulderEmail).first()

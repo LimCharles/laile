@@ -1,0 +1,379 @@
+{
+ "enrollmentId": "2CF736B9-3CCC-4A7E-8CB8-BCA3B0473DD2",
+ "isCheckIn": false,
+ "isSupervised": true,
+ "kind": "program",
+ "mode": "rehab",
+ "plan": [
+  {
+   "dose": {
+    "holdSeconds": 30,
+    "restSeconds": 30,
+    "sets": 1
+   },
+   "side": "right",
+   "spec": {
+    "cameraView": "any",
+    "category": "circulation",
+    "cues": {
+     "go": "Point your toes away, then pull them back towards you. Keep a steady rhythm.",
+     "purpose": "Pumping your ankles keeps blood moving in your legs, which helps prevent clots after surgery.",
+     "setup": "Lie on your back with your legs straight."
+    },
+    "defaultDose": {
+     "holdSeconds": 45,
+     "restSeconds": 10,
+     "sets": 1
+    },
+    "formChecks": [],
+    "id": "ankle-pumps",
+    "intensity": 1,
+    "kind": {
+     "hold": {
+      "_0": {}
+     }
+    },
+    "limits": {
+     "holdSeconds": [
+      20,
+      120
+     ],
+     "restSeconds": [
+      5,
+      120
+     ],
+     "sets": [
+      1,
+      3
+     ]
+    },
+    "loads": {
+     "impact": 0,
+     "loadsWrists": false,
+     "peakHipFlexion": 0,
+     "peakKneeFlexion": 0,
+     "peakShoulderElevation": 0,
+     "weightBearing": false
+    },
+    "modes": [
+     "rehab"
+    ],
+    "name": "Ankle pumps",
+    "perSide": false,
+    "posture": "supine"
+   }
+  },
+  {
+   "dose": {
+    "holdSeconds": 4,
+    "restSeconds": 5,
+    "sets": 10
+   },
+   "side": "right",
+   "spec": {
+    "cameraView": "side",
+    "category": "strength",
+    "cues": {
+     "go": "Tighten your thigh and push the back of your knee down.",
+     "purpose": "Tightening your thigh muscle wakes it up and helps your knee get fully straight again.",
+     "setup": "Lie on your back, legs straight, with your side facing the phone."
+    },
+    "defaultDose": {
+     "holdSeconds": 5,
+     "restSeconds": 5,
+     "sets": 10
+    },
+    "formChecks": [],
+    "id": "quad-set",
+    "intensity": 1,
+    "kind": {
+     "hold": {
+      "_0": {
+       "angle": {
+        "from": "hip",
+        "to": "ankle",
+        "vertex": "knee"
+       },
+       "condition": {
+        "atLeast": {
+         "_0": 165
+        }
+       },
+       "correction": "Press the back of your knee down into the bed to keep the timer going."
+      }
+     }
+    },
+    "limits": {
+     "holdSeconds": [
+      3,
+      10
+     ],
+     "restSeconds": [
+      3,
+      30
+     ],
+     "sets": [
+      3,
+      15
+     ]
+    },
+    "loads": {
+     "impact": 0,
+     "loadsWrists": false,
+     "peakHipFlexion": 0,
+     "peakKneeFlexion": 0,
+     "peakShoulderElevation": 0,
+     "weightBearing": false
+    },
+    "metric": {
+     "kind": "kneeExtensionDeficit",
+     "source": "extensionDeficitFromMaxAngle"
+    },
+    "modes": [
+     "rehab"
+    ],
+    "name": "Quad set",
+    "perSide": false,
+    "posture": "supine"
+   }
+  },
+  {
+   "careCue": {
+    "key": "care.FF021A2D",
+    "priority": 1,
+    "text": "Last time this one was sore on the inside of your right knee, so I've made it a little easier today. Tell me how it feels."
+   },
+   "dose": {
+    "reps": 7,
+    "restSeconds": 30,
+    "sets": 2
+   },
+   "repTargetOverride": 132.2,
+   "side": "right",
+   "spec": {
+    "cameraView": "side",
+    "category": "mobility",
+    "cues": {
+     "go": "Slide your heel up towards your bottom, as far as is comfortable, then slide it back.",
+     "purpose": "Sliding your heel towards you gently stretches your new knee so it can bend enough for chairs and stairs.",
+     "setup": "Lie on your back with the side of your operated leg facing the phone."
+    },
+    "defaultDose": {
+     "reps": 10,
+     "restSeconds": 30,
+     "sets": 2
+    },
+    "formChecks": [],
+    "id": "heel-slide",
+    "intensity": 1,
+    "kind": {
+     "reps": {
+      "_0": {
+       "angle": {
+        "from": "hip",
+        "to": "ankle",
+        "vertex": "knee"
+       },
+       "partialFraction": 0.45,
+       "start": 160,
+       "target": 110
+      }
+     }
+    },
+    "limits": {
+     "reps": [
+      5,
+      20
+     ],
+     "restSeconds": [
+      5,
+      120
+     ],
+     "sets": [
+      1,
+      3
+     ]
+    },
+    "loads": {
+     "impact": 0,
+     "loadsWrists": false,
+     "peakHipFlexion": 60,
+     "peakKneeFlexion": 90,
+     "peakShoulderElevation": 0,
+     "weightBearing": false
+    },
+    "metric": {
+     "kind": "kneeFlexion",
+     "source": "peakFlexionFromMinAngle"
+    },
+    "modes": [
+     "rehab"
+    ],
+    "name": "Heel slides",
+    "perSide": false,
+    "posture": "supine"
+   }
+  },
+  {
+   "dose": {
+    "reps": 5,
+    "restSeconds": 30,
+    "sets": 2
+   },
+   "side": "right",
+   "spec": {
+    "cameraView": "side",
+    "category": "strength",
+    "cues": {
+     "go": "Tighten your thigh, lift the straight leg to the height of your other knee, then lower slowly.",
+     "purpose": "Lifting a straight leg strengthens your thigh so your knee feels steady when you walk.",
+     "setup": "Lie on your back. Bend your other knee and keep the operated leg straight."
+    },
+    "defaultDose": {
+     "reps": 10,
+     "restSeconds": 30,
+     "sets": 2
+    },
+    "formChecks": [
+     {
+      "angle": {
+       "from": "hip",
+       "to": "ankle",
+       "vertex": "knee"
+      },
+      "condition": {
+       "atLeast": {
+        "_0": 155
+       }
+      },
+      "cue": "Keep your knee straight as you lift.",
+      "id": "knee-straight"
+     }
+    ],
+    "id": "straight-leg-raise",
+    "intensity": 2,
+    "kind": {
+     "reps": {
+      "_0": {
+       "angle": {
+        "from": "shoulder",
+        "to": "knee",
+        "vertex": "hip"
+       },
+       "partialFraction": 0.45,
+       "start": 170,
+       "target": 145
+      }
+     }
+    },
+    "limits": {
+     "reps": [
+      5,
+      15
+     ],
+     "restSeconds": [
+      5,
+      120
+     ],
+     "sets": [
+      1,
+      3
+     ]
+    },
+    "loads": {
+     "impact": 0,
+     "loadsWrists": false,
+     "peakHipFlexion": 40,
+     "peakKneeFlexion": 0,
+     "peakShoulderElevation": 0,
+     "weightBearing": false
+    },
+    "metric": {
+     "kind": "straightLegRaiseReps",
+     "source": "bestSetReps"
+    },
+    "modes": [
+     "rehab"
+    ],
+    "name": "Straight-leg raise",
+    "perSide": false,
+    "posture": "supine"
+   }
+  },
+  {
+   "dose": {
+    "reps": 10,
+    "restSeconds": 30,
+    "sets": 2
+   },
+   "side": "right",
+   "spec": {
+    "cameraView": "side",
+    "category": "strength",
+    "cues": {
+     "go": "Straighten your knee until your leg is level, pause, then lower slowly.",
+     "purpose": "Straightening your knee while seated builds the thigh strength you need to stand up.",
+     "setup": "Sit on a firm chair with your side facing the phone."
+    },
+    "defaultDose": {
+     "reps": 10,
+     "restSeconds": 30,
+     "sets": 2
+    },
+    "formChecks": [],
+    "id": "long-arc-quad",
+    "intensity": 2,
+    "kind": {
+     "reps": {
+      "_0": {
+       "angle": {
+        "from": "hip",
+        "to": "ankle",
+        "vertex": "knee"
+       },
+       "partialFraction": 0.45,
+       "start": 110,
+       "target": 160
+      }
+     }
+    },
+    "limits": {
+     "reps": [
+      5,
+      15
+     ],
+     "restSeconds": [
+      5,
+      120
+     ],
+     "sets": [
+      1,
+      3
+     ]
+    },
+    "loads": {
+     "impact": 0,
+     "loadsWrists": false,
+     "peakHipFlexion": 90,
+     "peakKneeFlexion": 90,
+     "peakShoulderElevation": 0,
+     "weightBearing": false
+    },
+    "modes": [
+     "rehab"
+    ],
+    "name": "Seated knee straightening",
+    "perSide": false,
+    "posture": "seated"
+   }
+  }
+ ],
+ "policy": {
+  "emergencyNumber": "995",
+  "mode": "rehab",
+  "painStopExerciseAt": 6,
+  "painStopSetAbove": 4
+ },
+ "programId": "69CF55C4-26D4-44CE-ABB5-15956B5E64AC",
+ "title": "Knee replacement, phase 1"
+}

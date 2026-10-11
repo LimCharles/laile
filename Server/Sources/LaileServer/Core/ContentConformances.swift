@@ -35,3 +35,4 @@ extension API.CoachTurnRequest: @retroactive Content {}
 extension API.MedicationTakenRequest: @retroactive Content {}
 extension API.VoiceSessionRequest: @retroactive Content {}
 extension API.SpeakRequest: @retroactive Content {}
+extension SessionTemplate: @retroactive Content {}
