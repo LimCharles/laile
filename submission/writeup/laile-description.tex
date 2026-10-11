@@ -222,7 +222,22 @@ Safe, strictly bounded, honest & Fixed referral for dose questions, red flags ha
 \section{How it was built}
 \laile\ is a Swift monorepo: \texttt{LaileCore} (pure Swift domain logic shared by phone and server), \texttt{LaileKit} (SwiftUI feature modules), the iOS app, and a Vapor server with the clinician portal. Lele's prompt and knowledge base live in \texttt{agent/} and are imported into ADP.
 
-\fillinblock{How CodeBuddy or WorkBuddy was used, with 3+ conversation screenshots (required for scoring).}
+\subsection*{Audited and fixed with CodeBuddy}
+In the final week the code was handed to WorkBuddy, CodeBuddy's coding agent (Tencent Hy4 model), through its GitHub connector. It cloned the repository, ported the safety rules to Python to test real phrasings against them, and later installed a Swift toolchain to compile and run its own changes. Three tasks:
+\begin{itemize}
+  \item \textbf{Safety audit} of the symptom rules. Findings included: a denial of pain hid numbness (``no pain but my foot is numb'' was answered with ``carry on''); denials raised false emergencies (``no chest pain'' told the person to call 995); a red flag judged by the model could never reach the emergency level; the server's pain threshold could become 11 on a 0 to 10 scale; a stop decision during rest was ignored; and common wordings were missed (``my chest is really tight'', ``my incision is leaking'', falls).
+  \item \textbf{Safety fixes.} WorkBuddy implemented all six fixes with tests for every case in its audit; 112 core tests pass in its toolchain (92 before). The patch is reviewed before it is merged.
+  \item \textbf{ADP and reply review.} Sixteen findings on the Lele integration, the most serious being that ``I haven't taken it yet'' was logged as a taken medicine dose, plus reasoning text that could leak into replies, no server-side timeout on the ADP call, and a failed turn that could not be retried.
+\end{itemize}
+
+\begin{figure}[htbp]
+\centering
+\fbox{\includegraphics[width=0.47\linewidth]{../codebuddy/01-safety-audit-request.jpg}}\hfill
+\fbox{\includegraphics[width=0.47\linewidth]{../codebuddy/02-safety-audit-findings.jpg}}\\[6pt]
+\fbox{\includegraphics[width=0.47\linewidth]{../codebuddy/06-safety-fixes-done.jpg}}\hfill
+\fbox{\includegraphics[width=0.47\linewidth]{../codebuddy/05-adp-review-findings.jpg}}
+\caption{WorkBuddy (CodeBuddy) sessions on the Laile repository: the safety audit request and its findings (top), the implemented safety fixes and the ADP integration review (bottom).}
+\end{figure}
 
 \begin{thebibliography}{9}\small
 \bibitem{argent2018} Argent R, Daly A, Caulfield B. Patient involvement with home-based exercise programs: can connected health interventions influence adherence? \emph{JMIR mHealth and uHealth}. 2018;6(3):e47. \url{https://mhealth.jmir.org/2018/3/e47/}
