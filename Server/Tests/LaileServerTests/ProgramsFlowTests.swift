@@ -343,6 +343,56 @@ final class ProgramsFlowTests: XCTestCase {
         }
     }
 
+    /// Plans a new program by chatting with Lele: five questions, buttons or typed answers.
+    func planByChat(_ token: String) async throws -> [LeleMessage] {
+        func send(_ path: String, _ body: some Content) async throws -> API.LeleTurnResponse {
+            var turn: API.LeleTurnResponse?
+            try await app.test(.POST, path, headers: bearer(token), beforeRequest: { req in try req.content.encode(body) },
+                               afterResponse: { res in turn = try res.content.decode(API.LeleTurnResponse.self) })
+            return try XCTUnwrap(turn)
+        }
+        var turn = try await send("v1/lele/chat", API.LeleChatRequest(text: "my goals have changed, can you make me a new program?"))
+        let answers: [API.LeleReplyRequest] = [.init(text: "I want to get stronger"), .init(actionId: "min:15"), .init(text: "I train regularly"),
+                                                .init(actionId: "area:none"), .init(actionId: "safe:no")]
+        for answer in answers {
+            let question = try XCTUnwrap(turn.messages.last { PlanChat.isPlanQuestion($0) && $0.answeredAt == nil })
+            turn = try await send("v1/lele/messages/\(question.id)/reply", answer)
+        }
+        return turn.messages
+    }
+
+    func testPlanningByChatReplacesTheirLelePlan() async throws {
+        let auth = try await demo(.mover)
+        let before = try await enrollments(auth.token).filter { $0.kind == .personal && $0.isActive }
+        let messages = try await planByChat(auth.token)
+        XCTAssertTrue(messages.contains { $0.actions.contains { $0.kind == .startSession } }, "Lele offers the check-in")
+        let after = try await enrollments(auth.token).filter { $0.kind == .personal && $0.isActive }
+        XCTAssertEqual(after.count, 1, "one Lele plan at a time")
+        if let old = before.first { XCTAssertNotEqual(after.first?.id, old.id, "the new plan replaced the old one") }
+    }
+
+    func testPlanningByChatWhileSupervisedGoesToThePhysio() async throws {
+        let auth = try await demo(.patient)
+        let messages = try await planByChat(auth.token)
+        XCTAssertTrue(messages.last?.text.contains("sent it to them to approve") ?? false)
+        let pending = try await enrollments(auth.token)
+        XCTAssertFalse(pending.contains { $0.kind == .personal }, "nothing starts before the physio says yes")
+
+        let cookie = try await portalCookie()
+        var dashboard = ""
+        try await app.test(.GET, "portal", headers: cookie) { res in dashboard = res.body.string }
+        XCTAssertTrue(dashboard.contains("Set new goals with Lele"))
+
+        let found = try await ProgramRequestModel.query(on: app.db).filter(\.$user.$id == auth.user.id).first()
+        let request = try XCTUnwrap(found)
+        XCTAssertNotNil(request.draftProgram)
+        try await app.test(.POST, "portal/requests/\(try request.requireID())/approve", headers: cookie, beforeRequest: { req in
+            try req.content.encode(["back": "/portal"], as: .urlEncodedForm)
+        }, afterResponse: { res in XCTAssertEqual(res.status, .seeOther) })
+        let approved = try await enrollments(auth.token).first { $0.kind == .personal }
+        XCTAssertEqual(approved?.program.signedBy?.contains("Nair"), true)
+    }
+
     func testShoulderDemoPatientHasAnArmLiftTrend() async throws {
         try await DemoWorld(app: app).ensureBase()
         let userFound = try await UserModel.query(on: app.db).filter(\.$email == DemoSeed.shoulderEmail).first()

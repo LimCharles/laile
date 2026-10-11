@@ -34,7 +34,8 @@ public func configure(_ app: Application) async throws {
     app.http.client.configuration.timeout = .init(connect: .seconds(10), read: .seconds(45))
 
     let config = LaileConfig.fromEnvironment(app.environment)
-    app.laile = AppServices(config: config, llm: makeLLMProvider(config: config, app: app),
+    let llm = makeLLMProvider(config: config, app: app)
+    app.laile = AppServices(config: config, llm: llm, planner: makePlanner(config: config, llm: llm, app: app),
                             speech: SpeechFactory.make(config: config.speech, tencent: config.tencent, client: app.client))
 
     // JSON: ISO-8601 dates everywhere, matching the iOS client (LaileJSON).
@@ -72,13 +73,20 @@ public func configure(_ app: Application) async throws {
     }
 
     app.asyncCommands.use(GenerateCuesCommand(), as: "generate-cues")
-    app.get("health") { _ in ["status": "ok", "llm": app.laile.llm.name] }
+    app.get("health") { _ in ["status": "ok", "llm": app.laile.llm.name, "planner": app.laile.planner.name] }
     app.get { req in req.redirect(to: "/portal") }
     app.logger.info("Laile features: \(features.map(\.name).joined(separator: ", "))")
-    app.logger.info("LLM: \(app.laile.llm.name) · Voice: \(app.laile.speech?.name ?? "none (on-device fallback)") · TRTC: \(config.trtc == nil ? "off" : "on")")
+    app.logger.info("LLM: \(app.laile.llm.name) · Planner: \(app.laile.planner.name) · Voice: \(app.laile.speech?.name ?? "none (on-device fallback)") · TRTC: \(config.trtc == nil ? "off" : "on")")
 }
 
 func makeLLMProvider(config: LaileConfig, app: Application) -> any LLMProvider {
     guard let llm = config.llm else { return MockLLMProvider() }
     return HunyuanProvider(config: llm, client: app.client, logger: app.logger)
+}
+
+/// Drafts go to the configured model when there is one, otherwise to Lele's ADP agent.
+func makePlanner(config: LaileConfig, llm: any LLMProvider, app: Application) -> any LLMProvider {
+    if llm.isLive { return llm }
+    guard let appKey = config.adpAppKey else { return llm }
+    return ADPPlannerProvider(appKey: appKey, client: app.client, logger: app.logger)
 }

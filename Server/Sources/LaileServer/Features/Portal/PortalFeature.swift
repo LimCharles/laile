@@ -22,6 +22,10 @@ struct PortalFeature: LaileFeature {
         clinician.get("patients", "new") { req in try await req.view.render("patient-new", NewPatientContext.make(error: nil)) }
         clinician.post("patients", use: createPatient)
         clinician.get("patients", ":patientID", use: patientDetail)
+        clinician.get("patients", ":patientID", "lele-brief") { req async throws -> [String: String] in
+            let profile = try await ownedPatient(req)
+            return ["text": try await LeleBriefWriter(req: req).brief(for: profile) ?? ""]
+        }
         clinician.get("patients", ":patientID", "report", use: report)
         clinician.post("patients", ":patientID", "programs", "draft", use: draftProgram)
         clinician.get("programs", ":programID", use: editProgram)
@@ -122,7 +126,7 @@ struct PortalFeature: LaileFeature {
             a.item.priority != b.item.priority ? a.item.priority < b.item.priority : (a.item.at ?? .distantPast) > (b.item.at ?? .distantPast)
         }.map(\.row)
         return try await req.view.render("dashboard", DashboardContext(clinicianName: clinician.displayName, patients: rows,
-                                                                       brief: ordered, llmName: req.laile.llm.name))
+                                                                       brief: ordered, llmName: req.laile.planner.name))
     }
 
     /// What Lele noticed about one patient, for the clinician's daily list.
@@ -336,7 +340,7 @@ struct PortalFeature: LaileFeature {
             guard let userID = profile.$user.id else { return nil }
             return try await MetricSampleModel.samples(for: userID, on: req.db).last { $0.kind == .kneeFlexion }?.value
         }()
-        var program = try await ProgramDraftService(llm: req.laile.llm, library: req.laile.library, logger: req.logger)
+        var program = try await ProgramDraftService(llm: req.laile.planner, library: req.laile.library, logger: req.logger)
             .draft(for: profile, latestKneeFlexion: latestFlexion)
         let existing = try await ProgramModel.all(for: profile.requireID(), on: req.db)
         program.version = (existing.map(\.version).max() ?? 0) + 1

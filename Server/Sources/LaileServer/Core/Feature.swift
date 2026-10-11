@@ -69,7 +69,7 @@ struct LaileConfig: Sendable {
         return LaileConfig(
             databaseURL: value("DATABASE_URL"),
             sqlitePath: value("SQLITE_PATH") ?? "laile.sqlite",
-            llm: llm,
+            llm: env == .testing ? nil : llm,
             tencent: tencent,
             trtc: trtc,
             seedDemoData: value("SEED_DEMO_DATA").map { $0 == "true" } ?? (env != .production),
@@ -85,6 +85,9 @@ struct LaileConfig: Sendable {
 final class AppServices: Sendable {
     let config: LaileConfig
     let llm: any LLMProvider
+    /// Writes program drafts, Lele's plans and the clinician brief: the configured model, or Lele's
+    /// ADP agent (same knowledge base as her chat) when only ADP is set up.
+    let planner: any LLMProvider
     /// The coach's voice (ElevenLabs, or Tencent TTS as fallback), if configured.
     let speech: (any SpeechSynthesizer)?
     let speechCache: SpeechCache
@@ -93,10 +96,13 @@ final class AppServices: Sendable {
     let voiceSessions = VoiceSessionStore()
     /// What each person is doing right now in a session, for their clinician's live view.
     let live = LiveSessionStore()
+    /// Lele's written briefs for clinicians, kept for 30 minutes.
+    let briefs = LeleBriefCache()
 
-    init(config: LaileConfig, llm: any LLMProvider, speech: (any SpeechSynthesizer)? = nil) {
+    init(config: LaileConfig, llm: any LLMProvider, planner: (any LLMProvider)? = nil, speech: (any SpeechSynthesizer)? = nil) {
         self.config = config
         self.llm = llm
+        self.planner = planner ?? llm
         self.speech = speech
         self.speechCache = SpeechCache(directory: config.speech?.cacheDirectory ?? "voice-cache")
     }

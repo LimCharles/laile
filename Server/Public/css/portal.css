@@ -177,3 +177,8 @@ select { padding: 0.45rem; border-radius: 8px; border: 1px solid var(--border); 
 .brief-actions form { display: flex; gap: 0.4rem; margin: 0; }
 .decline-form input[type="text"] { width: 12rem; max-width: 100%; padding: 0.3rem 0.5rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font: inherit; font-size: 0.85rem; }
 .btn-small { padding: 0.3rem 0.7rem; font-size: 0.85rem; }
+
+/* Lele's written summary for the clinician */
+.lele-brief { border-left: 4px solid var(--accent, #0F8A6A); }
+.lele-brief ul { margin: 0.4rem 0 0.6rem; padding-left: 1.2rem; }
+.lele-brief li { margin: 0.3rem 0; line-height: 1.45; }

@@ -3,6 +3,9 @@ import Foundation
 /// A supervised person asking their physio to add a catalog program. Lele passes it on; only the
 /// physio can approve it.
 public struct ProgramRequest: Codable, Sendable, Hashable, Identifiable {
+    /// `catalogId` of a plan Lele drafted from the person's new goals, waiting for the physio.
+    public static let lelePlanId = "lele-plan"
+
     public enum Status: String, Codable, Sendable, Hashable {
         case pending, approved, declined
     }
@@ -124,7 +127,9 @@ public enum ClinicianBrief {
         }
         for request in input.requests where request.status == .pending {
             out.append(BriefItem(id: "request-\(request.id)", kind: .request, priority: .today,
-                                 text: "Asks to add \(request.title) alongside their program", at: request.createdAt, requestId: request.id))
+                                 text: request.catalogId == ProgramRequest.lelePlanId
+                                    ? "Set new goals with Lele, who drafted \(request.title) for you to approve"
+                                    : "Asks to add \(request.title) alongside their program", at: request.createdAt, requestId: request.id))
         }
         for draft in input.drafts where draft.status == .draft {
             out.append(BriefItem(id: "draft-\(draft.id)", kind: .draft, priority: .today,

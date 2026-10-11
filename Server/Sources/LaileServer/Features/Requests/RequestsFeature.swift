@@ -2,7 +2,8 @@ import Fluent
 import LaileCore
 import Vapor
 
-/// A supervised person asking their physio to add a catalog program.
+/// A supervised person asking their physio to add a catalog program, or to approve a plan Lele
+/// drafted from their new goals (`program` holds the draft, `catalogId` is `ProgramRequest.lelePlanId`).
 final class ProgramRequestModel: Model, @unchecked Sendable {
     static let schema = "program_requests"
 
@@ -15,8 +16,23 @@ final class ProgramRequestModel: Model, @unchecked Sendable {
     @OptionalField(key: "note") var note: String?
     @Field(key: "created_at") var createdAt: Date
     @OptionalField(key: "decided_at") var decidedAt: Date?
+    @OptionalField(key: "program") var programJSON: String?
 
     init() {}
+
+    init(userID: UUID, profileID: UUID, draft program: Program, at: Date) {
+        self.$user.id = userID
+        self.$patientProfile.id = profileID
+        self.catalogId = ProgramRequest.lelePlanId
+        self.title = program.title
+        self.status = ProgramRequest.Status.pending.rawValue
+        self.createdAt = at
+        self.programJSON = (try? LaileJSON.encoder().encode(program)).flatMap { String(data: $0, encoding: .utf8) }
+    }
+
+    var draftProgram: Program? {
+        programJSON.flatMap { try? LaileJSON.decoder().decode(Program.self, from: Data($0.utf8)) }
+    }
 
     init(userID: UUID, profileID: UUID, template: SessionTemplate, at: Date) {
         self.$user.id = userID
@@ -53,6 +69,16 @@ struct CreateProgramRequests: AsyncMigration {
     }
 }
 
+struct AddDraftProgramToRequests: AsyncMigration {
+    func prepare(on database: Database) async throws {
+        try await database.schema(ProgramRequestModel.schema).field("program", .string).update()
+    }
+
+    func revert(on database: Database) async throws {
+        try await database.schema(ProgramRequestModel.schema).deleteField("program").update()
+    }
+}
+
 struct RequestStore {
     let db: Database
 
@@ -82,7 +108,7 @@ struct RequestStore {
 
 struct RequestsFeature: LaileFeature {
     let name = "requests"
-    var migrations: [any Migration] { [CreateProgramRequests()] }
+    var migrations: [any Migration] { [CreateProgramRequests(), AddDraftProgramToRequests()] }
 
     func boot(_ app: Application) async throws {
         app.protected.post("requests") { req async throws -> API.LeleTurnResponse in
@@ -133,7 +159,20 @@ struct RequestsFeature: LaileFeature {
         let userID = model.$user.id
         let physio = CallName.plain(clinician.displayName)
         var message: LeleMessage
-        if approve, let template = SessionTemplate.builtIn(model.catalogId) {
+        if approve, var program = model.draftProgram {
+            // A plan Lele drafted from new goals: it starts as the physio's approved plan.
+            program.signedBy = clinician.displayName
+            program.signedAt = now
+            let store = EnrollmentStore(db: req.db)
+            let created = try await store.createPersonal(program, userID: userID)
+            created.subtitle = "Built by Lele, approved by \(physio)"
+            try await created.save(on: req.db)
+            var text = "Good news: \(physio) approved the plan I drafted from your new goals, \(program.title)."
+            if let note { text += " Their note: \"\(note)\"" }
+            text += " It runs alongside your program with them, inside their limits. The first session is a quick check-in."
+            message = LeleMessage(createdAt: now, kind: .clinician, text: text,
+                                  actions: [LeleAction(id: "start", label: "Start check-in", kind: .startSession, value: try created.requireID().uuidString)])
+        } else if approve, let template = SessionTemplate.builtIn(model.catalogId) {
             let store = EnrollmentStore(db: req.db)
             let enrollment = try await store.joinCatalog(template, userID: userID, joinedAt: now)
             var text = "Good news: \(physio) says yes to \(template.title)."

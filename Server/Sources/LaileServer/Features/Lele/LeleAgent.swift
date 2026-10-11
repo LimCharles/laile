@@ -174,3 +174,24 @@ struct ADPClient {
         return !reasoningTypes.contains(type ?? "")
     }
 }
+
+/// Program drafts and the clinician brief through the same Tencent Cloud ADP agent as Lele's chat.
+/// The request goes in a named mode ("PLAN REQUEST", "CLINICIAN BRIEF") that Lele's ADP prompt
+/// answers with only what was asked for, grounded in the knowledge base. Each call gets a fresh
+/// conversation, so drafts never mix with anyone's chat.
+struct ADPPlannerProvider: LLMProvider {
+    let appKey: String
+    let client: any Client
+    let logger: Logger
+
+    var name: String { "Lele on Tencent Cloud ADP (Hy3)" }
+    var isLive: Bool { true }
+
+    func complete(messages: [ChatMessage], tools: [ToolDefinition], temperature: Double) async throws -> LLMReply {
+        let body = messages.compactMap(\.content).joined(separator: "\n\n")
+        let text = body.hasPrefix("CLINICIAN BRIEF") || body.hasPrefix("PLAN REQUEST") ? body : "PLAN REQUEST\n\(body)"
+        let answer = try await ADPClient(appKey: appKey, client: client)
+            .chat(text, visitorId: "laile-planner", conversationId: "laile-plan-\(UUID().uuidString.lowercased())")
+        return LLMReply(content: answer, toolCalls: [])
+    }
+}

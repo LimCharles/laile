@@ -255,34 +255,9 @@ struct EnrollmentsFeature: LaileFeature {
     /// The goals conversation's result: Lele builds a personal program and explains it.
     func plan(req: Request) async throws -> API.PlanResponse {
         try await requireNotSupervised(req)
-        let user = try req.user
-        let userID = try user.requireID()
-        var profile = try req.content.decode(API.PlanRequest.self).profile
-        profile.clinicianPrecautions = try await HealthStore(db: req.db).get(userID)?.clinicianPrecautions
-        profile.updatedAt = Date()
-        try await HealthStore(db: req.db).save(profile, userID: userID)
-
-        let draft = try await LelePlanner(llm: req.laile.llm, logger: req.logger).plan(for: profile, name: user.displayName)
-        let store = EnrollmentStore(db: req.db)
-        let model = try await store.createPersonal(draft.program, userID: userID)
-        let enrollment = try await store.resolve(model)
-
-        let now = Date()
-        var messages: [LeleMessage] = []
-        let first = CallName.from(user.displayName)
-        let list = draft.reasons.prefix(4).map { "• \($0)" }.joined(separator: "\n")
-        messages.append(LeleMessage(createdAt: now, kind: .welcome,
-                                    text: "Thanks, \(first)! I've put together \u{201C}\(enrollment.title)\u{201D} for you:\n\(list)\nYour first session is a quick check-in so I can set targets from what you can comfortably do.",
-                                    actions: [LeleAction(id: "start", label: "Start check-in", kind: .startSession, value: enrollment.id.uuidString)]))
-        if profile.shouldSeeClinician {
-            // Name what they told us, so the suggestion fits ("your wrists", "an injury").
-            let areas = profile.sensitiveAreas.map { $0.label.lowercased() }
-            let what = profile.goals.contains(.recoverInjury) ? "an injury"
-                : areas.count > 1 ? "your " + areas.dropLast().joined(separator: ", ") + " and " + areas.last! : "your " + (areas.first ?? "aches")
-            messages.append(LeleMessage(createdAt: now.addingTimeInterval(1), kind: .welcome,
-                                        text: "Because you mentioned \(what), I've kept things gentle. If it bothers you, a physiotherapist can check it properly and give you a program I'll coach you through. If you already have a code from one, add it in Programs."))
-        }
-        for message in messages { try await LeleMessageModel(userID: userID, message: message).create(on: req.db) }
+        let profile = try req.content.decode(API.PlanRequest.self).profile
+        let outcome = try await LelePlanService(app: req.application, db: req.db, logger: req.logger).build(profile, user: req.user)
+        guard case .enrolled(let enrollment, let messages) = outcome else { throw Abort(.conflict) }
         return API.PlanResponse(enrollment: enrollment, messages: messages)
     }
 }

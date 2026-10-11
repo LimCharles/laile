@@ -25,6 +25,28 @@
     <p class="muted small">All numbers come straight from recorded sessions. Joint angles are camera estimates for tracking trends. Confirm key angles with a goniometer in clinic.</p>
   </div>
 
+<div class="card lele-brief" id="lele-brief">
+  <h2>Lele's summary</h2>
+  <p class="muted small" id="lele-brief-status">Lele is reading the record: sessions, measurements, what they told Lele and what needs review…</p>
+  <ul id="lele-brief-list" hidden></ul>
+  <p class="muted small" id="lele-brief-note" hidden>Written by Lele on Tencent Cloud ADP from this patient's record and the Laile knowledge base. Numbers come from recorded sessions; check anything that matters in clinic.</p>
+</div>
+<script>
+(function () {
+  const url = location.pathname.replace(/\/report$/, '').replace(/\/$/, '') + '/lele-brief';
+  fetch(url, { credentials: 'same-origin' }).then(r => r.json()).then(v => {
+    const status = document.getElementById('lele-brief-status');
+    const text = (v.text || '').trim();
+    if (!text) { document.getElementById('lele-brief').hidden = true; return; }
+    const list = document.getElementById('lele-brief-list');
+    text.split('\n').map(l => l.replace(/^[•\-*]\s*/, '').trim()).filter(Boolean).forEach(l => {
+      const li = document.createElement('li'); li.textContent = l; list.appendChild(li);
+    });
+    status.hidden = true; list.hidden = false; document.getElementById('lele-brief-note').hidden = false;
+  }).catch(() => { document.getElementById('lele-brief').hidden = true; });
+})();
+</script>
+
   #if(count(flags) > 0):
   <div class="card">
     <h2>Flags</h2>

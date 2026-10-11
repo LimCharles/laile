@@ -140,10 +140,10 @@ extension PortalFeature {
         var program = draftModel.program
         var changes: [String] = []
         var usedModel = false
-        if req.laile.llm.isLive {
+        if req.laile.planner.isLive {
             do {
                 let messages = Prompts.programRevise(program: program, instruction: instruction, context: profile.context, library: req.laile.library)
-                let reply = try await req.laile.llm.complete(messages: messages, tools: [], temperature: 0.2)
+                let reply = try await req.laile.planner.complete(messages: messages, tools: [], temperature: 0.2)
                 let response = try LaileJSON.decoder().decode(ProgramDraftResponse.self, from: Data(Prompts.extractJSON(reply.content ?? "").utf8))
                 let revised = response.toProgram(context: profile.context, patientId: try profile.requireID(), draftedBy: "Lele", library: req.laile.library)
                 if !revised.items.isEmpty {

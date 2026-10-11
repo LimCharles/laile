@@ -118,6 +118,9 @@ struct LeleService {
             ?? typed.flatMap { ReplyReader.action(in: question, for: $0) }
         guard typed != nil || action != nil else { throw Abort(.badRequest, reason: "Pick an answer or type one.") }
         let answer = typed ?? action?.label ?? ""
+        if PlanChat.isPlanQuestion(question), let key = question.dedupeKey {
+            return try await planTurn(question, key: key, actionId: action?.id, typed: typed, answer: answer, user: user)
+        }
         question.answer = answer
         question.answeredAt = now
         // The question is only saved as answered once the turn has succeeded, so a failed reply
@@ -170,6 +173,34 @@ struct LeleService {
         return API.LeleTurnResponse(messages: out, careNotes: notes)
     }
 
+    /// One answer in planning-by-chat: ask the next question, or build the plan once all five are in.
+    func planTurn(_ question: LeleMessage, key: String, actionId: String?, typed: String?, answer: String,
+                  user: UserModel) async throws -> API.LeleTurnResponse {
+        let userID = try user.requireID()
+        // A red flag said mid-planning is never read as an answer.
+        if let typed, RedFlagDetector.detect(typed) != nil { return try await chat(typed, user: user) }
+        guard let outcome = PlanChat.answer(dedupeKey: key, actionId: actionId, text: typed) else { return API.LeleTurnResponse(messages: []) }
+        let now = Date()
+        var answered = question
+        answered.answer = answer
+        answered.answeredAt = now
+        let mine = LeleMessage(createdAt: now, kind: .chat, author: .person, text: answer)
+        try await save(mine, userID: userID)
+        var out = [answered, mine]
+        switch outcome {
+        case .ask(let step, let answers, let lead):
+            let next = PlanChat.question(step, answers: answers, at: now.addingTimeInterval(1), lead: lead)
+            try await save(next, userID: userID)
+            out.append(next)
+        case .build(let answers):
+            let base = try await HealthStore(db: db).get(userID)
+            let built = try await LelePlanService(app: app, db: db, logger: logger).build(answers.profile(base: base, at: now), user: user)
+            out += built.messages
+        }
+        try await save(answered, userID: userID)
+        return API.LeleTurnResponse(messages: out)
+    }
+
     /// Free chat with Lele. Safety rules answer first; the model (ADP, then Hunyuan) otherwise; offline rules last.
     func chat(_ text: String, user: UserModel, echo: Bool = true, prefix: [LeleMessage] = []) async throws -> API.LeleTurnResponse {
         let userID = try user.requireID()
@@ -187,6 +218,14 @@ struct LeleService {
                 : "Please don't exercise today and contact your care team or a doctor today about the \(flag.reason). I've noted it for your records."
         } else if MedicationBoundary.isDoseQuestion(text) {
             replyText = MedicationBoundary.referral
+        } else if PlanChat.wantsNewPlan(text) {
+            // "I want a new program": Lele plans it with them right here in the chat.
+            let supervisor = try await activePatientProfile(for: userID)
+            let question = PlanChat.start(at: now.addingTimeInterval(1), supervised: supervisor != nil,
+                                          clinician: supervisor.map { CallName.plain($0.clinician.displayName) })
+            try await save(question, userID: userID)
+            out.append(question)
+            return API.LeleTurnResponse(messages: out)
         } else {
             let context = try await LeleContext.build(for: user, db: db)
             replyText = try await LeleAgent(app: app, logger: logger).reply(to: text, context: context, userID: userID)
