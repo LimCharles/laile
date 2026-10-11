@@ -83,3 +83,25 @@ public enum MedicationSchedule {
             .sorted { $0.scheduled < $1.scheduled }
     }
 }
+
+/// "What's rivaroxaban for?" about one of the person's own medicines, answered from what their
+/// prescriber entered: the same words as "What's this for?" on Today. Lele uses it when the
+/// knowledge base has nothing to add. It repeats the prescription and never suggests a change.
+public enum MedicationExplainer {
+    /// The person's medicine that a question names, matched on the first word of its name.
+    public static func medicine(namedIn text: String, among medications: [Medication]) -> Medication? {
+        let words = Set(TextNormalizer.tokens(text))
+        return medications.first { med in
+            guard let first = TextNormalizer.tokens(med.name).first, first.count >= 4 else { return false }
+            return words.contains(first)
+        }
+    }
+
+    public static func answer(_ med: Medication) -> String {
+        let times = med.times.sorted().map(\.label)
+        let when = times.isEmpty ? "" : " at \(times.joined(separator: " and "))"
+        return "Here's what \(med.prescribedBy) wrote about \(med.name): \(med.purpose) "
+            + "It's \(med.doseText)\(when). \(med.howToTake) "
+            + "Questions about the dose or timing go to your doctor or pharmacist."
+    }
+}

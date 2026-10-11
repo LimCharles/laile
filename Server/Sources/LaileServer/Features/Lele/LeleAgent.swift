@@ -31,6 +31,11 @@ struct LeleAgent {
         "laile-\(userID.uuidString.replacingOccurrences(of: "-", with: "").lowercased())-\(DayKey(now, timeZone: .current).description)"
     }
 
+    /// ADP's Fallback Reply (set in the console, see agent/README.md): the knowledge base had no answer.
+    static func isFallback(_ text: String) -> Bool {
+        text.replacingOccurrences(of: "’", with: "'").hasPrefix("I'm not able to answer that one")
+    }
+
     /// ADP's knowledge-base answers can come back with markdown headings and [n] citations.
     static func tidy(_ text: String) -> String {
         var lines = text.components(separatedBy: "\n").map { line -> String in
@@ -40,6 +45,8 @@ struct LeleAgent {
         }
         lines = lines.map {
             $0.replacingOccurrences(of: #"\s?\[\d+(,\s?\d+)*\](\(@ref\))?"#, with: "", options: .regularExpression)
+                // Section labels from the context Laile sends, echoed back: "[CARE NOTES]".
+                .replacingOccurrences(of: #"\s?\[[A-Z][A-Z ]{2,}\]"#, with: "", options: .regularExpression)
                 // ADP strips its citations itself and leaves the gap: "work ." → "work."
                 .replacingOccurrences(of: #"\s+([.,;:!?])"#, with: "$1", options: .regularExpression)
         }

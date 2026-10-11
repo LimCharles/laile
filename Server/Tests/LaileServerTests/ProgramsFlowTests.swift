@@ -230,6 +230,8 @@ final class ProgramsFlowTests: XCTestCase {
         ].joined(separator: "\n")
         XCTAssertEqual(try ADPClient.parse(renamed), "Bend gently.")
         XCTAssertEqual(LeleAgent.tidy("Hold 15–20 seconds — then rest."), "Hold 15 to 20 seconds, then rest.")
+        XCTAssertEqual(LeleAgent.tidy("We eased the bend by 10° [CARE NOTES]."), "We eased the bend by 10°.")
+        XCTAssertTrue(LeleAgent.isFallback("I’m not able to answer that one, and I don't want to guess."))
     }
 
     // MARK: Clinician portal

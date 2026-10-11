@@ -303,7 +303,7 @@ struct DemoWorld {
             )
             _ = try await recorder.record(summary, userID: user.requireID(), now: summary.endedAt)
         }
-        let first = profileName.components(separatedBy: " ").first ?? "there"
+        let first = CallName.from(CallName.plain(profileName))
         try await seedLele(user: user, timeZone: tz, now: now, history: [
             (4, 8.5, LeleMessage(createdAt: now, kind: .morningCheckIn,
                                  text: "Good morning, \(first). How's your knee this morning compared with yesterday?",

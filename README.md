@@ -115,7 +115,7 @@ Tests:
 cd Packages/LaileCore && swift test && cd ../../Server && swift test && cd .. && node --test Server/Tests/Web/conductor.test.mjs
 ```
 
-158 tests: 121 in LaileCore, 32 for the server, 5 for the web session engine.
+160 tests: 123 in LaileCore, 32 for the server, 5 for the web session engine.
 
 ### Lele (the agent) and care notes
 

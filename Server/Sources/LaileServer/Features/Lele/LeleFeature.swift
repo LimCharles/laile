@@ -235,6 +235,12 @@ struct LeleService {
             replyText = try await LeleAgent(app: app, logger: logger).reply(to: text, context: context, userID: userID)
             let (clean, remember) = LeleAgent.extractRemember(replyText)
             replyText = clean
+            // The knowledge base had nothing, but the question names one of their own medicines:
+            // answer from the prescription, as "What's this for?" on Today does.
+            if LeleAgent.isFallback(replyText), let profile = try await activePatientProfile(for: userID),
+               let medicine = MedicationExplainer.medicine(namedIn: text, among: profile.medications) {
+                replyText = MedicationExplainer.answer(medicine)
+            }
             if let remember, let note = remember.careNote(at: now) {
                 try await CareNoteStore(db: db).save(note, userID: userID)
                 notes.append(note)
@@ -272,6 +278,12 @@ enum LeleContext {
         }
         if let health = try await HealthStore(db: db).get(userID) {
             lines.append("Goals: \(health.goals.map(\.label).joined(separator: ", ")); \(health.minutesPerDay) min a day; careful with: \(health.sensitiveAreas.map(\.label).joined(separator: ", ")).")
+        }
+        if let profile = try await PatientProfileModel.query(on: db).filter(\.$user.$id == userID).filter(\.$dischargedAt == nil).first(),
+           !profile.medications.isEmpty {
+            lines.append("MEDICINES (as prescribed): " + profile.medications.map { med in
+                "\(med.name), \(med.doseText) at \(med.times.sorted().map(\.label).joined(separator: ", ")): \(med.purpose)"
+            }.joined(separator: " | "))
         }
         let samples = try await MetricSampleModel.samples(for: userID, on: db)
         for trend in ProgressOverviewBuilder.trends(samples: samples, mode: user.mode) {

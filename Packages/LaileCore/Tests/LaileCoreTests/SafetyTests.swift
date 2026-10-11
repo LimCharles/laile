@@ -443,3 +443,25 @@ import Testing
         #expect(subset.count < CueCatalog.all().count)
     }
 }
+
+@Suite struct MedicationExplainerTests {
+    let meds = [
+        Medication(name: "Paracetamol", doseText: "2 tablets", purpose: "Pain relief.", howToTake: "As prescribed.",
+                   times: [TimeOfDay(14), TimeOfDay(8)], prescribedBy: "Dr. Priya Nair"),
+        Medication(name: "Rivaroxaban", doseText: "1 tablet", purpose: "A blood thinner that lowers the risk of clots after surgery.",
+                   howToTake: "Same time each day.", times: [TimeOfDay(9)], prescribedBy: "Dr. Priya Nair"),
+    ]
+
+    @Test func findsTheirOwnMedicine() {
+        #expect(MedicationExplainer.medicine(namedIn: "What is rivaroxaban for?", among: meds)?.name == "Rivaroxaban")
+        #expect(MedicationExplainer.medicine(namedIn: "what's Paracetamol for", among: meds)?.name == "Paracetamol")
+        #expect(MedicationExplainer.medicine(namedIn: "What's Zorvatrin for?", among: meds) == nil)
+    }
+
+    @Test func answersFromThePrescription() {
+        let text = MedicationExplainer.answer(meds[0])
+        #expect(text.contains("Pain relief."))
+        #expect(text.contains("2 tablets at 8:00 am and 2:00 pm"))
+        #expect(text.contains("doctor or pharmacist"))
+    }
+}
