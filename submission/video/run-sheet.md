@@ -34,7 +34,7 @@ iPhone screen once and **clap once**.
 **At the chair, phone in hand (the Mac films you using it):**
 1. Laile → **Today**. Scroll slowly to the bottom and back up.
 2. **Lele** tab. On "How's your knee feeling compared with yesterday?" tap **Worse**. Read the reply.
-3. Type **How am I doing?** and send. Wait for the reply, even if it takes 30 seconds.
+3. Type **How am I doing?** and send. Wait for the reply, even if it takes a minute.
 4. Type **Why am I doing heel slides?** and wait.
 5. Type **Can I take two more paracetamol before my exercises?**
 6. Type **I have chest pain and feel dizzy**. (It's only a test of the safety reply.)
@@ -61,7 +61,7 @@ iPhone screen once and **clap once**.
     - tap **15 minutes**
     - tap **I move now and then**
     - type **my right knee, it's the new one**
-    - tap **No**, then wait for the plan (up to 30 seconds).
+    - tap **No**, then wait for the plan (up to a minute).
 20. **Me** tab: scroll slowly through "What Lele knows about you" and "What Lele remembers".
 21. **Lele** tab → **phone icon**. Say: **"My knee was stiff this morning, but the exercises helped."**
     Listen to Lele, then End.
@@ -76,7 +76,7 @@ Press Cmd+Shift+5 → Record Entire Screen. In the browser at 125% zoom:
    `laile-demo-2026`.
 2. On **Today from Lele**, find your **Mdm Tan (demo guest HH:mm)**. Hover over her pain report
    and the plan waiting for approval.
-3. Click her name. Wait for **Lele's summary** to fill in (up to 30 seconds), then scroll slowly:
+3. Click her name. Wait for **Lele's summary** to fill in (up to a minute), then scroll slowly:
    needs attention, charts, her pain reports.
 4. Back to **Patients**. Next to "Set new goals with Lele…", click **Approve**.
 5. Open her patient page → her program. Under **Ask Lele to change this program**, type
@@ -84,16 +84,12 @@ Press Cmd+Shift+5 → Record Entire Screen. In the browser at 125% zoom:
 
 Stop the recording (the stop button in the menu bar).
 
-## Take 3: the good news, and calisthenics (about 5 minutes, iPhone screen)
+## Take 3: the good news (about 1 minute, iPhone screen)
 
-Start the iPhone screen recording:
+Start the iPhone screen recording. On the **Lele** tab, show Dr Nair's "Good news…" message, tap
+**Start check-in**, let Lele introduce the first move, then End. Stop the recording.
 
-1. **Lele** tab: show Dr Nair's "Good news…" message. Tap **Start check-in**, let Lele introduce
-   the first move, then End.
-2. Me → Sign out → **Calisthenics** demo. Scroll **Today** and **Programs** slowly.
-3. Optional: stand side-on, start a session and do 5 squats.
-
-Stop the recording.
+(Claude has already recorded the web app, the calisthenics demo and the phone-size view.)
 
 ## Take 4: talk to the Mac (about 10 minutes)
 
