@@ -165,7 +165,7 @@ with nothing to install."
 
 **Say:** "Lele talks, code decides. Lele runs on Tencent Cloud ADP for conversation, program drafts
 and the physio's brief. Counting, pain limits, red flags and every number a physio sees are tested
-rules, 160 automated tests. Video stays on the device. Physios sign every program and approve every
+rules, 166 automated tests. Video stays on the device. Physios sign every program and approve every
 plan. It runs on Tencent Cloud Lighthouse, the brand was made in Miora, and CodeBuddy audited the
 safety rules and fixed what it found. Laile: home physio that counts every rep and checks in."
 
