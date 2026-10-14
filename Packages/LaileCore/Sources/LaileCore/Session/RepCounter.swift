@@ -18,7 +18,7 @@ public struct RepCounter: Sendable {
         case inRep(peakProgress: Double, peakAngle: Double, reachedTarget: Bool)
     }
 
-    public let rule: RepRule
+    public private(set) var rule: RepRule
     public private(set) var count = 0
     public private(set) var partials = 0
     public private(set) var currentProgress: Double = 0
@@ -80,6 +80,16 @@ public struct RepCounter: Sendable {
         }
     }
 
+    /// A new target mid-set ("make it easier"). Reps already counted stay counted, and a rep in
+    /// progress is judged against the new target.
+    public mutating func retarget(_ target: Double) {
+        rule.target = target
+        if case .inRep(_, let peakAngle, _) = state {
+            let peak = progress(for: peakAngle)
+            state = .inRep(peakProgress: peak, peakAngle: peakAngle, reachedTarget: peak >= 1)
+        }
+    }
+
     /// Call when tracking is lost for a while so a half-finished rep isn't counted later.
     public mutating func interrupt() {
         if case .inRep = state { state = .waitingForStart }
@@ -89,7 +99,7 @@ public struct RepCounter: Sendable {
 /// Accumulates time while a hold condition is met. Brief dropouts (tracking jitter)
 /// inside the grace window don't stop the clock; longer ones pause it.
 public struct HoldTimer: Sendable {
-    public let targetSeconds: Double
+    public private(set) var targetSeconds: Double
     public private(set) var heldSeconds: Double = 0
     public private(set) var isHolding = false
     var lastTimestamp: TimeInterval?
@@ -103,6 +113,12 @@ public struct HoldTimer: Sendable {
     }
 
     public var isComplete: Bool { heldSeconds >= targetSeconds }
+
+    /// A shorter hold mid-set ("make it easier"). Never at or below the time already held, so the
+    /// set still finishes on a later update.
+    public mutating func retarget(_ seconds: Double) {
+        targetSeconds = max(seconds, heldSeconds.rounded(.down) + 1)
+    }
     public var wholeSeconds: Int { Int(heldSeconds) }
 
     public struct Update: Sendable, Equatable {

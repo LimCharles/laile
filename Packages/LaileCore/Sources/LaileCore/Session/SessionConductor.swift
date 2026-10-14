@@ -118,6 +118,14 @@ public struct SessionConductor: Sendable {
     /// We asked "how did that feel?" during this rest and haven't had an answer yet.
     public private(set) var isCheckingIn = false
     var reasonBeforeResume: PauseReason?
+    /// Targets the person asked to make easier, for the current exercise only.
+    var easedRepTarget: Double?
+    var easedHoldSeconds: Double?
+
+    /// How far one "make it easier" moves a rep target, and the share of the planned range (or
+    /// hold) that always stays.
+    static let easeStepDegrees = 10.0
+    static let easeFloor = 0.5
 
     public init(plan: [PlannedExercise], kind: SessionSummary.Kind, title: String, mode: AppMode, config: ConductorConfig,
                 startDate: Date = Date(), startTime: TimeInterval, programId: UUID? = nil, templateId: String? = nil, streamId: UUID? = nil) {
@@ -357,6 +365,51 @@ public struct SessionConductor: Sendable {
         return events
     }
 
+    /// The person asked for it to be easier ("I can't bend that far"). The current exercise's rep
+    /// target moves 10° towards the start, never below half its planned range; a hold gets a
+    /// quarter shorter, never below half. It lasts for the rest of this exercise, and their words
+    /// go into the summary for the physio.
+    public mutating func ease(utterance: String, source: SymptomSource, at t: TimeInterval) -> [ConductorEvent] {
+        now = max(now, t)
+        guard let planned = currentExercise, phase != .finished else { return [] }
+        var line = CueCatalog.easeAtFloor
+        if let rule = planned.repRule {
+            let current = easedRepTarget ?? rule.target
+            let floor = rule.start + (rule.target - rule.start) * Self.easeFloor
+            let next = rule.isFlexion ? min(current + Self.easeStepDegrees, floor) : max(current - Self.easeStepDegrees, floor)
+            if abs(next - current) > 0.5 {
+                easedRepTarget = next
+                repCounter?.retarget(next)
+                line = CueCatalog.easedReps(supervised: mode == .rehab)
+            }
+        } else if planned.spec.kind.isHold {
+            let planned = plannedHoldSeconds(planned)
+            let current = easedHoldSeconds ?? planned
+            let next = max(max(2, (planned * Self.easeFloor).rounded(.up)), (current * 0.75).rounded())
+            if next < current {
+                easedHoldSeconds = next
+                holdTimer?.retarget(next)
+                line = CueCatalog.easedHold(seconds: Int(holdTimer?.targetSeconds ?? next))
+            }
+        }
+
+        var report = SymptomReport(timestamp: date(for: now), category: .effort, utterance: utterance,
+                                   quality: line == CueCatalog.easeAtFloor ? "asked for it easier" : "asked for it easier, target eased",
+                                   source: source, exerciseId: planned.spec.id, setIndex: setIndex, angle: lastAngle)
+        if let counter = repCounter { report.repIndex = counter.count + (counter.isAtStart ? 0 : 1) }
+        if let timer = holdTimer, timer.heldSeconds > 0 { report.holdSecond = timer.wholeSeconds }
+        report.action = .continueExercise
+        symptoms.append(report)
+
+        var events: [ConductorEvent] = [.symptomLogged(report), .say(line)]
+        if case .paused(let reason) = phase, reason != .user { events += resume(at: now) }
+        return events
+    }
+
+    func plannedHoldSeconds(_ planned: PlannedExercise) -> Double {
+        Double(planned.dose.holdSeconds ?? planned.spec.defaultDose.holdSeconds ?? 30)
+    }
+
     public func summary(painBefore: Int? = nil, painAfter: Int? = nil) -> SessionSummary {
         SessionSummary(
             kind: kind, title: title, mode: mode, startedAt: startDate, endedAt: date(for: now),
@@ -420,9 +473,14 @@ public struct SessionConductor: Sendable {
 
     mutating func beginSet() {
         guard let planned = currentExercise else { return }
-        if let rule = planned.repRule { repCounter = RepCounter(rule: rule) } else { repCounter = nil }
+        if var rule = planned.repRule {
+            if let eased = easedRepTarget { rule.target = eased }
+            repCounter = RepCounter(rule: rule)
+        } else {
+            repCounter = nil
+        }
         if planned.spec.kind.isHold {
-            holdTimer = HoldTimer(targetSeconds: Double(planned.dose.holdSeconds ?? planned.spec.defaultDose.holdSeconds ?? 30))
+            holdTimer = HoldTimer(targetSeconds: easedHoldSeconds ?? plannedHoldSeconds(planned))
         } else {
             holdTimer = nil
         }
@@ -590,6 +648,8 @@ public struct SessionConductor: Sendable {
         setIndex = 0
         repCounter = nil
         holdTimer = nil
+        easedRepTarget = nil
+        easedHoldSeconds = nil
         smoother.reset()
         lastAngle = nil
         guard exerciseIndex < plan.count else { return events + finishSession() }

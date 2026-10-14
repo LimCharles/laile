@@ -137,7 +137,7 @@ struct VoiceFeature: LaileFeature {
         let agent = CoachAgent(llm: req.laile.llm, logger: req.logger)
         let turn = await agent.respond(to: body.utterance, history: [], context: body.context, mode: user.mode,
                                        userName: user.displayName, policy: try await policy(for: user, on: req.db))
-        return API.CoachTurnResponse(reply: turn.reply, report: turn.report)
+        return API.CoachTurnResponse(reply: turn.reply, report: turn.report, ease: turn.ease ? true : nil)
     }
 
     func trtcLLMTurn(req: Request) async throws -> Response {

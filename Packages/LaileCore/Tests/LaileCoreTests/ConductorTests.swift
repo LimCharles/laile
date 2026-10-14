@@ -246,3 +246,55 @@ struct ConductorHarness {
         #expect(h.said.last == "Set two of two. Start whenever you're ready.")
     }
 }
+
+/// "Make it easier" mid-session: the target moves towards the start, within limits, and the
+/// person's words are kept for the physio.
+@Suite struct EaseTests {
+    let library = ExerciseLibrary.standard
+
+    @Test func recognisesAskingForItEasier() {
+        #expect(EaseRequest.detect("can you make it easier"))
+        #expect(EaseRequest.detect("I can't bend that far"))
+        #expect(EaseRequest.detect("this is too hard for me"))
+        #expect(!EaseRequest.detect("it's not too hard"))
+        #expect(!EaseRequest.detect("it hurts, I can't bend that far"), "pain goes to the symptom rules")
+        #expect(!EaseRequest.detect("feels fine"))
+    }
+
+    @Test func easierTargetCountsTheRepsTheyCanReach() {
+        let heel = library.spec("heel-slide")!
+        var h = ConductorHarness(plan: [PlannedExercise(spec: heel, dose: Dose(sets: 1, reps: 5, restSeconds: 10))])
+        h.getReady()
+        h.rep(to: 125)
+        #expect(h.conductor.snapshot.reps == 0, "125° doesn't reach the 110° target")
+        h.events += h.conductor.ease(utterance: "I can't bend that far", source: .voiceLLM, at: h.t)
+        h.events += h.conductor.ease(utterance: "still too hard", source: .voiceLLM, at: h.t)
+        h.rep(to: 125)
+        h.rep(to: 125)
+        #expect(h.conductor.snapshot.reps == 2)
+        #expect(h.said.contains { $0.hasPrefix("Of course. I've made it a little easier") })
+        let report = h.conductor.symptoms.first
+        #expect(report?.utterance == "I can't bend that far")
+        #expect(report?.category == .effort)
+        #expect(report?.exerciseId == "heel-slide")
+        #expect(report?.clinicalSummary.hasPrefix("Asked for it easier, target eased; Heel slides, set 1") == true)
+    }
+
+    @Test func neverEasesBelowHalfTheRange() {
+        let heel = library.spec("heel-slide")!
+        var h = ConductorHarness(plan: [PlannedExercise(spec: heel, dose: Dose(sets: 1, reps: 5, restSeconds: 10))])
+        h.getReady()
+        for _ in 0..<5 { h.events += h.conductor.ease(utterance: "too hard", source: .typed, at: h.t) }
+        #expect(h.conductor.easedRepTarget == 135, "half of the 160° to 110° range")
+        #expect(h.said.last == CueCatalog.easeAtFloor.text)
+    }
+
+    @Test func easierHoldIsShorter() {
+        let quad = library.spec("quad-set")!
+        var h = ConductorHarness(plan: [PlannedExercise(spec: quad, dose: Dose(sets: 2, holdSeconds: 8, restSeconds: 5))])
+        h.getReady(angle: 175)
+        h.events += h.conductor.ease(utterance: "I can't hold it", source: .voiceLLM, at: h.t)
+        #expect(h.conductor.easedHoldSeconds == 6)
+        #expect(h.said.contains("Of course. The hold is shorter now, 6 seconds."))
+    }
+}

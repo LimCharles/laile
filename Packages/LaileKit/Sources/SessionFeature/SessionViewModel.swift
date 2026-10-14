@@ -23,6 +23,7 @@ public final class SessionViewModel {
         case stretch = "Stretching"
         case sharp = "Sharp pain"
         case wrong = "Feels wrong"
+        case easier = "Make it easier"
         public var id: String { rawValue }
 
         var report: SymptomReport {
@@ -31,6 +32,7 @@ public final class SessionViewModel {
             case .stretch: SymptomReport(category: .expectedStretch, utterance: "Stretching feeling (tapped)", quality: "pulling", source: .tapped)
             case .sharp: SymptomReport(category: .pain, utterance: "Sharp pain (tapped)", quality: "sharp", source: .tapped)
             case .wrong: SymptomReport(category: .wrongSensation, utterance: "Something feels wrong (tapped)", source: .tapped)
+            case .easier: SymptomReport(category: .effort, utterance: "Make it easier (tapped)", quality: "asked for it easier", source: .tapped)
             }
         }
     }
@@ -262,6 +264,11 @@ public final class SessionViewModel {
         guard stage == .running else { return }
 
         if let turn = try? await app.backend.coachTurn(text, context: voiceContext) {
+            // "Make it easier": the conductor eases the exercise and says how; their words are kept.
+            if turn.ease == true {
+                handle(conductor.ease(utterance: text, source: .voiceLLM, at: PoseClock.now))
+                return
+            }
             if var report = turn.report {
                 report.source = .voiceLLM
                 handle(conductor.report(report, at: PoseClock.now, speakResponse: false))
@@ -272,6 +279,10 @@ public final class SessionViewModel {
         }
 
         // Offline: same rules on-device, and the conductor speaks the fixed responses.
+        if EaseRequest.detect(text) {
+            handle(conductor.ease(utterance: text, source: source, at: PoseClock.now))
+            return
+        }
         if MedicationBoundary.isDoseQuestion(text) {
             speak(CueCatalog.medicationReferral)
             return
@@ -284,6 +295,10 @@ public final class SessionViewModel {
     }
 
     public func quickReply(_ reply: QuickReply) {
+        if reply == .easier {
+            handle(conductor.ease(utterance: reply.report.utterance, source: .tapped, at: PoseClock.now))
+            return
+        }
         handle(conductor.report(reply.report, at: PoseClock.now))
     }
 

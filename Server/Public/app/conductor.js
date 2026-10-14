@@ -29,6 +29,10 @@ export const Cue = {
   },
   restCheckIn: (s) => line(`Nice. Take ${s} seconds. How did that feel?`),
   restFor: (s) => line(`Nice. Rest for ${s} seconds.`),
+  easedReps: (supervised) => line("Of course. I've made it a little easier, so a smaller movement counts now. Go as far as is comfortable."
+    + (supervised ? ' Your physio will see that you asked.' : '')),
+  easedHold: (s) => line(`Of course. The hold is shorter now, ${s} seconds.`),
+  easeAtFloor: line("That's as easy as I can make it today. Go as far as is comfortable, and tell me if anything hurts."),
 };
 
 // The phone's camera tips, worded for a laptop or phone browser.
@@ -202,6 +206,15 @@ export class RepCounter {
   }
 
   interrupt() { if (this.state.name === 'inRep') this.state = { name: 'waitingForStart' }; }
+
+  /// A new target mid-set ("make it easier"); a rep in progress is judged against it.
+  retarget(target) {
+    this.rule = { ...this.rule, target };
+    if (this.state.name === 'inRep') {
+      const peak = this.progress(this.state.peakAngle);
+      this.state = { ...this.state, peakProgress: peak, reachedTarget: peak >= 1 };
+    }
+  }
 }
 
 export class HoldTimer {
@@ -217,6 +230,9 @@ export class HoldTimer {
   }
 
   get isComplete() { return this.heldSeconds >= this.targetSeconds; }
+
+  /// A shorter hold mid-set; never at or below the time already held.
+  retarget(seconds) { this.targetSeconds = Math.max(seconds, Math.floor(this.heldSeconds) + 1); }
   get wholeSeconds() { return Math.floor(this.heldSeconds); }
 
   update(satisfied, t) {
@@ -281,6 +297,9 @@ export class Conductor {
     this.phaseBeforePause = null;
     this.coachSpeaking = false;
     this.isCheckingIn = false;
+    // Targets the person asked to make easier, for the current exercise only.
+    this.easedRepTarget = null;
+    this.easedHoldSeconds = null;
   }
 
   get currentExercise() { return this.plan[this.exerciseIndex] ?? null; }
@@ -467,6 +486,48 @@ export class Conductor {
     return events;
   }
 
+  /// The person asked for it to be easier ("I can't bend that far"): SessionConductor.ease. The rep
+  /// target moves 10° towards the start, never below half its planned range; a hold gets a quarter
+  /// shorter, never below half. Their words go into the summary for the physio.
+  ease(utterance, source, t) {
+    this.now = Math.max(this.now, t);
+    const planned = this.currentExercise;
+    if (!planned || this.isFinished) return [];
+    let say = Cue.easeAtFloor;
+    const rule = this.repRule(planned);
+    if (rule) {
+      const current = this.easedRepTarget ?? rule.target;
+      const floor = rule.start + (rule.target - rule.start) * 0.5;
+      const next = rule.target < rule.start ? Math.min(current + 10, floor) : Math.max(current - 10, floor);
+      if (Math.abs(next - current) > 0.5) {
+        this.easedRepTarget = next;
+        this.repCounter?.retarget(next);
+        say = Cue.easedReps(this.launch.mode === 'rehab');
+      }
+    } else if (isHold(planned.spec)) {
+      const plan = plannedHold(planned);
+      const current = this.easedHoldSeconds ?? plan;
+      const next = Math.max(Math.max(2, Math.ceil(plan * 0.5)), Math.round(current * 0.75));
+      if (next < current) {
+        this.easedHoldSeconds = next;
+        this.holdTimer?.retarget(next);
+        say = Cue.easedHold(Math.floor(this.holdTimer?.targetSeconds ?? next));
+      }
+    }
+    const report = {
+      id: uuid(), timestamp: iso(this.dateFor(this.now)), category: 'effort', utterance,
+      quality: say === Cue.easeAtFloor ? 'asked for it easier' : 'asked for it easier, target eased',
+      source, exerciseId: planned.spec.id, setIndex: this.setIndex, action: { continueExercise: {} },
+    };
+    if (this.lastAngle != null) report.angle = this.lastAngle;
+    if (this.repCounter) report.repIndex = this.repCounter.count + (this.repCounter.isAtStart ? 0 : 1);
+    if (this.holdTimer && this.holdTimer.heldSeconds > 0) report.holdSecond = this.holdTimer.wholeSeconds;
+    this.symptoms.push(report);
+    const events = [{ type: 'symptom', report }, { type: 'say', line: say }];
+    if (this.phase.name === 'paused' && this.phase.reason !== 'user') events.push(...this.resume(this.now));
+    return events;
+  }
+
   summary(painBefore, painAfter) {
     const s = {
       id: uuid(), kind: this.launch.kind, title: this.launch.title, mode: this.launch.mode,
@@ -540,8 +601,9 @@ export class Conductor {
     const planned = this.currentExercise;
     if (!planned) return;
     const rule = this.repRule(planned);
+    if (rule && this.easedRepTarget != null) rule.target = this.easedRepTarget;
     this.repCounter = rule ? new RepCounter(rule) : null;
-    this.holdTimer = isHold(planned.spec) ? new HoldTimer(planned.dose.holdSeconds ?? planned.spec.defaultDose.holdSeconds ?? 30) : null;
+    this.holdTimer = isHold(planned.spec) ? new HoldTimer(this.easedHoldSeconds ?? plannedHold(planned)) : null;
     this.formViolationSince = {};
     this.trackingLostAnnounced = false;
   }
@@ -690,6 +752,8 @@ export class Conductor {
     this.setIndex = 0;
     this.repCounter = null;
     this.holdTimer = null;
+    this.easedRepTarget = null;
+    this.easedHoldSeconds = null;
     this.smoothed = null;
     this.lastAngle = null;
     if (this.exerciseIndex >= this.plan.length) return [...events, ...this.finishSession()];
@@ -708,6 +772,8 @@ export class Conductor {
 
   dateFor(t) { return new Date(this.startDate.getTime() + (t - this.startTime) * 1000); }
 }
+
+const plannedHold = (planned) => planned.dose.holdSeconds ?? planned.spec.defaultDose.holdSeconds ?? 30;
 
 function newResult(planned) {
   const result = { id: uuid(), exerciseId: planned.spec.id, plannedSets: planned.dose.sets, repsPerSet: [], partialReps: 0,

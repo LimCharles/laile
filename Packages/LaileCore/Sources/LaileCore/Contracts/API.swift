@@ -272,7 +272,10 @@ public enum API {
     public struct CoachTurnResponse: Codable, Sendable {
         public var reply: String
         public var report: SymptomReport?
-        public init(reply: String, report: SymptomReport?) { self.reply = reply; self.report = report }
+        /// They asked for it to be easier: the app eases the current exercise and says so itself
+        /// (`SessionConductor.ease`). Older apps ignore it, speak `reply` and log `report`.
+        public var ease: Bool?
+        public init(reply: String, report: SymptomReport?, ease: Bool? = nil) { self.reply = reply; self.report = report; self.ease = ease }
     }
 
     public struct ErrorResponse: Codable, Sendable {

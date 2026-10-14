@@ -12,6 +12,7 @@ struct CoachAgent {
         var reply: String
         var report: SymptomReport?
         var action: SymptomAction?
+        var ease = false
     }
 
     let llm: any LLMProvider
@@ -30,7 +31,13 @@ struct CoachAgent {
         if MedicationBoundary.isDoseQuestion(utterance) {
             return Turn(reply: MedicationBoundary.referral, report: nil, action: nil)
         }
-        // 3. The model classifies and chats.
+        // 3. "Make it easier": the app eases the exercise and records their words; no model needed.
+        if EaseRequest.detect(utterance) {
+            var report = SymptomReport(category: .effort, utterance: utterance, quality: "asked for it easier", source: .voiceLLM)
+            report.action = .continueExercise
+            return Turn(reply: "Of course, let's make it a little easier.", report: report, action: .continueExercise, ease: true)
+        }
+        // 4. The model classifies and chats.
         var messages = [ChatMessage.system(Prompts.coachSystem(context: context, mode: mode, userName: userName))]
         messages += history.suffix(8)
         messages.append(.user(utterance))

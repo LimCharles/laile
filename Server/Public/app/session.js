@@ -178,7 +178,8 @@ function linesFor(launch) {
   });
   const maxCount = Math.min(30, Math.max(10, ...plan.map((p) => p.dose.reps ?? 0)));
   const counts = Array.from({ length: maxCount }, (_, i) => Cue.count(i + 1).text);
-  const core = [Cue.holdIt, Cue.relax, Cue.niceWork, Cue.rest, Cue.further, Cue.cantSee, Cue.paused, Cue.resumed, Cue.sessionDone].map((l) => l.text);
+  const core = [Cue.holdIt, Cue.relax, Cue.niceWork, Cue.rest, Cue.further, Cue.cantSee, Cue.paused, Cue.resumed, Cue.sessionDone,
+    Cue.easedReps(launch.mode === 'rehab'), Cue.easeAtFloor].map((l) => l.text);
   const setup = ['noPerson', 'tooFar', 'tooClose', 'offCenter', 'needSideView', 'needFrontView'].map((type) => setupGuidance({ type }).text);
   return [...first, ...counts.slice(0, 10), ...core, ...setup, ...rest, ...counts.slice(10)];
 }
@@ -213,6 +214,7 @@ export async function runSession({ api, speech, query, onFinished }) {
       <input class="field" name="said" placeholder="Tell Lele how it feels" aria-label="Tell Lele how it feels" autocomplete="off" style="flex:2;min-width:180px">
       <button class="btn secondary" type="button" data-do="mic" hidden>Speak</button>
       <button class="btn secondary" type="submit">Tell Lele</button>
+      <button class="btn secondary" type="button" data-do="easier">Make it easier</button>
       <button class="btn secondary" type="button" data-do="pause">Pause</button>
       <button class="btn secondary" type="button" data-do="skip">${launch.isCheckIn ? "That's enough" : 'Skip'}</button>
       <button class="btn danger" type="button" data-do="end">End</button>
@@ -459,6 +461,14 @@ export async function runSession({ api, speech, query, onFinished }) {
     };
     try {
       const turn = await api('POST', 'v1/voice/turn', { utterance, context });
+      // "Make it easier": the session eases the exercise and says how; their words are kept.
+      if (turn.ease) {
+        hideOverlay();
+        handle(conductor.ease(utterance, source, clock()));
+        telling = false;
+        paint();
+        return;
+      }
       // Lele's answer first, then whatever the session does next (the next exercise's intro).
       if (turn.reply) voice.say({ text: turn.reply, priority: 'high' });
       if (turn.report) {
@@ -603,6 +613,7 @@ export async function runSession({ api, speech, query, onFinished }) {
       case 'end':
         if (conductor && confirm('End the session now? What you did so far is saved.')) handle(conductor.endSession(now));
         break;
+      case 'easier': if (conductor && !finished) handle(conductor.ease('Make it easier (tapped)', 'tapped', now)); break;
       case 'rate': hideOverlay(); tell(`${el.dataset.n} out of 10`); break;
       case 'clarify': hideOverlay(); tell(el.dataset.text); break;
       case 'mic': break;

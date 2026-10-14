@@ -139,6 +139,16 @@ final class APITests: XCTestCase {
         XCTAssertEqual(dose.reply, MedicationBoundary.referral)
     }
 
+    /// "Make it easier" never waits on a model either: the app eases the exercise and keeps their words.
+    func testAskingForItEasierTellsTheAppToEase() async throws {
+        let agent = CoachAgent(llm: ExplodingLLM(), logger: app.logger)
+        let turn = await agent.respond(to: "I can't bend that far, make it easier", history: [], context: nil, mode: .rehab,
+                                       userName: "T", policy: .rehabDefault)
+        XCTAssertTrue(turn.ease)
+        XCTAssertEqual(turn.report?.category, .effort)
+        XCTAssertEqual(turn.report?.utterance, "I can't bend that far, make it easier")
+    }
+
     func testTRTCLLMEndpointStreamsChatCompletionChunks() async throws {
         let auth = try await register()
         await app.laile.voiceSessions.create(.init(key: "session-key-1", userID: auth.user.id, userName: "Tester", mode: .move, policy: .moveDefault))

@@ -19,6 +19,9 @@ struct LeleView: View {
     @State private var showGoals = false
     @FocusState private var focused: Bool
 
+    /// Starts planning by chat; the server asks the five questions.
+    static let planPrompt = "I'd like a new program with new goals."
+
     private var suggestions: [String] {
         var list = ["How am I doing?", "Why am I doing this exercise?", "I've been sore after sessions"]
         if !(app.today?.medicationDoses.isEmpty ?? true) { list.append("What are my medicines for?") }
@@ -84,16 +87,19 @@ struct LeleView: View {
 
     private var inputBar: some View {
         VStack(spacing: 8) {
-            if app.leleMessages.filter({ $0.author == .person }).count < 2 {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack {
+                    Button { Task { await send(Self.planPrompt) } } label: { Label("Plan a new program", systemImage: "sparkles") }
+                        .font(.caption.weight(.semibold)).buttonStyle(.borderedProminent).tint(Theme.accent)
+                        .disabled(sending)
+                    if app.leleMessages.filter({ $0.author == .person }).count < 4 {
                         ForEach(suggestions, id: \.self) { s in
                             Button(s) { Task { await send(s) } }
                                 .font(.caption.weight(.semibold)).buttonStyle(.bordered).tint(Theme.accent)
                         }
                     }
-                    .padding(.horizontal, 16)
                 }
+                .padding(.horizontal, 16)
             }
             HStack(spacing: 10) {
                 TextField(app.openQuestion == nil ? "Message Lele" : "Reply to Lele, or tap an answer", text: $draft, axis: .vertical)

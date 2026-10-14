@@ -50,6 +50,20 @@ public enum CueCatalog {
 
     public static let further = CueLine("A little further if it's comfortable.", key: "cue.further")
 
+    // MARK: Making it easier mid-session
+
+    public static func easedReps(supervised: Bool) -> CueLine {
+        CueLine("Of course. I've made it a little easier, so a smaller movement counts now. Go as far as is comfortable."
+                + (supervised ? " Your physio will see that you asked." : ""), key: supervised ? "ease.reps.physio" : "ease.reps")
+    }
+
+    public static func easedHold(seconds: Int) -> CueLine {
+        CueLine("Of course. The hold is shorter now, \(seconds) seconds.", key: "ease.hold.\(seconds)")
+    }
+
+    public static let easeAtFloor = CueLine("That's as easy as I can make it today. Go as far as is comfortable, and tell me if anything hurts.",
+                                            key: "ease.floor")
+
     // MARK: Setup
 
     public static func missing(_ parts: [BodyPart]) -> CueLine {
@@ -79,6 +93,7 @@ public enum CueCatalog {
     public static func core(emergencyNumber: String = "995") -> [CueLine] {
         var lines: [CueLine] = (0...30).map(CueLine.count)
         lines += [.go, .resumed, .holdIt, .relax, .niceWork, .rest, .sessionDone, .cantSee, .paused, further, medicationReferral, CoachVoice.sampleLine]
+        lines += [easedReps(supervised: true), easedReps(supervised: false), easeAtFloor]
         lines += SymptomResponses.all + [SymptomResponses.emergency(number: emergencyNumber)]
         lines += [SetupIssue.noPerson, .tooClose, .tooFar, .offCenter, .needSideView, .needFrontView].map(\.guidance)
         return unique(lines)

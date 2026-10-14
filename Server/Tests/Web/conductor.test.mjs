@@ -89,3 +89,21 @@ test('a red flag ends the session with an emergency', () => {
   assert.ok(events.some((e) => e.type === 'finished'));
   assert.equal(c.summary().escalation, 'emergency');
 });
+
+test('"make it easier" lowers the target within limits and keeps their words', () => {
+  const heel = launch.plan.find((p) => p.spec.id === 'heel-slide');
+  const c = new Conductor({ ...launch, plan: [{ ...heel, dose: { sets: 1, reps: 5, restSeconds: 10 } }] }, 0);
+  c.start(0);
+  let t = 0;
+  const run = (knee, seconds) => { for (const end = t + seconds; t < end; t += 1 / 30) c.process(frame(t, knee)); };
+  run(170, 8); // setup: hold still until counting is live
+  assert.equal(c.phase.name, 'active');
+  const before = c.repCounter.rule.target;
+  const events = c.ease("I can't bend that far", 'voiceLLM', t);
+  assert.ok(events.some((e) => e.type === 'say' && e.line.text.startsWith("Of course. I've made it a little easier")));
+  assert.equal(c.repCounter.rule.target, before + 10);
+  for (let i = 0; i < 5; i++) c.ease('too hard', 'typed', t);
+  assert.equal(c.easedRepTarget, 160 + (before - 160) * 0.5, 'never below half the range');
+  assert.equal(c.symptoms[0].utterance, "I can't bend that far");
+  assert.equal(c.symptoms[0].category, 'effort');
+});
