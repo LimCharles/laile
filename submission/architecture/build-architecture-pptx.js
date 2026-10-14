@@ -80,7 +80,7 @@ pres.addSection({ title: 'Architecture' });
   // Lele's ADP settings, tall, on the left.
   s.addImage({ path: path.join(TC, 'adp-lele-settings.jpg'), x: 0.6, y: 1.35, w: 2.8, h: 2.8 * 504 / 290, objectName: 'ADP settings',
     altText: "Lele's ADP settings: models, role prompt and welcome message", line: frame });
-  cap("ADP: Lele's models, role prompt and welcome", 0.6, 6.3, 3.0);
+  cap("ADP: Lele on Tencent Hy3, role prompt, welcome", 0.6, 6.3, 3.0);
   // Knowledge base.
   s.addImage({ path: path.join(TC, 'adp-knowledge-base.jpg'), x: 3.75, y: 1.35, w: 5.3, h: 5.3 * 390 / 800, objectName: 'ADP knowledge base',
     altText: 'ADP knowledge base: the 12 Laile documents, older versions switched off' });
