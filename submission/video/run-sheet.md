@@ -118,7 +118,14 @@ Read each line, pause two seconds, then the next. Redo any line you trip on.
 16. She can also ask Lele to change a program in plain words. Nothing reaches the patient until she signs it.
 17. After physio, people carry on with calisthenics, with their limits carried over. It works on iPhone or in any browser.
 18. Lele talks, code decides. Built on Tencent Cloud ADP and Lighthouse, audited with CodeBuddy, branded with Miora, and covered by 160 automated tests.
-19. Laile. Home physio that counts every rep and checks in.
+19. A quick reflection on how I built it. I'm a solo builder, so I kept one language, Swift, and one shared engine for the phone and the server.
+20. My rule was simple: the model talks, the code decides. Anything to do with safety is plain code with tests, and Lele handles the conversation.
+21. WorkBuddy audited my safety rules and found real bugs. "No pain, but my foot is numb" was answered with "carry on". I reviewed its fixes and merged them.
+22. Miora made the whole brand from one brief: the logo, the app icon and Lele herself.
+23. My tips: send your ADP agent real numbers with every message, restate its voice, because the knowledge base template can take over, and test with the way people actually talk.
+24. Laile. Home physio that counts every rep and checks in.
+
+(Optional, your call: one line on any other coding assistant you used, e.g. "I also used Claude Code for much of the coding.")
 
 Then sit still and silent for **10 seconds** (room tone). Stop.
 
