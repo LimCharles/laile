@@ -70,6 +70,36 @@ pres.addSection({ title: 'Architecture' });
   notes(s, 'Video stays on the device. Counts, angles and what the person says go to the Laile API on Lighthouse. The safety gate runs before any model. ADP drafts, chats and summarises; code decides.');
 }
 
+// ---- 2b. Running on Tencent Cloud --------------------------------------------------
+{
+  const s = pres.addSlide({ masterName: 'CONTENT', sectionTitle: 'Architecture' });
+  s.addText('Running on Tencent Cloud', { placeholder: 'title' });
+  const TC = path.join(REPO, 'submission/tencent-cloud');
+  const cap = (text, x, y, w) => s.addText(text, { x, y, w, h: 0.3, fontSize: 11, color: C.accent4, margin: 0, isTextBox: true });
+  const frame = { type: 'solid', color: 'E1E7E3', pt: 0.75 };
+  // Lele's ADP settings, tall, on the left.
+  s.addImage({ path: path.join(TC, 'adp-lele-settings.jpg'), x: 0.6, y: 1.35, w: 2.8, h: 2.8 * 504 / 290, objectName: 'ADP settings',
+    altText: "Lele's ADP settings: models, role prompt and welcome message", line: frame });
+  cap("ADP: Lele's models, role prompt and welcome", 0.6, 6.3, 3.0);
+  // Knowledge base.
+  s.addImage({ path: path.join(TC, 'adp-knowledge-base.jpg'), x: 3.75, y: 1.35, w: 5.3, h: 5.3 * 390 / 800, objectName: 'ADP knowledge base',
+    altText: 'ADP knowledge base: the 12 Laile documents, older versions switched off' });
+  cap('ADP knowledge base: 12 active documents in two categories', 3.75, 1.35 + 5.3 * 390 / 800 + 0.08, 5.3);
+  // Lighthouse.
+  s.addImage({ path: path.join(TC, 'lighthouse-server.jpg'), x: 9.35, y: 1.35, w: 3.35, h: 3.35 * 150 / 232, objectName: 'Lighthouse server',
+    altText: 'Lighthouse: the laile server in Singapore, running' });
+  cap('Lighthouse: the Laile server, Singapore', 9.35, 1.35 + 3.35 * 150 / 232 + 0.08, 3.35);
+  s.addText([
+    { text: 'Try Lele directly on ADP', options: { bold: true, color: C.accent1, breakLine: true } },
+    { text: 'adp.tencentcloud.com/webim_exp/#/chat/nZbZZz', options: { color: C.text1 } },
+  ], { x: 9.35, y: 4.55, w: 3.35, h: 0.9, fontSize: 13, valign: 'top', margin: 0, isTextBox: true });
+  // Publish history.
+  s.addImage({ path: path.join(TC, 'adp-publish-history.jpg'), x: 3.75, y: 4.55, w: 5.3, h: 5.3 * 214 / 800, objectName: 'ADP publish history',
+    altText: 'ADP publish history: three published versions of Lele' });
+  cap('ADP publish history: three published versions, latest 12 Oct', 3.75, 4.55 + 5.3 * 214 / 800 + 0.08, 5.3);
+  notes(s, 'Console screenshots, 15 Oct 2026. The ADP app is named Laile; the agent inside it is Lele.');
+}
+
 // ---- 3. AI and safety -------------------------------------------------------------
 {
   const s = pres.addSlide({ masterName: 'CONTENT', sectionTitle: 'Architecture' });
