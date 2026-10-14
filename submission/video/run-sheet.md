@@ -1,4 +1,4 @@
-# Recording run sheet (about 45 minutes)
+# Recording run sheet (about 35 minutes)
 
 Four long takes. Don't stop for mistakes: pause, then redo the step. Claude cuts everything,
 adds the titles, captions, split screens and music. You don't record any title slides.
