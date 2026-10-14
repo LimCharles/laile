@@ -49,9 +49,13 @@ physio is told. The model doesn't decide that."
 
 **Do:** pause on the session list: heel slides are marked **eased** because last week they hurt.
 Continue (pain before: 1). Let Lele introduce the first move, then **Skip** to Seated knee
-straightening and do 3 or 4 reps on camera.
+straightening. Do 2 reps that stop short of straight, so they don't count.
 
-**Type or say, mid-set:** "it's just pulling at the back"
+**Say, mid-set:** "I can't straighten it that far, can you make it easier?" (or tap **Make it easier**)
+**Lele:** "Of course. I've made it a little easier, so a smaller movement counts now. Go as far as is
+comfortable. Your physio will see that you asked." Your next reps count.
+
+**Type or say:** "it's just pulling at the back"
 **Lele:** "That pulling feeling is normal. Keep breathing." (carries on counting)
 
 **Type or say:** "ow, sharp, on the inside of my knee"
@@ -63,10 +67,11 @@ straightening and do 3 or 4 reps on camera.
 **Do:** tap **End**, set pain after to 3, show the results card: reps, XP, and "Lele noted: Sharp pain,
 inside of right knee, 6/10; ... rep ..., knee bent to ...°".
 
-**Say:** "A rep only counts when the knee reaches the target angle. When she says it's sharp, fixed
-rules apply her physio's pain limits: above 4 stops the set, 6 stops the exercise. The exact moment
-is logged with the knee angle, and next time that exercise is eased. The video never leaves the
-phone."
+**Say:** "A rep only counts when the knee reaches the target angle. When she can't reach it, Lele
+eases the target on the spot, never below half the range her physio set, and keeps her words for
+Dr Nair. When she says it's sharp, fixed rules apply her physio's pain limits: above 4 stops the
+set, 6 stops the exercise. The exact moment is logged with the knee angle, and next time that
+exercise is eased. The video never leaves the phone."
 
 ## 4. Ask Lele (2:40 to 3:20)
 
@@ -86,11 +91,16 @@ rules answer first."
 Optional, 10 seconds: "Can I take two more paracetamol before my exercises?" → "That's one for your
 doctor or pharmacist. I'll add it to your questions for your next visit."
 
+Optional, 20 seconds: tap the **phone** icon to call Lele and say "my knee was stiff this morning
+but the exercises helped". Lele answers out loud in the same voice, and the call is saved in the
+chat like any message.
+
 ## 5. New goals, planned in chat (3:20 to 4:30)
 
 **Screen:** patient, Lele tab.
 
-**Do:** tap **Plan a new program**, then answer:
+**Do:** tap **Plan a new program** (iPhone build 4 or the web app; on an older build, type "my goals
+have changed"), then answer:
 
 | Lele asks | You answer |
 |---|---|
@@ -131,6 +141,9 @@ your new goals, ... The first session is a quick check-in." with **Start check-i
 **Say:** "Dr Nair gets a brief Lele wrote from the record and the knowledge base. Every number in it
 comes from code, so the model only summarises. She approves, and Mdm Tan's new plan starts with a
 check-in that sets her targets."
+
+Optional, 30 seconds: open her program, and under **Ask Lele to change this program** type "make it gentler, she had a flare this week" and tap **Ask Lele**. Lele drafts a
+gentler version on ADP (about 20 s, cut it); nothing reaches her until Dr Nair signs it.
 
 Optional: with a second phone mid-session, her page shows the session live (reps and knee angle
 every 2 seconds).

@@ -256,6 +256,7 @@ struct ConductorHarness {
         #expect(EaseRequest.detect("can you make it easier"))
         #expect(EaseRequest.detect("I can't bend that far"))
         #expect(EaseRequest.detect("this is too hard for me"))
+        #expect(EaseRequest.detect("I cant straighten it that far"))
         #expect(!EaseRequest.detect("it's not too hard"))
         #expect(!EaseRequest.detect("it hurts, I can't bend that far"), "pain goes to the symptom rules")
         #expect(!EaseRequest.detect("feels fine"))
