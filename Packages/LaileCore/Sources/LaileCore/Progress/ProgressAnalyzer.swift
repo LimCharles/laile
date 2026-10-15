@@ -53,6 +53,15 @@ public struct MetricTrend: Codable, Sendable, Hashable {
         let delta = latest.value - baseline.value
         return kind.higherIsBetter ? delta : -delta
     }
+
+    /// Which way the number itself moved: "Up 24° since your baseline", "Down 4/10 since your baseline".
+    /// Pain falling is good news, so it must not read as "+4".
+    public var baselineChange: (text: String, up: Bool, better: Bool)? {
+        guard let baseline, let latest, latest.value != baseline.value else { return nil }
+        let up = latest.value > baseline.value
+        return ("\(up ? "Up" : "Down") \(kind.format(abs(latest.value - baseline.value))) since your baseline",
+                up, up == kind.higherIsBetter)
+    }
 }
 
 public enum ProgressAnalyzer {

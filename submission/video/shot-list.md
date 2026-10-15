@@ -38,7 +38,7 @@ record, and what Claude makes.
 ### Under the hood (said, not shown)
 - [ ] Tencent Cloud ADP (Hy3, 12-document knowledge base), Lighthouse, ElevenLabs, TestFlight, web app.
 - [ ] Code decides, the model talks; video stays on the device; physios sign.
-- [ ] 166 automated tests; CodeBuddy safety audit and fixes; brand made in Miora.
+- [ ] 168 automated tests; CodeBuddy safety audit and fixes; brand made in Miora.
 
 ## What only you can record
 

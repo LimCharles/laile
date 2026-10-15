@@ -30,7 +30,7 @@ COMPREHENSIVE SOLUTION DESIGN: BUSINESS AND TECHNICAL ARCHITECTURE, AND HOW PROM
 
 Technical architecture
 - Patient side: a SwiftUI iPhone app (Apple Vision pose on the device) and a web app (MediaPipe pose in the browser). Both run the same session engine: reps count only at the target angle, holds only while in position, and video never leaves the device.
-- Server: Swift (Vapor) on Tencent Cloud Lighthouse with the clinician portal. LaileCore, one shared Swift package, holds the safety rules, programs, care notes and session engine, so the phone and the server decide the same way. 166 automated tests.
+- Server: Swift (Vapor) on Tencent Cloud Lighthouse with the clinician portal. LaileCore, one shared Swift package, holds the safety rules, programs, care notes and session engine, so the phone and the server decide the same way. 168 automated tests.
 - Lele: an agent on Tencent Cloud ADP (Hy3 model) with a 12-document knowledge base on rehabilitation, exercise and medicines. ElevenLabs gives Lele its voice, cached per line.
 - Safety gate: red flags (chest pain, a hot swollen calf and others), medicine dose questions and the physio's pain limits are decided by tested code before any model sees a message.
 

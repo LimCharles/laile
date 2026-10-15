@@ -162,16 +162,22 @@ public struct ExerciseCalibration: Codable, Sendable, Hashable {
         self.stoppedForSymptom = stoppedForSymptom
     }
 
+    /// The peak angle the way people talk about it: "knee bent to 62°" (clinical flexion, not the
+    /// camera's interior angle) or "arm lifted to 120°". Nil when the exercise doesn't track one.
+    public var angleDescription: String? {
+        guard let peakAngle, let spec = ExerciseLibrary.standard.spec(exerciseId), let angle = spec.kind.trackedAngle else { return nil }
+        if angle.vertex == .knee, spec.tracksKneeFlexion { return "knee bent to \(Int((180 - peakAngle).rounded()))°" }
+        if angle == .armRaise { return "arm lifted to \(Int(peakAngle.rounded()))°" }
+        return nil
+    }
+
     /// "Heel slides: 10 reps, knee bent to 85°", for Lele and the clinician.
     public var summary: String {
         let spec = ExerciseLibrary.standard.spec(exerciseId)
         var parts: [String] = []
         if let maxReps { parts.append(maxReps == 1 ? "1 rep" : "\(maxReps) reps") }
         if let bestHoldSeconds { parts.append("\(bestHoldSeconds)s hold") }
-        if let peakAngle, let spec, let angle = spec.kind.trackedAngle {
-            if angle.vertex == .knee, spec.tracksKneeFlexion { parts.append("knee bent to \(Int((180 - peakAngle).rounded()))°") }
-            else if angle == .armRaise { parts.append("arm lifted to \(Int(peakAngle.rounded()))°") }
-        }
+        if let angleDescription { parts.append(angleDescription) }
         if stoppedForSymptom { parts.append("stopped for discomfort") }
         return "\(spec?.name ?? exerciseId): " + (parts.isEmpty ? "done" : parts.joined(separator: ", "))
     }

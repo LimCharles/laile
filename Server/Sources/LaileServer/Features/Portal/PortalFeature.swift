@@ -315,7 +315,7 @@ struct PortalFeature: LaileFeature {
         let recent = snapshot.sessions.filter { $0.startedAt > Date().addingTimeInterval(-14 * 86_400) }
         let headline = snapshot.trends.compactMap { t -> String? in
             guard let latest = t.latest else { return nil }
-            let change = t.improvementFromBaseline.map { " (\($0 >= 0 ? "+" : "−")\(t.kind.format(abs($0))) since baseline)" } ?? ""
+            let change = t.baselineChange.map { " (\($0.text.replacingOccurrences(of: "your ", with: "").lowercased()))" } ?? ""
             return "\(t.kind.displayName): \(t.kind.format(latest.value))\(change)"
         }
         let vm = ReportVM(

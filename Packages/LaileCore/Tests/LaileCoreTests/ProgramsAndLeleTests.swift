@@ -55,6 +55,15 @@ import Testing
         #expect(abs((planned.repRule?.target ?? 0) - 133) < 0.01)
     }
 
+    @Test func checkInAnglesReadAsBendNotTheCameraAngle() {
+        // The camera's interior angle of 118° is a 62° knee bend.
+        let heel = ExerciseCalibration(exerciseId: "heel-slide", maxReps: 10, peakAngle: 118)
+        #expect(heel.angleDescription == "knee bent to 62°")
+        #expect(heel.summary == "Heel slides: 10 reps, knee bent to 62°")
+        #expect(ExerciseCalibration(exerciseId: "shoulder-flexion", peakAngle: 120).angleDescription == "arm lifted to 120°")
+        #expect(ExerciseCalibration(exerciseId: "ankle-pump", bestHoldSeconds: 45).angleDescription == nil)
+    }
+
     @Test func personalDrafterRespectsWhatTheyToldLele() {
         let profile = HealthProfile(goals: [.getStronger], minutesPerDay: 10, experience: .some, sensitiveAreas: [.knees, .wrists])
         let draft = PersonalProgramDrafter.draft(profile)

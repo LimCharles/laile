@@ -167,7 +167,7 @@ public enum LeleRound {
         for enrollment in active where enrollment.needsCalibration {
             propose("calibrate-\(enrollment.id)") {
                 LeleMessage(createdAt: input.now, kind: .calibration,
-                            text: "The first session of \(enrollment.title) is a quick check-in: do each move at a comfortable effort and I'll set your targets from what the camera sees. Got a few minutes?",
+                            text: "The first session of your \(enrollment.title) is a quick check-in: do each move at a comfortable effort and I'll set your targets from what the camera sees. Got a few minutes?",
                             actions: [LeleAction(id: "start", label: "Start check-in", kind: .startSession, value: enrollment.id.uuidString)])
             }
         }

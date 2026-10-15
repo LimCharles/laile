@@ -177,7 +177,7 @@ struct EnrollmentDetailSheet: View {
         var parts: [String] = []
         if let reps = m.maxReps { parts.append(reps == 1 ? "1 rep" : "\(reps) reps") }
         if let hold = m.bestHoldSeconds { parts.append("\(Int(hold))s hold") }
-        if let angle = m.peakAngle { parts.append("\(Int(angle))°") }
+        if let angle = m.angleDescription { parts.append(angle) }
         return parts.joined(separator: " · ")
     }
 

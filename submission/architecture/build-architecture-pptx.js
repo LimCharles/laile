@@ -180,7 +180,7 @@ pres.addSection({ title: 'Build' });
       ['Vapor (Swift)', 'API, Leaf portal, live session view'],
       ['Fluent', 'SQLite, or TencentDB for PostgreSQL'],
       ['LaileCore', 'safety rules, programs, care notes and the session engine, shared by phone and server'],
-      ['166 automated tests', '127 core, 33 server, 6 web'],
+      ['168 automated tests', '129 core, 33 server, 6 web'],
     ]],
   ];
   cols.forEach(([title, color, items], i) => {

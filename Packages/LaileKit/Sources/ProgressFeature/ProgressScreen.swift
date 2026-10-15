@@ -77,11 +77,10 @@ struct TrendCard: View {
                         Text(trend.kind.format(latest.value)).font(.title2.weight(.heavy)).foregroundStyle(Theme.text)
                     }
                 }
-                if let delta = trend.improvementFromBaseline, trend.samples.count > 1 {
-                    Label("\(delta >= 0 ? "+" : "−")\(trend.kind.format(abs(delta))) since your baseline",
-                          systemImage: delta >= 0 ? "arrow.up.right" : "arrow.down.right")
+                if let change = trend.baselineChange, trend.samples.count > 1 {
+                    Label(change.text, systemImage: change.up ? "arrow.up.right" : "arrow.down.right")
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(delta >= 0 ? Theme.accent : Theme.warn)
+                        .foregroundStyle(change.better ? Theme.accent : Theme.warn)
                 }
                 chart.frame(height: 160)
                 ForEach(trend.flags, id: \.self) { flag in

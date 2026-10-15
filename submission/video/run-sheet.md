@@ -109,7 +109,7 @@ Read each line, pause two seconds, then the next. Redo any line you trip on.
 15. She approves the plan, and Mdm Tan gets the news straight away.
 16. She can also ask Lele to change a program in plain words. Nothing reaches the patient until she signs it.
 17. After physio, people carry on with calisthenics, with their limits carried over. It works on iPhone or in any browser.
-18. Lele talks, code decides. Built on Tencent Cloud ADP and Lighthouse, audited with CodeBuddy, branded with Miora, and covered by 166 automated tests.
+18. Lele talks, code decides. Built on Tencent Cloud ADP and Lighthouse, audited with CodeBuddy, branded with Miora, and covered by 168 automated tests.
 19. A quick reflection on how I built it. I'm a solo builder, so I kept one language, Swift, and one shared engine for the phone and the server.
 20. My rule was simple: the model talks, the code decides. Anything to do with safety is plain code with tests, and Lele handles the conversation.
 21. WorkBuddy audited my safety rules and found real bugs. "No pain, but my foot is numb" was answered with "carry on". I reviewed its fixes and merged them.

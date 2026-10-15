@@ -125,6 +125,15 @@ import Testing
         #expect(trend.reachedMilestones.map(\.id) == ["ext-10", "ext-5"])
     }
 
+    @Test func baselineChangeSaysWhichWayTheNumberMoved() throws {
+        let bend = try #require(ProgressAnalyzer.trend(kind: .kneeFlexion, samples: samples([62, 86]), milestones: []).baselineChange)
+        #expect(bend.text == "Up 24° since your baseline" && bend.up && bend.better)
+        // Pain from 5 to 1 is good news, and it reads as down, not "+4".
+        let pain = try #require(ProgressAnalyzer.trend(kind: .painAtRest, samples: samples([5, 1], kind: .painAtRest), milestones: []).baselineChange)
+        #expect(pain.text == "Down 4/10 since your baseline" && !pain.up && pain.better)
+        #expect(ProgressAnalyzer.trend(kind: .kneeFlexion, samples: samples([80, 80]), milestones: []).baselineChange == nil)
+    }
+
     @Test func achievementsOnNewSample() {
         let history = samples([62, 70, 85])
         let new = [MetricSample(kind: .kneeFlexion, value: 92, date: Date(timeIntervalSince1970: 10 * 86_400))]
