@@ -164,6 +164,9 @@ final class ProgramsFlowTests: XCTestCase {
         }
         let redFlag = try await chat("my calf is swollen and hot since last night")
         XCTAssertTrue(redFlag.contains("care team"))
+        let emergency = try await chat("I have chest pain and feel dizzy")
+        XCTAssertTrue(emergency.contains("995"))
+        XCTAssertTrue(emergency.contains("Chest pain needs urgent attention"), emergency)
         let dose = try await chat("should I take 2 panadol before my session?")
         XCTAssertTrue(dose.lowercased().contains("pharmacist") || dose.lowercased().contains("doctor"))
         let exercise = try await chat("why am I doing heel slides?")

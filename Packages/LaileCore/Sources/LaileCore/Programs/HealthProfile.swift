@@ -175,5 +175,5 @@ public enum FollowOn {
 
 extension String {
     /// "10-minute strength plan" stays as is; "strength plan" → "Strength plan".
-    var capitalizedFirst: String { prefix(1).uppercased() + dropFirst() }
+    public var capitalizedFirst: String { prefix(1).uppercased() + dropFirst() }
 }

@@ -218,7 +218,7 @@ struct LeleService {
         var notes: [CareNote] = []
         if let flag = RedFlagDetector.detect(text) {
             replyText = flag.level == .emergency
-                ? "Please stop and call 995 now, or ask someone nearby to help you. \(flag.reason.capitalized) needs urgent attention."
+                ? "Please stop and call 995 now, or ask someone nearby to help you. \(flag.reason.capitalizedFirst) needs urgent attention."
                 : "Please don't exercise today and contact your care team or a doctor today about the \(flag.reason). I've noted it for your records."
         } else if MedicationBoundary.isDoseQuestion(text) {
             replyText = MedicationBoundary.referral
