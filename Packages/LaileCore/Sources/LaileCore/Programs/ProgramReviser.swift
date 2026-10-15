@@ -69,7 +69,7 @@ public enum ProgramReviser {
         let addWords = [" add ", " include ", " introduce ", " start "]
         if addWords.contains(where: text.contains) {
             for spec in mentioned() where !items.contains(where: { $0.exerciseId == spec.id }) {
-                items.append(ProgramItem(exerciseId: spec.id, dose: spec.defaultDose, rationale: "Added at the physician's request.", source: .aiDraft))
+                items.append(ProgramItem(exerciseId: spec.id, dose: spec.defaultDose, rationale: "Added at the physio's request.", source: .aiDraft))
                 changes.append("Added \(spec.name) (\(spec.defaultDose.shortDescription))")
                 understood = true
             }

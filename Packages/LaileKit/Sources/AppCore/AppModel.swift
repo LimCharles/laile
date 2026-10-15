@@ -254,7 +254,14 @@ public final class AppModel {
     // MARK: Lele
 
     public func refreshLele() async {
-        if let messages = try? await backend.leleMessages() { leleMessages = messages.sorted { $0.createdAt < $1.createdAt } }
+        guard let messages = try? await backend.leleMessages() else { return }
+        let known = Set(leleMessages.map(\.id))
+        leleMessages = messages.sorted { $0.createdAt < $1.createdAt }
+        // Something happened since the last look (e.g. the physio approved a plan): programs and Today may have changed too.
+        if messages.contains(where: { !known.contains($0.id) }), !known.isEmpty {
+            enrollments = (try? await backend.enrollments()) ?? enrollments
+            today = (try? await backend.today()) ?? today
+        }
     }
 
     public func chat(_ text: String) async {

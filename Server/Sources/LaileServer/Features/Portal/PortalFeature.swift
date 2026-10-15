@@ -381,7 +381,7 @@ struct PortalFeature: LaileFeature {
                 return ItemVM(id: item.id.uuidString, name: spec.name, category: spec.category.rawValue, isHold: spec.kind.isHold,
                               sets: item.dose.sets, reps: item.dose.reps ?? 0, hold: item.dose.holdSeconds ?? 0, rest: item.dose.restSeconds,
                               times: item.timesPerDay, target: item.targetKneeFlexion.map { "\(Int($0))" } ?? "",
-                              tracksKnee: spec.tracksKneeFlexion, rationale: item.rationale, source: item.source.rawValue, limits: limits)
+                              tracksKnee: spec.tracksKneeFlexion, rationale: item.rationale, source: item.source.label, limits: limits)
             },
             blocked: program.blockedSuggestions.map { "\(library.spec($0.exerciseId)?.name ?? $0.exerciseId): \($0.message)" },
             violations: ContraindicationChecker.violations(program: program, library: library).map(\.message),

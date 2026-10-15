@@ -172,6 +172,8 @@ struct RequestsFeature: LaileFeature {
             text += " It runs alongside your program with them, inside their limits. The first session is a quick check-in."
             message = LeleMessage(createdAt: now, kind: .clinician, text: text,
                                   actions: [LeleAction(id: "start", label: "Start check-in", kind: .startSession, value: try created.requireID().uuidString)])
+            // This message already offers the check-in, so Lele's round doesn't send a second invite for it.
+            message.dedupeKey = "calibrate-\(try created.requireID())"
         } else if approve, let template = SessionTemplate.builtIn(model.catalogId) {
             let store = EnrollmentStore(db: req.db)
             let enrollment = try await store.joinCatalog(template, userID: userID, joinedAt: now)
@@ -180,6 +182,7 @@ struct RequestsFeature: LaileFeature {
             text += " Your limits from them carry over to it. The first session is a quick check-in."
             message = LeleMessage(createdAt: now, kind: .clinician, text: text,
                                   actions: [LeleAction(id: "start", label: "Start check-in", kind: .startSession, value: try enrollment.requireID().uuidString)])
+            message.dedupeKey = "calibrate-\(try enrollment.requireID())"
         } else {
             var text = "\(physio) would rather you hold off on \(model.title) for now."
             if let note { text += " Their note: \"\(note)\"" }

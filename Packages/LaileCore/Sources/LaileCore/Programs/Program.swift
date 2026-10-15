@@ -65,6 +65,15 @@ public struct Precautions: Codable, Sendable, Hashable {
 
 public enum ProgramItemSource: String, Codable, Sendable, Hashable {
     case clinician, aiDraft, template
+
+    /// How the portal names who put this exercise in the program.
+    public var label: String {
+        switch self {
+        case .clinician: "physio"
+        case .aiDraft: "Lele's draft"
+        case .template: "template"
+        }
+    }
 }
 
 public struct ProgramItem: Codable, Sendable, Hashable, Identifiable {

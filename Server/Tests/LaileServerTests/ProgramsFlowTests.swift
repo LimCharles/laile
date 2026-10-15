@@ -404,6 +404,13 @@ final class ProgramsFlowTests: XCTestCase {
         }, afterResponse: { res in XCTAssertEqual(res.status, .seeOther) })
         let approved = try await enrollments(auth.token).first { $0.kind == .personal }
         XCTAssertEqual(approved?.program.signedBy?.contains("Nair"), true)
+        // The good news offers the check-in, and Lele's round doesn't send a second invite for it.
+        var inbox: [LeleMessage] = []
+        for _ in 0..<2 {
+            try await app.test(.GET, "v1/lele/messages", headers: bearer(auth.token)) { res in inbox = try res.content.decode([LeleMessage].self) }
+        }
+        let invites = inbox.filter { $0.actions.contains { $0.kind == .startSession && $0.value == approved?.id.uuidString } }
+        XCTAssertEqual(invites.count, 1, invites.map(\.text).joined(separator: " | "))
     }
 
     /// The app sends typed words as the answer to Lele's open question; asking for a new plan starts planning instead.
