@@ -1,14 +1,10 @@
-# What's left to record (about 10 minutes)
+# What's left to record: the voice-over (about 8 minutes)
 
 Claude has recorded everything else: the iPhone app in the simulator (Mdm Tan's morning, the chat,
 planning, Programs, Progress, Me, the calisthenics demo, the good news), the web app, and Dr Nair's
 portal. Charles recorded the real camera session (iPhone screen + Photo Booth).
 
-## 1. Hand over the Photo Booth clip
-
-In Photo Booth, drag the clip onto the Desktop (or File → Export). Claude picks it up from there.
-
-## 2. Voice-over (QuickTime → File → New Audio Recording, or Photo Booth)
+## Voice-over (QuickTime → File → New Audio Recording)
 
 Quiet room, phone or Mac mic about a hand's width from your mouth. Read each line, pause two
 seconds, then the next. Redo any line you trip on; don't stop the recording. The bracket says what's
@@ -24,10 +20,7 @@ on screen, so you know the mood. Don't read the brackets.
 5. [chat with real numbers] Lele runs on Tencent Cloud ADP with a physio knowledge base, and she answers with Mdm Tan's real numbers.
 6. [dose question, chest pain] Some things never reach the model. A medicine dose question goes to her pharmacist. Chest pain means call 995. Those are fixed rules in code.
 
-**Your session (your footage)**
-7. [skeleton on screen, reps counting] In a session, the phone's camera counts every rep and measures the joint. The video never leaves the phone.
-8. [you say "ouch", pain 0 to 10] When something hurts, you just say so. Lele asks how bad it is, stops that exercise, and saves the exact moment.
-9. [Session complete, Lele will remember] Lele remembers. Next time, that exercise is a little easier, and if a physio is involved, they see the note too.
+**Your session:** skip lines 7 to 9. The video uses your live sound from Photo Booth there.
 
 **Planning and the physio (iPhone, then the portal)**
 10. [plan chat] When her goals change, Mdm Tan plans a new program just by talking to Lele. Lele drafts it from vetted exercises, inside her physio's limits.
@@ -52,6 +45,6 @@ on screen, so you know the mood. Don't read the brackets.
 
 Then stay silent for **10 seconds** (room tone) and stop.
 
-## 3. Send
+## Send
 
 Save the audio to the Desktop and tell Claude.
