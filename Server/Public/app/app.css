@@ -48,8 +48,9 @@ img { max-width: 100%; }
 
 /* Layout: bottom tabs on phones, a sidebar on wider screens. */
 .shell { min-height: 100vh; }
-.frame { display: grid; grid-template-columns: 1fr; min-height: 100vh; }
-.main { padding: 16px 16px 96px; max-width: 760px; width: 100%; margin: 0 auto; }
+/* minmax(0, …): the scrolling chip rows must not widen the column past the screen. */
+.frame { display: grid; grid-template-columns: minmax(0, 1fr); min-height: 100vh; }
+.main { padding: 16px 16px 96px; max-width: 760px; width: 100%; min-width: 0; margin: 0 auto; }
 .nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: flex; justify-content: space-around;
   background: var(--surface); border-top: 1px solid var(--border); padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
 .nav a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; border-radius: 12px;
@@ -58,7 +59,7 @@ img { max-width: 100%; }
 .nav a.on { color: var(--accent); background: var(--accent-soft); }
 .nav .brand-row { display: none; }
 @media (min-width: 960px) {
-  .frame { grid-template-columns: 240px 1fr; }
+  .frame { grid-template-columns: 240px minmax(0, 1fr); }
   .nav { position: sticky; top: 0; height: 100vh; flex-direction: column; justify-content: flex-start; gap: 4px;
     border-top: none; border-right: 1px solid var(--border); padding: 20px 14px; }
   .nav a { flex: none; flex-direction: row; gap: 12px; font-size: 15px; padding: 10px 12px; }
