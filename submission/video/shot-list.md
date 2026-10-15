@@ -43,7 +43,7 @@ record, and what Claude makes.
 ## What only you can record
 
 ### Before you start
-- [ ] Update to **build 4** in TestFlight (it has the Plan a new program and Make it easier buttons).
+- [ ] Update to **build 5** in TestFlight (it has the Plan a new program and Make it easier buttons).
 - [ ] Fresh demo: Me → Restart the demo with fresh data. Note the time it shows in the portal.
 - [ ] Phone: Do Not Disturb, brightness up, volume up, battery over 50%.
 - [ ] Control Center → long-press Screen Recording → **Microphone On**.

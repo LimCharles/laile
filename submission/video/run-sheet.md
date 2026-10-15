@@ -17,7 +17,7 @@ adds the titles, captions, split screens and music. You don't record any title s
    Mac on a table just behind the phone, a little higher, camera on
 ```
 
-1. **iPhone:** TestFlight → update Laile to **build 4**. In Laile: Me → **Restart demo with fresh data**
+1. **iPhone:** TestFlight → update Laile to **build 5**. In Laile: Me → **Restart demo with fresh data**
    (or tap **Physio patient** on the welcome screen).
 2. **iPhone:** turn on Do Not Disturb, brightness and volume up. Add Screen Recording to Control
    Center. Long-press it and set **Microphone OFF**: the Mac records your voice, and Laile keeps

@@ -99,7 +99,7 @@ chat like any message.
 
 **Screen:** patient, Lele tab.
 
-**Do:** tap **Plan a new program** (iPhone build 4 or the web app; on an older build, type "my goals
+**Do:** tap **Plan a new program** (iPhone build 5 or the web app; on an older build, type "my goals
 have changed"), then answer:
 
 | Lele asks | You answer |
