@@ -233,6 +233,9 @@ final class ProgramsFlowTests: XCTestCase {
         XCTAssertEqual(LeleAgent.tidy("We eased the bend by 10° [CARE NOTES]."), "We eased the bend by 10°.")
         XCTAssertEqual(LeleAgent.tidy("How You Are Doing\n\nBased on the provided reference, your bend is 86°, often for a few weeks 07-medicines-after-joint-surgery."),
                        "your bend is 86°, often for a few weeks.")
+        XCTAssertEqual(LeleAgent.tidy("Hi, I'm Lele from Laile. Your knee bend is trending up."), "Your knee bend is trending up.")
+        XCTAssertEqual(LeleAgent.tidy("Hello! I’m Lele, your home physio coach. Heel slides help."), "Heel slides help.")
+        XCTAssertEqual(LeleAgent.tidy("I'm Lele's best guess: rest."), "I'm Lele's best guess: rest.")
         XCTAssertTrue(LeleAgent.isFallback("I’m not able to answer that one, and I don't want to guess."))
     }
 

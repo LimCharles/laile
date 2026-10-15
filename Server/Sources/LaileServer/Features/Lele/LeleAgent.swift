@@ -63,6 +63,8 @@ struct LeleAgent {
             // Knowledge-base file names cited inline ("... a few weeks 07-medicines-after-joint-surgery.").
             .replacingOccurrences(of: #"\s?\b\d{2}(-[a-z0-9]+){2,}(\.md)?\b"#, with: "", options: .regularExpression)
             .replacingOccurrences(of: #"(?i)based on the provided [^,:.]*[,:]\s*"#, with: "", options: .regularExpression)
+            // The model reintroduces itself mid-conversation: "Hi, I'm Lele from Laile. Your knee…"
+            .replacingOccurrences(of: #"^\s*(?i)(?:(?:hi|hello|hey)(?: there)?[!,.]?\s*)?i['’]m lele(?:,? from laile)?(?:,? your [a-z ]{1,30})?[.!]\s*"#, with: "", options: .regularExpression)
             // No dashes in Lele's voice: number ranges read "3 to 5", other dashes become commas.
             .replacingOccurrences(of: #"(\d)\s?[–—]\s?(\d)"#, with: "$1 to $2", options: .regularExpression)
             .replacingOccurrences(of: #"\s*[—–]\s*"#, with: ", ", options: .regularExpression)

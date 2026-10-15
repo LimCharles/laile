@@ -1,4 +1,4 @@
-# Recording run sheet (about 35 minutes)
+# Recording run sheet (about 30 minutes)
 
 Four long takes. Don't stop for mistakes: pause, then redo the step. Claude cuts everything,
 adds the titles, captions, split screens and music. You don't record any title slides.
@@ -26,44 +26,39 @@ adds the titles, captions, split screens and music. You don't record any title s
    from head to feet, are in the picture. This is the wide camera.
 4. Wear shorts or fitted trousers so the camera can see your knee.
 
-## Take 1: the patient (about 15 minutes)
+## Take 1: the patient (about 10 minutes)
 
 Start the **Mac recording**, then the **iPhone screen recording**. Stand in front of both, tap the
 iPhone screen once and **clap once**.
 
-**At the chair, phone in hand (the Mac films you using it):**
-1. Laile → **Today**. Scroll slowly to the bottom and back up.
-2. **Lele** tab. On "How's your knee feeling compared with yesterday?" tap **Worse**. Read the reply.
-3. Type **How am I doing?** and send. Wait for the reply, even if it takes a minute.
-4. Type **Why am I doing heel slides?** and wait.
-5. Type **Can I take two more paracetamol before my exercises?**
-6. Type **I have chest pain and feel dizzy**. (It's only a test of the safety reply.)
+**At the chair, phone in hand (the Mac films you using it, about 30 seconds):**
+1. Laile → **Today**. Scroll slowly down and back up, then open the **Lele** tab and scroll a little.
+   (Claude has already recorded the chat questions in the iPhone simulator, so don't type any.)
 
 **The session:**
-7. **Today** → **Start session**. For pain right now, tap **1**.
-8. Tap **Skip** four times, until the top says **Seated knee straightening**.
-9. Stand the phone on the stool, sit side-on with your **right leg nearest the phone**, back
+2. **Today** → **Start session**. For pain right now, tap **1**.
+3. Tap **Skip** four times, until the top says **Seated knee straightening**.
+4. Stand the phone on the stool, sit side-on with your **right leg nearest the phone**, back
    straight, feet on the floor. Wait until Lele says "Perfect, I can see you".
-10. **Clap once** (for syncing).
-11. Do **2 reps, straightening only three-quarters of the way** (don't lock the knee). They won't count.
-12. Say: **"I can't straighten it that far, can you make it easier?"** Wait for Lele.
-13. Say: **"Still a bit hard."** Wait for Lele.
-14. Do **3 reps, three-quarters of the way** again. These count now.
-15. Say: **"It's just pulling at the back."** Do 1 more rep.
-16. Touch the inside of your knee, wince, and say: **"Ow, sharp, on the inside of my knee."**
-17. When Lele asks zero to ten, say: **"About a six."**
-18. Pick up the phone. For pain now, tap **3**. Hold on the results for 5 seconds. Smile at the Mac,
+5. **Clap once** (for syncing).
+6. Do **2 reps, straightening only three-quarters of the way** (don't lock the knee). They won't count.
+7. Say: **"I can't straighten it that far, can you make it easier?"** Wait for Lele.
+8. Say: **"Still a bit hard."** Wait for Lele.
+9. Do **3 reps, three-quarters of the way** again. These count now.
+10. Say: **"It's just pulling at the back."** Do 1 more rep.
+11. Touch the inside of your knee, wince, and say: **"Ow, sharp, on the inside of my knee."**
+12. When Lele asks zero to ten, say: **"About a six."**
+13. Pick up the phone. For pain now, tap **3**. Hold on the results for 5 seconds. Smile at the Mac,
     thumbs up.
 
-**Planning, memory and a call:**
-19. **Lele** tab → **Plan a new program**. Answer:
+**Planning and a call:**
+14. **Lele** tab → **Plan a new program**. Answer:
     - type **I want to get stronger so stairs feel easier**
     - tap **15 minutes**
     - tap **I move now and then**
     - type **my right knee, it's the new one**
-    - tap **No**, then wait for the plan (up to a minute).
-20. **Me** tab: scroll slowly through "What Lele knows about you" and "What Lele remembers".
-21. **Lele** tab → **phone icon**. Say: **"My knee was stiff this morning, but the exercises helped."**
+    - tap **No**, then wait for the plan (up to a minute). Dr Nair approves this plan in Take 2.
+15. **Lele** tab → **phone icon**. Say: **"My knee was stiff this morning, but the exercises helped."**
     Listen to Lele, then End.
 
 Stop the iPhone recording, then the Mac recording.
@@ -89,7 +84,8 @@ Stop the recording (the stop button in the menu bar).
 Start the iPhone screen recording. On the **Lele** tab, show Dr Nair's "Good news…" message, tap
 **Start check-in**, let Lele introduce the first move, then End. Stop the recording.
 
-(Claude has already recorded the web app, the calisthenics demo and the phone-size view.)
+(Claude has already recorded the app screens in the iPhone simulator (Today, the Lele chat, planning,
+Programs, Progress, Me, calisthenics) and the web app.)
 
 ## Take 4: talk to the Mac (about 10 minutes)
 
