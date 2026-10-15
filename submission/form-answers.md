@@ -73,6 +73,8 @@ Post the demo on YouTube (Public) with this description:
 
 > Laile: home physio that counts every rep and checks in. Lele, an agent on Tencent Cloud ADP, coaches sessions, adapts when something hurts, plans new programs in chat and briefs the physio. Try it: https://43-156-108-79.sslip.io
 > #WorkBuddy #CodeBuddy #Miora #TencentCloudHackathon
+>
+> Music: "Wholesome" by Kevin MacLeod (incompetech.com), licensed under Creative Commons: By Attribution 4.0 License, http://creativecommons.org/licenses/by/4.0/
 
 ## Files to upload
 
